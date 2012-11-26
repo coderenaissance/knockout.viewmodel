@@ -129,9 +129,8 @@ Options can also be passed in to customize converting to a viewmodel.
 </ul><p>All processing types are exclusive. Processing types have the following order of operations map, append, exclude, allow, and extend. All options can be specified both for fromModel and toModel.</p>
 
 <h3>The map processing option</h3>
-
-<pre><code>With the map processing option the path and all of it's children are processed only as you specify.
-```
+With the map processing option the path and all of it's children are processed only as you specify.
+<pre><code>
 options:{ 
     extend:{
         "{root}.users[i]": function(user){
@@ -140,7 +139,6 @@ options:{
         }
     }
 };
-```
 In this case the users are passed through as is with the addition of an obeservable isDeleted flag. 
 Note: 
 *Make sure to return something from your function, otherwise undefined will be returned as the result of map.
@@ -148,47 +146,40 @@ Note:
 </code></pre>
 
 <h3>The append processing option</h3>
-
-<pre><code>With the append processing option the path and all of it's children are appended as is.
-```
+With the append processing option the path and all of it's children are appended as is.
+<pre><code>
 options:{ 
     append:["{root}.users[i]"]
 };
-```
-In this case none of the users have been altered and are appended unchanged.
 </code></pre>
+In this case none of the users have been altered and are appended unchanged.
 
 <h3>The exclude processing option</h3>
-
-<pre><code>With the exclude processing option the path and it's children are excluded from processing and will not be included.
-```
+With the exclude processing option the path and it's children are excluded from processing and will not be included.
+<pre><code>
 options:{ 
     exclude:["{root}.users[i].firstName"]
 };
-```
-The firstName property is not included.
 </code></pre>
+The firstName property is not included.
 
 <h3>The override processing option</h3>
-
-<pre><code>The override processing option exempts a path from certain default processing assumptions. It does not affect processing of the paths children. It is meant to be a quick way to do handle common situations that the map options would otherwise need to be used for.
-```
+The override processing option exempts a path from certain default processing assumptions. It does not affect processing of the paths children. It is meant to be a quick way to do handle common situations that the map options would otherwise need to be used for.
+<pre><code>
 options:{ 
     override:["{root}.someProperty"]
 };
-```
+</code></pre>
 When calling:
 *fromModel
     ** the path specified will not be wrapped in an observable.
 *toModel:
     ** if the path is for a computed value it will be unwrapped.
     ** if the path is for a non-observable value it will be included.
-</code></pre>
 
 <h3>The extend processing option</h3>
-
-<pre><code>With the extend processing option the path and it's children are processed normally but then extended/modified as specified.
-```
+With the extend processing option the path and it's children are processed normally but then extended/modified as specified.
+<pre><code>
 options:{ 
     extend:{
         "{root}.users[i]": function(user){
@@ -198,11 +189,10 @@ options:{
         }
     }
 };
-```
+</code></pre>
 The value of the path is passed to the extend function after processing has been completed on the path and its children. Objects can be modified without being returned. 
 Note: Whatever is returned from the extend function will take the place the processed object.
-</code></pre>
-      </section>
+</section>
     </div>
 
     <!-- FOOTER  -->
