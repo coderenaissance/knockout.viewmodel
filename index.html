@@ -54,7 +54,7 @@ viewmodel = ko.viewmodel.fromModel(model);
 
 <p>This code creates an observable viewModel with an observable array of users whose properties are observable.</p>
 
-<h3>Example: Creating a viewmodel with ko.viewModel</h3>
+<h3>Example: Creating an extended viewmodel with ko.viewModel</h3>
 
 <p>Now lets say that you want to extend each object in the users array with an isDeleted flag. You would do this by specifying custom mapping options.</p>
 
@@ -95,6 +95,18 @@ viewmodel = ko.viewmodel.fromModel(model,options));
 
 <p>Every property can have custom processing specified for it. Custom processing is specified for an item by it's path. </p>
 
+<h3>Example: Getting an updated model from your viewmodel with ko.viewModel</h3>
+
+<p>At somepoint you'll need to get an updated model to send back up to the server. This can be done by calling toModel.</p>
+
+<pre><code>
+
+viewmodel = ko.viewmodel.toModel(viewmodel);
+
+</code></pre>
+
+Options can also be passed in to customize converting to a viewmodel.
+
 <h3>Path Types</h3>
 
 <p>Every full path starts with {root}. Items in an array are referred to as [i]. So a path of "{root}.users[i].firstName" would be used to specify custom processing for the firstName property of every object in the users array. That is its full path name, but it's not necessary to refer to every item by it's -full path name. There are three ways of referencing a path:</p>
@@ -105,13 +117,13 @@ viewmodel = ko.viewmodel.fromModel(model,options));
 <li>Property Name - Matches every property with that name. So a partial path of "firstName" would match every firstName property in your model.</li>
 </ul><h3>Processing Types</h3>
 
-<p>There four types of custom processing: map, append, exclude, allow, and extend.</p>
+<p>There four types of custom processing: map, append, exclude, override, and extend.</p>
 
 <ul>
 <li>map - the path and all of it's children are processed only as you specify</li>
 <li>append - the path and it's children are appended as is </li>
 <li>exclude - the path is excluded from processing</li>
-<li>allow - the path is not processed but all of it's children are</li>
+<li>override - exempts a path from certain default processing assumptions</li>
 <li>extend - the path and it's children are processed normally but then extended/modified as specified</li>
 </ul><p>All processing types are exclusive. Processing types have the following order of operations map, append, exclude, allow, and extend. All options can be specified both for fromModel and toModel.</p>
 
@@ -158,7 +170,7 @@ The firstName property is not included.
 
 <h3>The override processing option</h3>
 
-<pre><code>The override processing option allows some default processing to be overridden. It does not affect processing of children. It is meant to be a quick way to do common things that map would otherwise need to be used for.
+<pre><code>The override processing option exempts a path from certain default processing assumptions. It does not affect processing of the paths children. It is meant to be a quick way to do handle common situations that the map options would otherwise need to be used for.
 ```
 options:{ 
     override:["{root}.someProperty"]
@@ -174,7 +186,7 @@ When calling:
 
 <h3>The extend processing option</h3>
 
-<pre><code>With the override processing option the path and it's children are processed normally but then extended/modified as specified.
+<pre><code>With the extend processing option the path and it's children are processed normally but then extended/modified as specified.
 ```
 options:{ 
     extend:{
