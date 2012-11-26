@@ -5,20 +5,26 @@
 /*global ko:false */
 ko.viewmodel = (function () {
     var fromSettings, toSettings;
-    function updateConsole(context, mapType) {
-        if (ko.viewmodel.logging && window.console){
-            window.console.log((mapType ? "Found " + mapType : "Processing") + ":" +
-                context.qualifiedName +
-                (context.qualifiedName != context.parentChildName ? (" | " + context.parentChildName) : "") +
-                (context.parentChildName != context.name ? (" | " + context.name) : "")
-            );
+    function updateConsole(context, mapType, settings) {
+        var msg;
+        if (ko.viewmodel.logging && window.console) {
+            if (mapType) {
+                msg = mapType + " " + context.qualifiedName + " (matched: '" + (
+                    (settings[context.qualifiedName + ":" + mapType] ? context.qualifiedName : "") ||
+                    (settings[context.parentChildName + ":" + mapType] ? context.parentChildName : "") ||
+                    (context.name)
+                ) + "')";
+            } else {
+                msg = "Parsing " + context.qualifiedName;
+            }
+            window.console.log( msg);
         }
     }
-    function GetPathSetting(mappings, context, mapType) {
+    function GetPathSetting(settings, context, mapType) {
         var t = ":" + mapType,
-            result = mappings ? mappings[context.qualifiedName + t] || mappings[context.parentChildName + t] || mappings[context.name + t] : undefined;
+            result = settings ? settings[context.qualifiedName + t] || settings[context.parentChildName + t] || settings[context.name + t] : undefined;
         if(result){
-            updateConsole(context, mapType);
+            updateConsole(context, mapType, settings)
         }
         return result;
     }
@@ -48,10 +54,10 @@ ko.viewmodel = (function () {
             fnMap = GetPathSetting(settings,context,"map");
         updateConsole(context);
         if (fnMap) return fnMap(obj);
-        else if (GetPathSetting(settings, context, "copy")) return unwrapped;
+        else if (GetPathSetting(settings, context, "append")) return unwrapped;
         else if (GetPathSetting(settings, context, "exclude")) return undefined;
-        else if (wasNotWrapped && !GetPathSetting(settings, context, "passthru")) return undefined;
-        else if (ko.isComputed(obj) && !GetPathSetting(settings, context, "passthru")) return undefined;
+        else if (wasNotWrapped && !GetPathSetting(settings, context, "override")) return undefined;
+        else if (ko.isComputed(obj) && !GetPathSetting(settings, context, "override")) return undefined;
         else if (isStandardProperty(unwrapped, objType))
             mapped = unwrapped;
         else if (isObjectProperty(unwrapped, objType)) {
@@ -77,14 +83,16 @@ ko.viewmodel = (function () {
     }
 
     function fnFromRecursive(obj, context) {
-        var mapped, p, objType = typeof obj, fnExtend,
-            settings = fromSettings, fnMap = GetPathSetting(settings, context, "map");
+        var mapped, p, objType = typeof obj, fnExtend, isOverride
+        settings = fromSettings, fnMap = GetPathSetting(settings, context, "map");
         updateConsole(context);
         if (fnMap) return fnMap(obj);
-        else if (GetPathSetting(settings, context, "copy")) return obj;
+        else if (GetPathSetting(settings, context, "append")) return obj;
         else if (GetPathSetting(settings, context, "exclude")) return undefined;
-        else if (isStandardProperty(obj, objType))
-            mapped = GetPathSetting(settings,context,"passthru") ? obj : ko.observable(obj);
+        else if (isStandardProperty(obj, objType)){
+            isOverride = GetPathSetting(settings,context,"override");
+            mapped = isOverride ? obj : ko.observable(obj);
+        }
         else if (isObjectProperty(obj, objType)) {
             mapped = {};
             for (p in obj) {
@@ -94,17 +102,19 @@ ko.viewmodel = (function () {
                     qualifiedName: context.qualifiedName + "." + p
                 });
             }
-            mapped = GetPathSetting(settings,context,"passthru") ? mapped : ko.observable(mapped);
+            isOverride = GetPathSetting(settings,context,"override");
+            mapped = isOverride ? mapped : ko.observable(mapped);
         }
         else if (isArrayProperty(obj, objType)) {
-            mapped = GetPathSetting(settings,context,"passthru") ? [] : ko.observableArray([]);
+            isOverride = GetPathSetting(settings,context,"override");
+            mapped = isOverride ? [] : ko.observableArray([]);
             for (p = 0; p < obj.length; p++) {
                 mapped.push(fnFromRecursive(obj[p], {
                     name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
                 }));
             }
         }
-        fnExtend = GetPathSetting(settings,context,"extend");
+        fnExtend = !isOverride ? GetPathSetting(settings, context, "extend") : null;
         return fnExtend ? (fnExtend(mapped) || mapped) : mapped;
     }
     return {

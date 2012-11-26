@@ -52,7 +52,7 @@ test("Map full path", function () {
 });
 
 
-test("Copy full path unwrapped", function () {
+test("Append full path unwrapped", function () {
     var viewmodel, modelResult;
 
     viewmodel = ko.observable({
@@ -62,7 +62,7 @@ test("Copy full path unwrapped", function () {
     });
 
     var customMapping = {
-        copy:["{root}.test"]
+        append:["{root}.test"]
     };
 
     modelResult = ko.viewmodel.toModel(viewmodel, customMapping);
@@ -84,7 +84,7 @@ test("Unwrapped fail", function () {
     deepEqual(modelResult.test, undefined);
 });
 
-test("Passthru Computed", function () {
+test("Override Computed", function () {
     var viewmodel, modelResult;
 
     viewmodel = ko.observable({
@@ -98,7 +98,7 @@ test("Passthru Computed", function () {
     })
 
     var customMapping = {
-        passthru: ["{root}.stringSaysTest"]
+        override: ["{root}.stringSaysTest"]
     };
 
     modelResult = ko.viewmodel.toModel(viewmodel, customMapping);

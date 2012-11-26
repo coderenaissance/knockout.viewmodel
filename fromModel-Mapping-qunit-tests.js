@@ -179,7 +179,7 @@ test("Exclude array item property path", function () {
     deepEqual(viewmodel().items()[0]().test, undefined, "Item Not Mapped");
 });
 
-test("Copy property", function () {
+test("Append property", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -191,7 +191,7 @@ test("Copy property", function () {
     };
 
     var customMapping = {
-        copy: ["items[i]"]
+        append: ["items[i]"]
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
@@ -202,7 +202,7 @@ test("Copy property", function () {
     deepEqual(actual, expected, "Item Not Mapped");
 });
 
-test("Passthru array", function () {
+test("Override array", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -214,7 +214,7 @@ test("Passthru array", function () {
     };
 
     var customMapping = {
-        passthru: ["[i]"]
+        override: ["[i]"]
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
@@ -225,7 +225,7 @@ test("Passthru array", function () {
     deepEqual(actual, expected, "Item Not Mapped");
 });
 
-test("Passthru object", function () {
+test("Override object", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -237,7 +237,7 @@ test("Passthru object", function () {
     };
 
     var customMapping = {
-        passthru: ["{root}"]
+        override: ["{root}"]
     };
 
 
@@ -249,7 +249,7 @@ test("Passthru object", function () {
     deepEqual(actual, expected, "Item Not Mapped");
 });
 
-test("Passthru stringProp", function () {
+test("Override stringProp", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -261,7 +261,7 @@ test("Passthru stringProp", function () {
     };
 
     var customMapping = {
-        passthru: ["stringProp"]
+        override: ["stringProp"]
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
