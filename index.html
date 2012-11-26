@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Knockout.viewmodel : " />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Knockout.viewmodel</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/coderenaissance/knockout.viewmodel">View on GitHub</a>
+
+          <h1 id="project_title">Knockout.viewmodel</h1>
+          <h2 id="project_tagline"></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>Welcome to the knockout viewmodel plugin.</h2>
+
+<p>The knockout viewmodel plugin let's you create complex observable viewmodels easily and with more structure and control than ever before.</p>
+
+<h3>Example: Creating a simple viewmodel with ko.viewmodel</h3>
+
+<p>Creating a viewmodel from a model is simple.</p>
+
+<pre><code>var model, viewmodel;
+
+//Normally this JSON model would be returned via ajax.
+model = {
+  users:[ 
+        {firstName:"John", lastName:"Doe"},
+        {firstName:"James", lastName:"Smith"}
+    ]
+};
+
+viewmodel = ko.viewmodel.fromModel(model);
+</code></pre>
+
+<p>This code creates an observable viewModel with an observable array of users whose properties are observable.</p>
+
+<h3>Example: Creating a viewmodel with ko.viewModel</h3>
+
+<p>Now lets say that you want to extend each object in the users array with an isDeleted flag. You would do this by specifying custom mapping options.</p>
+
+<pre><code>options:{ 
+    extend:{
+        "{root}.users[i]": function(user){
+            //note that user is an observable
+            //we're adding isDeleted to the object not the observable
+            user().isDeleted = ko.observable(false);
+        }
+    }
+};
+
+viewmodel = ko.viewmodel.fromModel(model,options));
+</code></pre>
+
+<p>We've now extended each object in the users array with an isDeleted flag. With ko.viewmodel all objects and properties are observable by default so it's up to you whether you extend the object or observable. </p>
+
+<p>If we also wanted to add a delete method to an array we would use the following options:</p>
+
+<pre><code>options:{ 
+    extend:{
+        "{root}.users[i]": function(user){
+            user().isDeleted= ko.observable(false);
+        },
+        "{root}.users": function(users){
+            users.Delete = function(user){
+                user.isDeleted(true);
+            }
+        }
+    }
+};
+</code></pre>
+
+<p>Note we've extending the observable array with the Delete function. Here's a jsFiddle that shows the code bound to a view: <a href="http://jsfiddle.net/CodeRenaissance/ytjns/3/">http://jsfiddle.net/CodeRenaissance/ytjns/3/</a></p>
+
+<h3>Custom Processing</h3>
+
+<p>Every property can have custom processing specified for it. Custom processing is specified for an item by it's path. </p>
+
+<h3>Path Types</h3>
+
+<p>Every full path starts with {root}. Items in an array are referred to as [i]. So a path of "{root}.users[i].firstName" would be used to specify custom processing for the firstName property of every object in the users array. That is its full path name, but it's not necessary to refer to every item by it's -full path name. There are three ways of referencing a path:</p>
+
+<ul>
+<li>Full Path Name - Matches only the specific path, e.g. "{root}.users[i].firstName".</li>
+<li>Parent Child Name - Matches the parent child combination specified. So "users[i].firstName" will only match the first name property on objects in the users array. Since this is an array we can also specify this as "[i].firstName" which would match every firstName property on an array child.</li>
+<li>Property Name - Matches every property with that name. So a partial path of "firstName" would match every firstName property in your model.</li>
+</ul><h3>Processing Types</h3>
+
+<p>There four types of custom processing: map, append, exclude, allow, and extend.</p>
+
+<ul>
+<li>map - the path and all of it's children are processed only as you specify</li>
+<li>append - the path and it's children are appended as is </li>
+<li>exclude - the path is excluded from processing</li>
+<li>allow - the path is not processed but all of it's children are</li>
+<li>extend - the path and it's children are processed normally but then extended/modified as specified</li>
+</ul><p>All processing types are exclusive. Processing types have the following order of operations map, append, exclude, allow, and extend. All options can be specified both for fromModel and toModel.</p>
+
+<h3>The map processing option</h3>
+
+<pre><code>With the map processing option the path and all of it's children are processed only as you specify.
+```
+options:{ 
+    extend:{
+        "{root}.users[i]": function(user){
+            user.isDeleted= ko.observable(false);
+            return user;
+        }
+    }
+};
+```
+In this case the users are passed through as is with the addition of an obeservable isDeleted flag. 
+Note: 
+*Make sure to return something from your function, otherwise undefined will be returned as the result of map.
+*The object passed into map is the unaltered object from your viewmodel or model (depending on if you are calling fromModel or toModel).
+</code></pre>
+
+<h3>The append processing option</h3>
+
+<pre><code>With the append processing option the path and all of it's children are appended as is.
+```
+options:{ 
+    append:["{root}.users[i]"]
+};
+```
+In this case none of the users have been altered and are appended unchanged.
+</code></pre>
+
+<h3>The exclude processing option</h3>
+
+<pre><code>With the exclude processing option the path and it's children are excluded from processing and will not be included.
+```
+options:{ 
+    exclude:["{root}.users[i].firstName"]
+};
+```
+The firstName property is not included.
+</code></pre>
+
+<h3>The override processing option</h3>
+
+<pre><code>The override processing option allows some default processing to be overridden. It does not affect processing of children. It is meant to be a quick way to do common things that map would otherwise need to be used for.
+```
+options:{ 
+    override:["{root}.someProperty"]
+};
+```
+When calling:
+*fromModel
+    ** the path specified will not be wrapped in an observable.
+*toModel:
+    ** if the path is for a computed value it will be unwrapped.
+    ** if the path is for a non-observable value it will be included.
+</code></pre>
+
+<h3>The extend processing option</h3>
+
+<pre><code>With the override processing option the path and it's children are processed normally but then extended/modified as specified.
+```
+options:{ 
+    extend:{
+        "{root}.users[i]": function(user){
+            //note that user is an observable
+            //we're adding isDeleted to the object not the observable
+            user().isDeleted = ko.observable(false);
+        }
+    }
+};
+```
+The value of the path is passed to the extend function after processing has been completed on the path and its children. Objects can be modified without being returned. 
+Note: Whatever is returned from the extend function will take the place the processed object.
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Knockout.viewmodel maintained by <a href="https://github.com/coderenaissance">coderenaissance</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
