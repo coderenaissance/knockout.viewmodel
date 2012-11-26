@@ -54,7 +54,7 @@ viewmodel = ko.viewmodel.fromModel(model);
 
 <p>This code creates an observable viewModel with an observable array of users whose properties are observable.</p>
 
-<h3>Example: Creating an extended viewmodel with ko.viewModel</h3>
+<h3>Example: Creating an extended viewmodel</h3>
 
 <p>Now lets say that you want to extend each object in the users array with an isDeleted flag. You would do this by specifying custom mapping options.</p>
 
@@ -91,11 +91,7 @@ viewmodel = ko.viewmodel.fromModel(model,options));
 
 <p>Note we've extending the observable array with the Delete function. Here's a jsFiddle that shows the code bound to a view: <a href="http://jsfiddle.net/CodeRenaissance/ytjns/3/">http://jsfiddle.net/CodeRenaissance/ytjns/3/</a></p>
 
-<h3>Custom Processing</h3>
-
-<p>Every property can have custom processing specified for it. Custom processing is specified for an item by it's path. </p>
-
-<h3>Example: Getting an updated model from your viewmodel with ko.viewModel</h3>
+<h3>Getting an updated model from your viewmodel</h3>
 
 <p>At somepoint you'll need to get an updated model to send back up to the server. This can be done by calling toModel.</p>
 
@@ -106,6 +102,11 @@ viewmodel = ko.viewmodel.toModel(viewmodel);
 </code></pre>
 
 Options can also be passed in to customize converting to a viewmodel.
+
+<h3>Custom Processing</h3>
+
+<p>Every property can have custom processing specified for it. Custom processing is specified for an item by it's path. </p>
+
 
 <h3>Path Types</h3>
 
