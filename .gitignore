@@ -168,4 +168,7 @@ My Project\*
 qunit*
 knockout.js
 *proj
+Properties
+*.debug.*
+*.config
 
