@@ -1,7 +1,7 @@
 ﻿/*ko.viewmodel.js v1.0
 * Copyright 2012, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
-/*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, maxerr:50 */
+/*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
 /*global ko:false */
 ko.viewmodel = (function () {
     var fromSettings, toSettings;
@@ -23,7 +23,7 @@ ko.viewmodel = (function () {
     function GetPathSettings(settings, context) {
         var result = settings ? settings[context.qualifiedName] || settings[context.parentChildName] || settings[context.name] || {} : {};
         if(result){
-            updateConsole(context, result)
+            updateConsole(context, result);
         }
         return result;
     }
@@ -55,8 +55,7 @@ ko.viewmodel = (function () {
     function isArrayProperty(obj, objType) { return objType === "object" && obj.length !== undefined; }
 
     function fnToRecursive(obj, context) {
-        var mapped, p, fnExtend,
-            unwrapped = ko.utils.unwrapObservable(obj),
+        var mapped, p, unwrapped = ko.utils.unwrapObservable(obj),
             wasNotWrapped = (obj === unwrapped),
             objType = typeof unwrapped,
             settings = GetPathSettings(toSettings, context);
