@@ -1,7 +1,7 @@
-knockout.viewmodel
-==================
+The knockout viewmodel plugin, Copyright (c) 2012 Dave Herren
+
 The MIT License (MIT)
-Copyright (c) 2012 Dave Herren
+==================
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the "Software"),
