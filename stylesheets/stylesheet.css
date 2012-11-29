@@ -292,6 +292,10 @@ Full-Width Styles
   border-bottom-right-radius: 2px;
 }
 
+#forkme_banner:hover {
+  background-color: orange;
+}
+
 #header_wrap {
   background: #212121;
   background: -moz-linear-gradient(top, #B85C1E, Orange);
