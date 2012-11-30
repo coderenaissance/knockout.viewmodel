@@ -120,15 +120,18 @@ ko.viewmodel = (function () {
     }
     return {
         logging: false,
-        fromModel: function fromModel(obj, options) {
+        fromModel: function fnFromModel(model, options) {
             fromSettings = options ? GetSettings(options) : {};
             if (ko.viewmodel.logging && window.console) window.console.log("Mapping From Model");
-            return fnFromRecursive(obj, { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" });
+            return fnFromRecursive(model, { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" });
         },
-        toModel: function toModel(obj, options) {
+        toModel: function fnToModel(viewmodel, options) {
             toSettings = options ? GetSettings(options) : {};
             if (ko.viewmodel.logging && window.console) window.console.log("Mapping To Model");
-            return fnToRecursive(obj, { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" });
+            return fnToRecursive(viewmodel, { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" });
+        },
+        updateFromModel: function fnUpdateFromModel(model, viewmodel, options) {
+            return undefined;
         }
     };
 }());
