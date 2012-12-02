@@ -106,6 +106,7 @@ ko.viewmodel = (function () {
         }
         else if (isObjectProperty(modelObj, objType)) {
             mapped = {};
+            idName = undefined;
             for (p in modelObj) {
                 mapped[p] = fnRecursiveFrom(modelObj[p], settings, {
                     name: p,
@@ -116,7 +117,7 @@ ko.viewmodel = (function () {
             }
             if (!pathSettings["override"]) {
                 mapped = ko.observable(mapped);
-                mapped["__getid"] = idName ? function (item) { return ko.unwrapObservable(ko.unwrapObservable(item)[idName]);} : undefined;
+                mapped["__idName"] = idName;
             }
         }
         else if (isArrayProperty(modelObj, objType)) {
@@ -152,14 +153,15 @@ ko.viewmodel = (function () {
                 }
             }
         }
-        else if (isArrayProperty(unwrapped, unwrappedType) && viewModelObj["__getid"]) {//array
+        else if (isArrayProperty(unwrapped, unwrappedType) && viewModelObj[0]()["__idName"]) {//array
+            idName = viewModel[0]()["__idName"];
             for (p = 0; p < viewModelObj.length; p++) {
                 found = false;
                 viewModelItem = unwrapped[p];
-                viewModelId = viewModelObj["__getid"](viewModelItem);
+                viewModelId = viewModelObj[idName]();
                 for (q = 0; q < unwrapped.length; q++) {
                     modelItem = unwrapped[q];
-                    if(viewModelId === viewModelObj["__getid"](modelItem)){
+                    if (viewModelId === modelItem["idName"]()) {
                         fnRecursiveUpdate(modelObj[p], unwrapped[p], settings, {
                             name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
                         });
