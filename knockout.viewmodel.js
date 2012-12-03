@@ -124,20 +124,20 @@ ko.viewmodel = (function () {
             mapped = pathSettings["override"] ? [] : ko.observableArray([]);
             mapped["__push"] = mapped["push"];
             mapped["push"] = function (item) {
-                item = fnRecursiveFrom(modelObj[item], settings, {
+                item = fnRecursiveFrom(item, settings, {
                     name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
                 });
                 mapped["__push"](item);
             };
             for (p = 0; p < modelObj.length; p++) {
-                mapped["push"](p);
+                mapped["push"](modelObj[p]);
             }
         }
         fnExtend = !pathSettings["override"] ? pathSettings["extend"] : null;
         return fnExtend ? (fnExtend(mapped) || mapped) : mapped;
     }
     function fnRecursiveUpdate(modelObj, viewModelObj, settings, context) {
-        var p, q, viewModelItem, viewModelId, found, modelItem, unwrapped = ko.utils.unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
+        var p, q, viewModelItem, viewModelId, found, foundModels, modelItem, unwrapped = ko.utils.unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped), modelObjType = typeof modelObj,
             pathSettings = GetPathSettings(settings, context);
         if (unwrapped === modelObj) return;
@@ -153,22 +153,36 @@ ko.viewmodel = (function () {
                 }
             }
         }
-        else if (isArrayProperty(unwrapped, unwrappedType) && viewModelObj[0]()["__idName"]) {//array
-            idName = viewModel[0]()["__idName"];
-            for (p = 0; p < viewModelObj.length; p++) {
-                found = false;
-                viewModelItem = unwrapped[p];
-                viewModelId = viewModelObj[idName]();
-                for (q = 0; q < unwrapped.length; q++) {
-                    modelItem = unwrapped[q];
-                    if (viewModelId === modelItem["idName"]()) {
-                        fnRecursiveUpdate(modelObj[p], unwrapped[p], settings, {
-                            name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
-                        });
-                        found = true;
-                    }                    
+        else if (isArrayProperty(unwrapped, unwrappedType)){
+            if(unwrapped[0]["__idName"]) {//array
+                idName = unwrapped[0]["__idName"];
+                foundModels = [];
+                for (p = modelObj.length - 1; p >= 0; p--) {
+                    found = false;
+                    modelId = modelObj[p][idName];
+                    for (q = unwrapped.length - 1; q >= 0; q--) {
+                        if (modelId === unwrapped[q]()[idName]()) {
+                            fnRecursiveUpdate(modelObj[p], unwrapped[p], settings, {
+                                name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
+                            });
+                            found = true;
+                            foundModels[q] = true;
+                            break;
+                        }                    
+                    }
+                    if (!found) {
+                        viewModelObj.splice(p, 1);
+                    }
                 }
-                if (!found) viewModelObj.splice(p);
+                for (p = modelObj.length - 1; p >= 0; p--) {
+                    if (!foundModels[p]) viewModelObj.push(modelObj[p]);
+                }
+            }
+            else {
+                viewModelObj([]);
+                for (p = 0; p < modelObj.length; p++) {
+                    viewModelObj.push(modelObj[p]);
+                }
             }
         }
         else if (wasWrapped) viewModelObj(modelObj);
