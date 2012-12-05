@@ -3,13 +3,7 @@
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
 /*global ko:false */
-ko["viewmodel"] = (function () {
-    //Declarations for compatibility with closure compiler
-    var unwrapObservable = ko["utils"]["unwrapObservable"],
-        isComputed = ko["isComputed"],
-        makeObservable = ko["observable"],
-        makeObservableArray = ko["observableArray"];
-
+ko.viewmodel = (function () {
     function updateConsole(context, pathSettings) {
         var msg;
         if (ko.viewmodel.logging && window.console) {
@@ -61,7 +55,7 @@ ko["viewmodel"] = (function () {
     function isArrayProperty(obj, objType) { return objType === "object" && obj.length !== undefined; }
 
     function fnRecursiveTo(viewModelObj, settings, context) {
-        var mapped, p, unwrapped = unwrapObservable(viewModelObj),
+        var mapped, p, unwrapped = ko.utils.unwrapObservable(viewModelObj),
             wasNotWrapped = (viewModelObj === unwrapped),
             objType = typeof unwrapped,
             pathSettings = GetPathSettings(settings, context);
@@ -69,7 +63,7 @@ ko["viewmodel"] = (function () {
         else if (pathSettings["append"]) return unwrapped;
         else if (pathSettings["exclude"]) return;
         else if (wasNotWrapped && !pathSettings["override"]) return;
-        else if (isComputed(viewModelObj) && !pathSettings["override"]) return;
+        else if (ko.isComputed(viewModelObj) && !pathSettings["override"]) return;
         else if (isStandardProperty(unwrapped, objType))
             mapped = unwrapped;
         else if (isObjectProperty(unwrapped, objType)) {
@@ -101,7 +95,7 @@ ko["viewmodel"] = (function () {
         else if (pathSettings["exclude"]) return;
         else if (isStandardProperty(modelObj, objType)) {
             if (!pathSettings["override"]) {
-                mapped = makeObservable(modelObj);
+                mapped = ko.observable(modelObj);
                 if(pathSettings["id"]){
                     mapped["__isid"] = true;
                 }
@@ -122,12 +116,12 @@ ko["viewmodel"] = (function () {
                 idName = mapped[p] && mapped[p]["__isid"] ? p : idName;
             }
             if (!pathSettings["override"]) {
-                mapped = makeObservable(mapped);
+                mapped = ko.observable(mapped);
                 mapped["__idName"] = idName;
             }
         }
         else if (isArrayProperty(modelObj, objType)) {
-            mapped = pathSettings["override"] ? [] : makeObservableArray([]);
+            mapped = pathSettings["override"] ? [] : ko.observableArray([]);
             mapped["__push"] = mapped["push"];
             mapped["push"] = function (item) {
                 item = fnRecursiveFrom(item, settings, {
@@ -143,13 +137,11 @@ ko["viewmodel"] = (function () {
         return fnExtend ? (fnExtend(mapped) || mapped) : mapped;
     }
     function fnRecursiveUpdate(modelObj, viewModelObj, settings, context) {
-        var p, q, viewModelItem, viewModelId, found, foundModels, modelItem, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
+        var p, q, viewModelItem, viewModelId, found, foundModels, modelItem, unwrapped = ko.utils.unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped), modelObjType = typeof modelObj,
             pathSettings = GetPathSettings(settings, context);
         if (unwrapped === modelObj) return;
-        else if (wasWrapped && (isMissing(unwrapped, unwrappedType) ^ isMissing(modelObj, viewModelObj))) {
-            viewModelObj(modelObj);
-        }
+        else if(wasWrapped && (isMissing(unwrapped, unwrappedType) ^ isMissing(modelObj, viewModelObj))) viewModelObj(modelObj);
         else if (isObjectProperty(unwrapped, unwrappedType) && isObjectProperty(modelObj, unwrappedType)) {
             if (wasWrapped || pathSettings["override"]) {
                 for (p in modelObj) {
@@ -161,8 +153,8 @@ ko["viewmodel"] = (function () {
                 }
             }
         }
-        else if (isArrayProperty(unwrapped, unwrappedType)) {
-            if (unwrapped[0]["__idName"]) {//array
+        else if (isArrayProperty(unwrapped, unwrappedType)){
+            if(unwrapped[0]["__idName"]) {//array
                 idName = unwrapped[0]["__idName"];
                 foundModels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
@@ -176,16 +168,14 @@ ko["viewmodel"] = (function () {
                             found = true;
                             foundModels[q] = true;
                             break;
-                        }
+                        }                    
                     }
                     if (!found) {
                         viewModelObj.splice(p, 1);
                     }
                 }
                 for (p = modelObj.length - 1; p >= 0; p--) {
-                    if (!foundModels[p]) {
-                        viewModelObj.push(modelObj[p]);
-                    }
+                    if (!foundModels[p]) viewModelObj.push(modelObj[p]);
                 }
             }
             else {
@@ -195,24 +185,22 @@ ko["viewmodel"] = (function () {
                 }
             }
         }
-        else if (wasWrapped) {
-            viewModelObj(modelObj);
-        }
+        else if (wasWrapped) viewModelObj(modelObj);
     }
     return {
-        "logging": false,
-        "fromModel": function fnFromModel(model, options) {
-            var settings = GetSettingsFromOptions(options);
+        logging: false,
+        fromModel: function fnFromModel(model, options) {
+            var settings = options ? GetSettingsFromOptions(options) : {};
             if (ko.viewmodel.logging && window.console) window.console.log("Mapping From Model");
             return fnRecursiveFrom(model, settings, { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" });
         },
-        "toModel": function fnToModel(viewmodel, options) {
-            var settings = GetSettingsFromOptions(options);
+        toModel: function fnToModel(viewmodel, options) {
+            var settings = options ? GetSettingsFromOptions(options) : {};
             if (ko.viewmodel.logging && window.console) window.console.log("Mapping To Model");
             return fnRecursiveTo(viewmodel, settings, { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" });
         },
-        "updateFromModel": function fnUpdateFromModel(model, viewmodel, options) {
-            var settings = GetSettingsFromOptions(options);
+        updateFromModel: function fnUpdateFromModel(model, viewmodel, options) {
+            var settings = options ? GetSettingsFromOptions(options) : {};
             if (ko.viewmodel.logging && window.console) window.console.log("Update From Model");
             return fnRecursiveUpdate(model, viewmodel, settings, { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" });
         }
