@@ -88,7 +88,7 @@ ko.viewmodel = (function () {
     }
 
     function fnRecursiveFrom(modelObj, settings, context) {
-        var mapped, p, q, idName, objType = typeof modelObj, fnExtend,
+        var mapped, p, idName, objType = typeof modelObj, fnExtend,
         pathSettings = GetPathSettings(settings, context);
         if (pathSettings["map"]) return pathSettings["map"](modelObj);
         else if (pathSettings["append"]) return modelObj;
@@ -137,8 +137,8 @@ ko.viewmodel = (function () {
         return fnExtend ? (fnExtend(mapped) || mapped) : mapped;
     }
     function fnRecursiveUpdate(modelObj, viewModelObj, settings, context) {
-        var p, q, viewModelItem, viewModelId, found, foundModels, modelItem, unwrapped = ko.utils.unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
-            wasWrapped = (viewModelObj !== unwrapped), modelObjType = typeof modelObj,
+        var p, q, modelId, idName, found, foundModels, unwrapped = ko.utils.unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
+            wasWrapped = (viewModelObj !== unwrapped),
             pathSettings = GetPathSettings(settings, context);
         if (unwrapped === modelObj) return;
         else if(wasWrapped && (isMissing(unwrapped, unwrappedType) ^ isMissing(modelObj, viewModelObj))) viewModelObj(modelObj);
