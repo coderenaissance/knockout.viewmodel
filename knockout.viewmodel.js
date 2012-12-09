@@ -79,11 +79,13 @@ ko["viewmodel"] = (function () {
         else if (isObjectProperty(unwrapped, objType)) {
             mapped = {};
             for (p in unwrapped) {
-                mapped[p] = fnRecursiveTo(unwrapped[p], {
-                    name: p,
-                    parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
-                    qualifiedName: context.qualifiedName + "." + p
-                });
+                if (p !== "..override") {
+                    mapped[p] = fnRecursiveTo(unwrapped[p], {
+                        name: p,
+                        parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                        qualifiedName: context.qualifiedName + "." + p
+                    });
+                }
             }
         }
         else if (isArrayProperty(unwrapped, objType)) {
@@ -116,8 +118,8 @@ ko["viewmodel"] = (function () {
                 }
             }
             else {
-                mapped["..override"] = undefined;
                 mapped = modelObj;
+                mapped["..override"] = undefined;
             }
         }
         else if (isObjectProperty(modelObj, objType)) {
@@ -163,6 +165,8 @@ ko["viewmodel"] = (function () {
             wasWrapped = (viewModelObj !== unwrapped);
         updateConsole(context, null);
         if (unwrapped === modelObj) return;
+        else if (!wasWrapped && !viewModelObj.hasOwnProperty("..override")) return;
+        else if (viewModelObj.hasOwnProperty("..append")) return;
         else if (viewModelObj.hasOwnProperty("..custom")) {
             if (typeof viewModelObj["..update"] === "function") {
                 viewModelObj["..update"](modelObj, viewModelObj);
@@ -172,14 +176,12 @@ ko["viewmodel"] = (function () {
             viewModelObj(modelObj);
         }
         else if (isObjectProperty(unwrapped, unwrappedType) && isObjectProperty(modelObj, unwrappedType)) {
-            if (wasWrapped) {
-                for (p in modelObj) {
-                    fnRecursiveUpdate(modelObj[p], unwrapped[p], {
-                        name: p,
-                        parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
-                        qualifiedName: context.qualifiedName + "." + p
-                    });
-                }
+            for (p in modelObj) {
+                fnRecursiveUpdate(modelObj[p], unwrapped[p], {
+                    name: p,
+                    parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                    qualifiedName: context.qualifiedName + "." + p
+                });
             }
         }
         else if (isArrayProperty(unwrapped, unwrappedType)) {

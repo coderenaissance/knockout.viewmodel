@@ -97,42 +97,15 @@ test("nested object override success simple types", function () {
     };
 
     viewmodel = ko.viewmodel.fromModel(model, options);
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel, options);
+    deepEqual(viewmodel().test.stringProp(), model.test.stringProp, "Viewmodel String Test");
+    deepEqual(viewmodel().test.number(), model.test.number, "Viewmodel Number Test");
+    deepEqual(viewmodel().test.date(), model.test.date, "Viewmodel Date Test");
 
-    deepEqual(viewmodel().test.stringProp(), updatedModel.test.stringProp, "String Test");
-    deepEqual(viewmodel().test.number(), updatedModel.test.number, "Number Test");
-    deepEqual(viewmodel().test.date(), updatedModel.test.date, "Date Test");
-});
+    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
 
-test("nested object non override fail simple types", function () {
-    var model, updatedModel, viewmodel, options;
-
-    options = {
-        override: ["{root}.test"]
-    };
-
-    model = {
-        test: {
-            stringProp: "test",
-            number: 5,
-            date: new Date("01/01/2001")
-        }
-    };
-
-    updatedModel = {
-        test: {
-            stringProp: "test2",
-            number: 6,
-            date: new Date("12/04/2001")
-        }
-    };
-
-    viewmodel = ko.viewmodel.fromModel(model, options);
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);//override option not passed in
-
-    notEqual(viewmodel().test.stringProp(), updatedModel.test.stringProp, "String Test");
-    notEqual(viewmodel().test.number(), updatedModel.test.number, "Number Test");
-    notEqual(viewmodel().test.date(), updatedModel.test.date, "Date Test");
+    deepEqual(viewmodel().test.stringProp(), updatedModel.test.stringProp, "UpdatedModel String Test");
+    deepEqual(viewmodel().test.number(), updatedModel.test.number, "UpdatedModel Number Test");
+    deepEqual(viewmodel().test.date(), updatedModel.test.date, "UpdatedModel Date Test");
 });
 
 test("ID option match array object simple types", function () {

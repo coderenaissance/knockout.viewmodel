@@ -123,15 +123,15 @@ test("Exclude property", function () {
         }]
     };
 
-    var customMapping = {
+    var options = {
         exclude: ["items[i].test"]
     };
 
-    viewmodel = ko.viewmodel.fromModel(model);
+    viewmodel = ko.viewmodel.fromModel(model, options);
 
-    modelResult = ko.viewmodel.toModel(viewmodel, customMapping);
+    modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(viewmodel().items()[0]().test().stringProp(), model.items[0].test.stringProp, "fromModel assert");
+    deepEqual(viewmodel().items()[0]().test, undefined, "fromModel assert");
     deepEqual(modelResult.items[0].test, undefined, "toModel assert");
 });
 
@@ -151,7 +151,7 @@ test("Append property", function () {
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
-    modelResult = ko.viewmodel.toModel(viewmodel, customMapping);
+    modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(viewmodel().items()[0].test.stringProp, model.items[0].test.stringProp, "fromModel assert");
     deepEqual(modelResult.items[0].test.stringProp, model.items[0].test.stringProp, "toModel assert");
@@ -173,8 +173,9 @@ test("Override array", function () {
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
-    modelResult = ko.viewmodel.toModel(viewmodel, customMapping);
+    modelResult = ko.viewmodel.toModel(viewmodel);
 
+    deepEqual(viewmodel().items()[0].test().stringProp(), model.items[0].test.stringProp);
     deepEqual(modelResult.items[0].test.stringProp, model.items[0].test.stringProp);
 });
 
@@ -194,7 +195,7 @@ test("Override object", function () {
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
-    modelResult = ko.viewmodel.toModel(viewmodel, customMapping);
+    modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(modelResult.items[0].test.stringProp, model.items[0].test.stringProp);
 });
@@ -215,7 +216,7 @@ test("Override stringProp", function () {
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
-    modelResult = ko.viewmodel.toModel(viewmodel, customMapping);
+    modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(viewmodel().items()[0]().test.stringProp(), model.items[0].test.stringProp, "fromModel assert");
     deepEqual(modelResult.items[0].test.stringProp, model.items[0].test.stringProp, "toModel assert");
