@@ -474,7 +474,7 @@ test("Map Success", function () {
     };
 
     var customMapping = {
-        map: {
+        custom: {
             "test": function (obj) {
                 return obj ? true : false;
             }
@@ -498,7 +498,7 @@ test("Map Fail", function () {
     };
 
     var customMapping = {
-        map: {
+        custom: {
             "test": function (obj) {
                 
             }
@@ -522,7 +522,7 @@ test("Map Obsevable", function () {
     };
 
     var customMapping = {
-        map: {
+        custom: {
             "test": function (obj) {
 
             }
