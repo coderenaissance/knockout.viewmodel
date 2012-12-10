@@ -90,83 +90,169 @@ test("Extend", function () {
     deepEqual(viewmodel.isValid(), true, "Extension check");
 });
 
-test("Append", function () {
+test("Append root", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
-        append: [""]
+        append: ["{root}"]
     });
+	
+	deepEqual(viewmodel, model, "From Model Test");
+	
+	ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+	
+	notEqual(viewmodel, updatedModel, "Update Fail Test");
+	
+	modelResult = ko.viewmodel.toModel(viewmodel);
+	
+	deepEqual(modelResult, model, "Result");
 });
 
-test("Override", function () {
+test("Append property", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
-        override: [""]
+        append: ["{root}.stringProp"]
+    });
+	
+	deepEqual(viewmodel().stringProp, model.stringProp, "From Model String Test");
+    deepEqual(viewmodel().id(), model.id, "From Model Number Test");
+    deepEqual(viewmodel().date(), model.date, "From Model Date Test");
+	
+	ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+	
+	notEqual(viewmodel().stringProp, updatedModel.stringProp, "From Model String Test Fail");
+	deepEqual(viewmodel().id(), updatedModel.id, "Update Number Test");
+    deepEqual(viewmodel().date(), updatedModel.date, "Update Date Test");
+	
+	modelResult = ko.viewmodel.toModel(viewmodel);
+	
+	notEqual(modelResult.stringProp, updatedModel.stringProp, "Update String Test");
+    deepEqual(modelResult.id, updatedModel.id, "Update Number Test");
+    deepEqual(modelResult.date, updatedModel.date, "Update Date Test");
+});
+
+test("Override root", function () {
+
+    var viewmodel = ko.viewmodel.fromModel(model, {
+        override: ["{root}"]
     });
 
-    deepEqual(viewmodel(), model, "From Model...");
+    deepEqual(viewmodel.stringProp(), model.stringProp, "From Model String Test");
+    deepEqual(viewmodel.id(), model.id, "From Model Number Test");
+    deepEqual(viewmodel.date(), model.date, "From Model Date Test");
+	
+	ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+	
+	deepEqual(viewmodel.stringProp(), updatedModel.stringProp, "From Model String Test Fail");
+	deepEqual(viewmodel.id(), updatedModel.id, "Update Number Test");
+    deepEqual(viewmodel.date(), updatedModel.date, "Update Date Test");
+	
+	modelResult = ko.viewmodel.toModel(viewmodel);
+	
+	deepEqual(modelResult.stringProp, updatedModel.stringProp, "Update String Test");
+    deepEqual(modelResult.id, updatedModel.id, "Update Number Test");
+    deepEqual(modelResult.date, updatedModel.date, "Update Date Test");
+});
 
-    ko.viewmodel.updateFromModel(updatedModel);
+test("Override property", function () {
 
-    deepEqual(viewmodel(), updatedModel, "Update...");
+    var viewmodel = ko.viewmodel.fromModel(model, {
+        override: ["{root}.stringProp"]
+    });
 
-    modelResult = ko.viewmodel.toModel(viewmodel);
-
-    deepEqual(modelResult, updatedModel, "To Model...");
+	deepEqual(viewmodel().stringProp, model.stringProp, "From Model String Test");
+    deepEqual(viewmodel().id(), model.id, "From Model Number Test");
+    deepEqual(viewmodel().date(), model.date, "From Model Date Test");
+	
+	ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+	
+	notEqual(viewmodel().stringProp, updatedModel.stringProp, "From Model String Test Fail");
+	deepEqual(viewmodel().id(), updatedModel.id, "Update Number Test");
+    deepEqual(viewmodel().date(), updatedModel.date, "Update Date Test");
+	
+	modelResult = ko.viewmodel.toModel(viewmodel);
+	
+	notEqual(modelResult.stringProp, updatedModel.stringProp, "Update String Test");
+    deepEqual(modelResult.id, updatedModel.id, "Update Number Test");
+    deepEqual(modelResult.date, updatedModel.date, "Update Date Test");
 });
 
 test("Custom basic", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
-        custom: function (item) {
-        }
+        custom: {
+			"{root}.date":function (date) {
+				return ko.observable(date.valueOf());
+			}
+		}
     });
 
-    deepEqual(viewmodel(), model, "From Model...");
+    deepEqual(viewmodel().stringProp(), model.stringProp, "From Model String Test");
+    deepEqual(viewmodel().id(), model.id, "From Model Number Test");
+    deepEqual(viewmodel().date(), model.date.valueOf(), "From Model Date Test");
 
     ko.viewmodel.updateFromModel(updatedModel);
 
-    deepEqual(viewmodel(), updatedModel, "Update...");
+	deepEqual(viewmodel().stringProp(), updatedModel.stringProp, "Update String Test");
+    deepEqual(viewmodel().id(), updatedModel.id, "Update Number Test");
+    notEqual(viewmodel().date(), updatedModel.date.valueOf(), "Update Date Test");
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(modelResult, updatedModel, "To Model...");
+    deepEqual(modelResult.stringProp, updatedModel.stringProp, "Update String Test");
+    deepEqual(modelResult.id, updatedModel.id, "Update Number Test");
+    notEqual(modelResult.date, updatedModel.date, "Update Date Test");
 });
 
 test("Custom map and unmap", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
         custom: {
-            map: function (item) {
-            },
-            unmap: function(item){
-
-            }
+			"{root}.date":{
+				map: function (date) {
+					return ko.observable(date.valueOf());
+				},
+				update: function (date) {//what if update isn't supplied... should map be used?
+					return ko.observable(date.valueOf());
+				},
+				unmap: function(date){
+					return new Date(date());
+				}
+			}
         }
     });
 
-    deepEqual(viewmodel(), model, "From Model...");
+    deepEqual(viewmodel().stringProp(), model.stringProp, "From Model String Test");
+    deepEqual(viewmodel().id(), model.id, "From Model Number Test");
+    deepEqual(viewmodel().date(), model.date.valueOf(), "From Model Date Test");
 
     ko.viewmodel.updateFromModel(updatedModel);
 
-    deepEqual(viewmodel(), updatedModel, "Update...");
+	deepEqual(viewmodel().stringProp(), updatedModel.stringProp, "Update String Test");
+    deepEqual(viewmodel().id(), updatedModel.id, "Update Number Test");
+    deepEqual(viewmodel().date(), updatedModel.date.valueOf(), "Update Date Test");
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(modelResult, updatedModel, "To Model...");
+    deepEqual(modelResult.stringProp, updatedModel.stringProp, "Update String Test");
+    deepEqual(modelResult.id, updatedModel.id, "Update Number Test");
+    deepEqual(modelResult.date, updatedModel.date, "Update Date Test");
 });
 
 test("Exclude", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
-        extend: function (item) {
-        }
+        exclude: ["{root}.stringProp"]
     });
 
-    deepEqual(viewmodel(), model, "From Model...");
+	equal(viewmodel().hasOwnProperty("stringProp"), false, "From Model String Prop Not Exist");
+    deepEqual(viewmodel().id(), model.id, "From Model Number Test");
+    deepEqual(viewmodel().date(), model.date, "From Model Date Test");
 
     ko.viewmodel.updateFromModel(updatedModel);
 
-    deepEqual(viewmodel(), updatedModel, "Update...");
+	equal(viewmodel().hasOwnProperty("stringProp"), false, "Update... String Prop Not Exist");
+    deepEqual(viewmodel().id(), updatedModel.id, "Update Number Test");
+    deepEqual(viewmodel().date(), updatedModel.date, "Update Date Test");
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
