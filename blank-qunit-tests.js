@@ -1,50 +1,37 @@
 ﻿/// <reference path="FromTo-Mapping-qunit-tests.js" />
-var model, updatedModel, modelResult;
-module("Simple Types", {
+var model, updatedModel;
+module("", {
     setup: function () {
         ko.viewmodel.logging = true;
 
-        model = {
-            stringProp: "test",
-            id: 5,
-            date: new Date("01/01/2001")
-        };
+        testData.model = {};
 
-        updatedModel = {
-            stringProp: "test2",
-            id: 6,
-            date: new Date("02/01/2002")
-        };
+        updatedModel = {};
 
     },
     teardown: function () {
         ko.viewmodel.logging = false;
         model = undefined;
         updatedModel = undefined;
-        modelResult = undefined;
     }
 });
+
 
 
 test("Basic", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model);
 
-    deepEqual(viewmodel().stringProp(), model.stringProp, "From Model String Test");
-    deepEqual(viewmodel().id(), model.id, "Number Test");
-    deepEqual(viewmodel().date(), model.date, "Date Test");
+    deepEqual(viewmodel(), model, "From Model...");
 
     ko.viewmodel.updateFromModel(updatedModel, viewmodel);
 
-    deepEqual(viewmodel().stringProp(), updatedModel.stringProp, "Update String Test");
-    deepEqual(viewmodel().id(), updatedModel.id, "Update Number Test");
-    deepEqual(viewmodel().date(), updatedModel.date, "Update Date Test");
+    deepEqual(viewmodel(), updatedModel, "Update...");
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(modelResult.stringProp, updatedModel.stringProp, "To Model String Test");
-    deepEqual(modelResult.id, updatedModel.id, "To Model Number Test");
-    deepEqual(modelResult.date, updatedModel.date, "To Model Date Test");
+    deepEqual(modelResult.stringProp, updatedModel.stringProp, "To Model..");
+
 });
 
 test("Extend", function () {
@@ -113,7 +100,7 @@ test("Custom map and unmap", function () {
         custom: {
             map: function (item) {
             },
-            unmap: function(item){
+            unmap: function (item) {
 
             }
         }
