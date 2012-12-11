@@ -103,7 +103,18 @@ ko["viewmodel"] = (function () {
         var mapped, p, idName, objType = typeof modelObj,
         pathSettings = GetPathSettings(settings, context);
         if (pathSettings["custom"]) {
-            mapped = pathSettings["custom"](modelObj);
+            if (typeof pathSettings["custom"] === "function") {
+                mapped = pathSettings["custom"](modelObj);
+            }
+            else {
+                mapped = pathSettings["custom"]["map"](modelObj);
+                if (mapped != undefined && mapped != null) {
+                    mapped["..map"] = pathSettings["custom"]["map"];
+                    if (pathSettings["custom"]["unmap"]) {
+                        mapped["..unmap"] = pathSettings["custom"]["unmap"];
+                    }
+                }
+            }
         }
         else if (pathSettings["append"]) {
             modelObj["..appended"] = undefined;
@@ -164,24 +175,24 @@ ko["viewmodel"] = (function () {
         var p, q, found, foundModels, modelId, idName, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped);
         updateConsole(context, null);
-        if (unwrapped === modelObj) return;
+        if (viewModelObj === undefined || unwrapped === modelObj) return;
         else if (!wasWrapped && !viewModelObj.hasOwnProperty("..override")) return;
         else if (viewModelObj.hasOwnProperty("..append")) return;
-        else if (viewModelObj.hasOwnProperty("..custom")) {
-            if (typeof viewModelObj["..update"] === "function") {
-                viewModelObj["..update"](modelObj, viewModelObj);
-            }
-        }
         else if (wasWrapped && (isMissing(unwrapped, unwrappedType) ^ isMissing(modelObj, viewModelObj))) {
             viewModelObj(modelObj);
         }
         else if (isObjectProperty(unwrapped, unwrappedType) && isObjectProperty(modelObj, unwrappedType)) {
             for (p in modelObj) {
-                fnRecursiveUpdate(modelObj[p], unwrapped[p], {
-                    name: p,
-                    parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
-                    qualifiedName: context.qualifiedName + "." + p
-                });
+                if (viewModelObj[p] && typeof viewModelObj[p]["..map"] === "function") {
+                    viewModelObj[p] = viewModelObj[p]["..map"](modelObj);
+                }
+                else {
+                    fnRecursiveUpdate(modelObj[p], unwrapped[p], {
+                        name: p,
+                        parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                        qualifiedName: context.qualifiedName + "." + p
+                    });
+                }
             }
         }
         else if (isArrayProperty(unwrapped, unwrappedType)) {
@@ -214,7 +225,12 @@ ko["viewmodel"] = (function () {
             else {
                 viewModelObj([]);
                 for (p = 0; p < modelObj.length; p++) {
-                    viewModelObj.push(modelObj[p]);
+                    if (typeof viewModelObj["..map"] === "function") {
+                        viewModelObj.push(viewModelObj["..map"](modelObj));
+                    }
+                    else {
+                        viewModelObj.push(modelObj[p]);
+                    }
                 }
             }
         }
