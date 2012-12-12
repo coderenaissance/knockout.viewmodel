@@ -7,6 +7,7 @@ ko["viewmodel"] = (function () {
     //Declarations for compatibility with closure compiler
     var unwrapObservable = ko["utils"]["unwrapObservable"],
         isComputed = ko["isComputed"],
+        isObservable = ko["isObservable"],
         makeObservable = ko["observable"],
         makeObservableArray = ko["observableArray"],
         rootContext = { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" };
@@ -149,7 +150,9 @@ ko["viewmodel"] = (function () {
             }
             if (!pathSettings["override"]) {
                 mapped = makeObservable(mapped);
-                mapped["..idName"] = idName;
+                if (idName) {
+                    mapped["..idName"] = idName;
+                }
             }
             else {
                 mapped["..override"] = undefined;
@@ -172,19 +175,23 @@ ko["viewmodel"] = (function () {
         return pathSettings["extend"] ? (pathSettings["extend"](mapped) || mapped) : mapped;
     }
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
-        var p, q, found, foundModels, modelId, idName, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
+        var p, q, found, newValue, foundModels, modelId, idName, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped);
         updateConsole(context, null);
         if (viewModelObj === undefined || unwrapped === modelObj) return;
         else if (!wasWrapped && !viewModelObj.hasOwnProperty("..override")) return;
-        else if (viewModelObj.hasOwnProperty("..append")) return;
         else if (wasWrapped && (isMissing(unwrapped, unwrappedType) ^ isMissing(modelObj, viewModelObj))) {
             viewModelObj(modelObj);
         }
         else if (isObjectProperty(unwrapped, unwrappedType) && isObjectProperty(modelObj, unwrappedType)) {
             for (p in modelObj) {
-                if (viewModelObj[p] && typeof viewModelObj[p]["..map"] === "function") {
-                    viewModelObj[p] = viewModelObj[p]["..map"](modelObj);
+                if (unwrapped[p] && typeof unwrapped[p]["..map"] === "function") {
+                    if (isObservable(unwrapped[p])) {
+                        unwrapped[p](unwrapObservable(unwrapped[p]["..map"](modelObj[p])));
+                    }
+                    else {
+                        unwrapped[p] = unwrapped[p]["..map"](modelObj[p]);
+                    }
                 }
                 else {
                     fnRecursiveUpdate(modelObj[p], unwrapped[p], {

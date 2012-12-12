@@ -259,38 +259,4 @@ test("Exclude", function () {
 });
 
 
-test("Update with obj with same id", function () {
-
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        id: []
-    });
-
-    deepEqual(viewmodel(), model, "From Model...");
-
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
-
-    deepEqual(viewmodel(), updatedModel, "Update...");
-
-    modelResult = ko.viewmodel.toModel(viewmodel);
-
-    deepEqual(modelResult, updatedModel, "To Model...");
-});
-
-test("Update with obj with different id", function () {
-
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        id: []
-    });
-
-    deepEqual(viewmodel(), model, "From Model...");
-
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
-
-    deepEqual(viewmodel(), updatedModel, "Update...");
-
-    modelResult = ko.viewmodel.toModel(viewmodel);
-
-    deepEqual(modelResult, updatedModel, "To Model...");
-});
-
 
