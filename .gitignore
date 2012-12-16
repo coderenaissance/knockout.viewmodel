@@ -162,5 +162,18 @@ pip-log.txt
 # Mac crap
 .DS_Store
 
+<<<<<<< HEAD
 # Proj Stuff
 My Project
+=======
+#vs
+My Project
+My Project\*
+qunit*
+knockout.js
+*proj
+Properties
+*.debug.*
+*.config
+
+>>>>>>> origin/master
