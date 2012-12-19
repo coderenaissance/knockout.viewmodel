@@ -60,46 +60,6 @@ ko["viewmodel"] = (function () {
     function isObjectProperty(obj, objType) { return objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
     function isArrayProperty(obj, objType) { return objType === "object" && obj.length !== undefined; }
 
-    function fnRecursiveTo(viewModelObj, context) {
-        var mapped, p, temp, unwrapped = unwrapObservable(viewModelObj),
-            wasNotWrapped = (viewModelObj === unwrapped),
-            objType = typeof unwrapped;
-        updateConsole(context, null);
-        if (viewModelObj["..unmap"]) {
-            mapped = viewModelObj["..unmap"](viewModelObj);
-        }
-        else if (unwrapped.hasOwnProperty("..appended")) {
-            mapped = unwrapped;
-        }
-        else if ((wasNotWrapped || isComputed(viewModelObj)) && !unwrapped.hasOwnProperty("..override")) {
-            return;
-        }
-        else if (isStandardProperty(unwrapped, objType)) {
-            mapped = unwrapped;
-        }
-        else if (isObjectProperty(unwrapped, objType)) {
-            mapped = {};
-            for (p in unwrapped) {
-                if (p !== "..override") {
-                    mapped[p] = fnRecursiveTo(unwrapped[p], {
-                        name: p,
-                        parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
-                        qualifiedName: context.qualifiedName + "." + p
-                    });
-                }
-            }
-        }
-        else if (isArrayProperty(unwrapped, objType)) {
-            mapped = [];
-            for (p = 0; p < unwrapped.length; p++) {
-                mapped.push(fnRecursiveTo(unwrapped[p], {
-                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
-                }));
-            }
-        }
-        return mapped;
-    }
-
     function fnRecursiveFrom(modelObj, settings, context) {
         var mapped, p, idName, objType = typeof modelObj,
         pathSettings = GetPathSettings(settings, context);
@@ -121,7 +81,7 @@ ko["viewmodel"] = (function () {
             modelObj["..appended"] = undefined;
             mapped = modelObj;
         }
-        else if (pathSettings["exclude"]) return ;
+        else if (pathSettings["exclude"]) return;
         else if (isStandardProperty(modelObj, objType)) {
             if (!pathSettings["override"]) {
                 mapped = makeObservable(modelObj);
@@ -165,7 +125,7 @@ ko["viewmodel"] = (function () {
                 item = fnRecursiveFrom(item, settings, {
                     name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
                 });
-                if (item === undefined) return; 
+                if (item === undefined) return;
                 mapped["..push"](item);
             };
             for (p = 0; p < modelObj.length; p++) {
@@ -174,6 +134,47 @@ ko["viewmodel"] = (function () {
         }
         return pathSettings["extend"] ? (pathSettings["extend"](mapped) || mapped) : mapped;
     }
+
+    function fnRecursiveTo(viewModelObj, context) {
+        var mapped, p, temp, unwrapped = unwrapObservable(viewModelObj),
+            wasNotWrapped = (viewModelObj === unwrapped),
+            objType = typeof unwrapped;
+        updateConsole(context, null);
+        if (viewModelObj["..unmap"]) {
+            mapped = viewModelObj["..unmap"](viewModelObj);
+        }
+        else if (unwrapped.hasOwnProperty("..appended")) {
+            mapped = unwrapped;
+        }
+        else if ((wasNotWrapped || isComputed(viewModelObj)) && !unwrapped.hasOwnProperty("..override")) {
+            return;
+        }
+        else if (isStandardProperty(unwrapped, objType)) {
+            mapped = unwrapped;
+        }
+        else if (isObjectProperty(unwrapped, objType)) {
+            mapped = {};
+            for (p in unwrapped) {
+                if (p !== "..override") {
+                    mapped[p] = fnRecursiveTo(unwrapped[p], {
+                        name: p,
+                        parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                        qualifiedName: context.qualifiedName + "." + p
+                    });
+                }
+            }
+        }
+        else if (isArrayProperty(unwrapped, objType)) {
+            mapped = [];
+            for (p = 0; p < unwrapped.length; p++) {
+                mapped.push(fnRecursiveTo(unwrapped[p], {
+                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
+                }));
+            }
+        }
+        return mapped;
+    }
+
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, newValue, foundModels, modelId, idName, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped);
