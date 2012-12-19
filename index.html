@@ -34,7 +34,7 @@
             <h2>The Knockout Viewmodel Plugin (ko.viewmodel)</h2>
 
             <p>The knockout viewmodel plugin let's you create complex observable viewmodels easily and with more structure and control than ever before.</p>
-
+			<p>Consider this simple example done with both the new viewmodel plugin and the old mapping plugin:</p>
             <div style="width: 45%; margin-right: 5%; float: left;">
                 <strong>The New Viewmodel Plugin</strong>
                 <pre><code>
@@ -129,7 +129,7 @@ mapping = {
         },
         create:function(options){
             var newUser = ko.mapping.fromJS(options.data);
-            newUser().isNew = (newUser().id !== null);
+            newUser.isNew = (newUser().id !== null);
         }
     }
 };
@@ -167,6 +167,15 @@ ko.applyBindings(viewmodel);
                 </code></pre>
             </div>
             <br style="clear: both" />
+			<p>Note that the old mapping plugin only lets you specify part of your viewmodel creation (array items) in your mapping. 
+			With the new viewmodel plugin all extensions needed for your viewmodel can be specified in your mapping using either full or partial paths. 
+			This provides a natural orgainization to your code. For example the addNew and delete functions are being added to the same object
+			so they show up together.  With the original mapping plugin there is no logical grouping which allows larger viewmodels to become disorganized and hard to follow.
+			It also allows related code to easily be separated.</p>
+			
+			<p>Of course the viewmodel plugin has even more benefits than this, but lets walk through everything
+			from the beginning for those who may be newer to knockout.</p>
+
             <h3>Creating a simple viewmodel with ko.viewmodel</h3>
 
             <p>Creating a viewmodel from a model is simple.</p>
@@ -182,9 +191,9 @@ model = {
 };
 
 viewmodel = ko.viewmodel.fromModel(model);
-</code></pre>
+			</code></pre>
 
-            <p>This code creates an observable viewModel with an observable array of users whose properties are observable.</p>
+            <p>This code creates an viewModel with an observable array of users whose properties are observable.</p>
 
             <h3>Creating an extended viewmodel</h3>
 
@@ -193,9 +202,7 @@ viewmodel = ko.viewmodel.fromModel(model);
             <pre><code>options:{ 
     extend:{
         "{root}.users[i]": function(user){
-            //note that user is an observable
-            //we're adding isDeleted to the object not the observable
-            user().isDeleted = ko.observable(false);
+            user.isDeleted = ko.observable(false);
         }
     }
 };
@@ -203,14 +210,14 @@ viewmodel = ko.viewmodel.fromModel(model);
 viewmodel = ko.viewmodel.fromModel(model,options));
 </code></pre>
 
-            <p>We've now extended each object in the users array with an isDeleted flag. With ko.viewmodel all objects and properties are observable by default so it's up to you whether you extend the object or observable. </p>
+            <p>We've now extended each object in the users array with an isDeleted flag. </p>
 
             <p>If we also wanted to add a delete method to an array we would use the following options:</p>
 
             <pre><code>options:{ 
     extend:{
         "{root}.users[i]": function(user){
-            user().isDeleted= ko.observable(false);
+            user.isDeleted= ko.observable(false);
         },
         "{root}.users": function(users){
             users.Delete = function(user){
@@ -221,7 +228,7 @@ viewmodel = ko.viewmodel.fromModel(model,options));
 };
 </code></pre>
 
-            <p>Note we've extending the observable array with the Delete function. Here's a jsFiddle that shows the code bound to a view: <a href="http://jsfiddle.net/CodeRenaissance/ytjns/5/">http://jsfiddle.net/CodeRenaissance/ytjns/5/</a></p>
+            <p>Note we've extending the observable array with the Delete function. <!--Here's a jsFiddle that shows the code bound to a view: <a href="http://jsfiddle.net/CodeRenaissance/ytjns/5/">http://jsfiddle.net/CodeRenaissance/ytjns/5/</a>--></p>
 
             <h3>Getting an updated model from your viewmodel</h3>
 
@@ -233,7 +240,16 @@ viewmodel = ko.viewmodel.toModel(viewmodel);
 
 </code></pre>
 
-            Options can also be passed in to customize converting to a viewmodel.
+            <h3>Updating your viewmodel with new model data</h3>
+
+            <p>If you need to update your viewmodel with more recent model data this can be done by calling updateFromModel.</p>
+
+            <pre><code>
+
+ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+
+</code></pre>
+<br/>
 
             <h3>Custom Processing</h3>
 
@@ -251,13 +267,12 @@ viewmodel = ko.viewmodel.toModel(viewmodel);
             </ul>
             <h3>Processing Types</h3>
 
-            <p>There four types of custom processing: map, append, exclude, override, and extend.</p>
+            <p>There four types of custom processing: map, append, exclude, and extend.</p>
 
             <ul>
                 <li>map - the path and all of it's children are processed only as you specify</li>
                 <li>append - the path and it's children are appended as is </li>
                 <li>exclude - the path is excluded from processing</li>
-                <li>override - exempts a path from certain default processing assumptions</li>
                 <li>extend - the path and it's children are processed normally but then extended/modified as specified</li>
             </ul>
             <p>All processing types are exclusive. All options can be specified both for fromModel and toModel.</p>
@@ -273,8 +288,9 @@ options:{
         }
     }
 };
+</pre></code>
 In this case the users are passed through as is with the addition of an obeservable isDeleted flag. 
-Note: 
+<br/>Note: 
 <ul><li>Make sure to return something from your function, otherwise undefined will be returned as the result of map.</li>
 <li>The object passed into map is the unaltered object from your viewmodel or model (depending on if you are calling fromModel or toModel).</li></ul>
 </code></pre>
@@ -297,13 +313,6 @@ options:{
 </code></pre>
             The firstName property is not included.
 
-            <h3>The override processing option</h3>
-            The override processing option exempts a path from certain default processing assumptions. It does not affect processing of the paths children. It is meant to be a quick way to do handle common situations that the map options would otherwise need to be used for.
-            <pre><code>
-options:{ 
-    override:["{root}.someProperty"]
-};
-</code></pre>
             When calling fromModel:
     <ul>
         <li>the path specified will not be wrapped in an observable.</li>
@@ -320,9 +329,7 @@ options:{
 options:{ 
     extend:{
         "{root}.users[i]": function(user){
-            //note that user is an observable
-            //we're adding isDeleted to the object not the observable
-            user().isDeleted = ko.observable(false);
+            user.isDeleted = ko.observable(false);
         }
     }
 };
@@ -330,7 +337,8 @@ options:{
             The value of the path is passed to the extend function after processing has been completed on the path and its children. Objects can be modified without being returned. 
 Note: Whatever is returned from the extend function will be persisted and replace the default processing.
 
-Can you trust that it works? We have a growing <a href="Tests.htm">suite of unit-tests</a> that say that it can.
+<h3>Can you trust that it works?</h3>
+We have a growing <a href="Tests.htm">suite of unit-tests</a> that say that you can.
         </section>
     </div>
 
