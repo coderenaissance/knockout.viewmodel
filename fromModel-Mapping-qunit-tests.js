@@ -29,7 +29,7 @@ test("Extend full path", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    deepEqual(viewmodel().test().stringProp.repeat(), viewmodel().test().stringProp() + viewmodel().test().stringProp());
+    deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
 
 test("Extend object property path", function () {
@@ -54,7 +54,7 @@ test("Extend object property path", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    deepEqual(viewmodel().test().stringProp.repeat(), viewmodel().test().stringProp() + viewmodel().test().stringProp());
+    deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
 
 test("Extend property path", function () {
@@ -77,7 +77,7 @@ test("Extend property path", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    deepEqual(viewmodel().stringProp.repeat(), viewmodel().stringProp() + viewmodel().stringProp());
+    deepEqual(viewmodel.stringProp.repeat(), viewmodel.stringProp() + viewmodel.stringProp());
 });
 
 test("Extend full path wins over object property path", function () {
@@ -105,7 +105,7 @@ test("Extend full path wins over object property path", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    deepEqual(viewmodel().test().stringProp.repeat(), viewmodel().test().stringProp() + viewmodel().test().stringProp());
+    deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
 
 test("Extend full path wins over property path", function () {
@@ -133,7 +133,7 @@ test("Extend full path wins over property path", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    deepEqual(viewmodel().test().stringProp.repeat(), viewmodel().test().stringProp() + viewmodel().test().stringProp());
+    deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
 
 
@@ -152,7 +152,7 @@ test("Extend array array-item property path", function () {
         extend: {
             "items[i].test": function (obj) {
                 obj.repeat = ko.computed(function () {
-                    return obj().stringProp() + obj().stringProp();
+                    return obj.stringProp() + obj.stringProp();
                 });
                 return obj;
             }
@@ -161,7 +161,7 @@ test("Extend array array-item property path", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    actual = viewmodel().items()[0]().test.repeat();
+    actual = viewmodel.items()[0].test.repeat();
     expected = model.items[0].test.stringProp + model.items[0].test.stringProp;
 
     deepEqual(actual, expected);
@@ -185,7 +185,7 @@ test("Extend array array-item property path wins over array-item property path",
             },
             "items[i].test": function (obj) {
                 obj.repeat = ko.computed(function () {
-                    return obj().stringProp() + obj().stringProp();
+                    return obj.stringProp() + obj.stringProp();
                 });
                 return obj;
             }            
@@ -194,7 +194,7 @@ test("Extend array array-item property path wins over array-item property path",
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    actual = viewmodel().items()[0]().test.repeat();
+    actual = viewmodel.items()[0].test.repeat();
     expected = model.items[0].test.stringProp + model.items[0].test.stringProp;
 
     deepEqual(actual, expected);
@@ -218,7 +218,7 @@ test("Extend array array-item property path wins over property path", function (
             },
             "items[i].test": function (obj) {
                 obj.repeat = ko.computed(function () {
-                    return obj().stringProp() + obj().stringProp();
+                    return obj.stringProp() + obj.stringProp();
                 });
                 return obj;
             }
@@ -227,7 +227,7 @@ test("Extend array array-item property path wins over property path", function (
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    actual = viewmodel().items()[0]().test.repeat();
+    actual = viewmodel.items()[0].test.repeat();
     expected = model.items[0].test.stringProp + model.items[0].test.stringProp;
 
     deepEqual(actual, expected);
@@ -254,7 +254,7 @@ test("Extend all array items", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    actual = viewmodel().items()[0].IsNew;
+    actual = viewmodel.items()[0].IsNew;
     expected = false;
 
     deepEqual(actual, expected);
@@ -278,7 +278,7 @@ test("Exclude full path", function () {
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(viewmodel().items()[0]().test, undefined, "Item Not Mapped");
+    deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
 test("Exclude full path wins over append object-property path", function () {
@@ -300,7 +300,7 @@ test("Exclude full path wins over append object-property path", function () {
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(viewmodel().items()[0]().test, undefined, "Item Not Mapped");
+    deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
 test("Exclude object-property path wins over append property path", function () {
@@ -322,7 +322,7 @@ test("Exclude object-property path wins over append property path", function () 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(viewmodel().items()[0]().test, undefined, "Item Not Mapped");
+    deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
 
@@ -345,7 +345,7 @@ test("Same path Last in wins", function () {
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    notEqual(viewmodel().items()[0]().test, undefined, "Item Not Mapped");
+    notEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
 test("Exclude array item property path", function () {
@@ -366,7 +366,7 @@ test("Exclude array item property path", function () {
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(viewmodel().items()[0]().test, undefined, "Item Not Mapped");
+    deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
 test("Append property", function () {
@@ -386,7 +386,7 @@ test("Append property", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    actual = viewmodel().items()[0].test.stringProp;
+    actual = viewmodel.items()[0].test.stringProp;
     expected = model.items[0].test.stringProp
 
     deepEqual(actual, expected, "Item Not Mapped");
@@ -409,7 +409,7 @@ test("Override array", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    actual = viewmodel().items()[0].test().stringProp();
+    actual = viewmodel.items()[0].test.stringProp();
     expected = model.items[0].test.stringProp
 
     deepEqual(actual, expected, "Item Not Mapped");
@@ -433,30 +433,7 @@ test("Override object", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    actual = viewmodel.items()[0]().test().stringProp();
-    expected = model.items[0].test.stringProp
-
-    deepEqual(actual, expected, "Item Not Mapped");
-});
-
-test("Override stringProp", function () {
-    var model, viewmodel, modelResult, actual, expected;
-
-    model = {
-        items: [{
-            test: {
-                stringProp: "test"
-            }
-        }]
-    };
-
-    var customMapping = {
-        override: ["stringProp"]
-    };
-
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
-
-    actual = viewmodel().items()[0]().test().stringProp;
+    actual = viewmodel.items()[0].test.stringProp();
     expected = model.items[0].test.stringProp
 
     deepEqual(actual, expected, "Item Not Mapped");
@@ -483,7 +460,7 @@ test("Map Success", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    deepEqual(viewmodel().items()[0]().test, true, "Item Not Mapped");
+    deepEqual(viewmodel.items()[0].test, true, "Item Not Mapped");
 });
 
 test("Map Fail", function () {
@@ -507,7 +484,7 @@ test("Map Fail", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    deepEqual(viewmodel().items()[0]().test, undefined, "Item Not Mapped");
+    deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
 test("Map Obsevable", function () {
@@ -531,6 +508,6 @@ test("Map Obsevable", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    deepEqual(viewmodel().items()[0]().test, undefined, "Item Not Mapped");
+    deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
