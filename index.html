@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 
-  <head>
+<head>
     <meta charset='utf-8' />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <meta name="description" content="Knockout.viewmodel : " />
@@ -9,37 +9,169 @@
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
     <title>Knockout Viewmodel Plugin</title>
-  </head>
+</head>
 
-  <body>
+<body>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
         <header class="inner">
-          <a id="forkme_banner" href="https://github.com/coderenaissance/knockout.viewmodel">View on GitHub</a>
+            <a id="forkme_banner" href="https://github.com/coderenaissance/knockout.viewmodel">View on GitHub</a>
 
-          <h1 id="project_title">Knockout Viewmodel Plugin</h1>
-          <h2 id="project_tagline"></h2>
+            <h1 id="project_title">Knockout Viewmodel Plugin</h1>
+            <h2 id="project_tagline"></h2>
 
             <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/tarball/master">Download this project as a tar.gz file</a>
+                <a class="zip_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/zipball/master">Download this project as a .zip file</a>
+                <a class="tar_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/tarball/master">Download this project as a tar.gz file</a>
             </section>
         </header>
     </div>
 
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h2>The Knockout Viewmodel Plugin (ko.viewmodel)</h2>
+        <section id="main_content" class="inner">
+            <h2>The Knockout Viewmodel Plugin (ko.viewmodel)</h2>
 
-<p>The knockout viewmodel plugin let's you create complex observable viewmodels easily and with more structure and control than ever before.</p>
+            <p>The knockout viewmodel plugin let's you create complex observable viewmodels easily and with more structure and control than ever before.</p>
 
-<h3>Creating a simple viewmodel with ko.viewmodel</h3>
+            <div style="width: 45%; margin-right: 5%; float: left;">
+                <strong>The New Viewmodel Plugin</strong>
+                <pre><code>
+var model, mapping, viewmodel;
 
-<p>Creating a viewmodel from a model is simple.</p>
+//Normally this JSON model 
+//would be returned via ajax.
+model = {
+    users:[ 
+        {
+            firstName:"John", 
+            lastName:"Doe",
+            id:1,
+            isDeleted: false
+        },
+        {
+            firstName:"James", 
+            lastName:"Smith",
+            id:2,
+            isDeleted: false
+        }
+    ]
+};
 
-<pre><code>var model, viewmodel;
+mapping = {
+  id:["{root}.users[i].id"],
+  extend:{
+    "{root}":function(root){
+        root.Save = function(){
+            $.ajax({
+              url: 'ajax/test.html',
+              data:ko.viewmodel.toModel(viewmodel),
+              success: function(data) {
+                ko.viewmodel.updateFromModel(data);
+              }
+            });
+        };
+    },
+    "{root}.users":function(users){
+        users.addNew = function(){
+            users.push({
+                firstName:"",
+                lastName:"",
+                id:null,
+                isDeleted: false
+            });
+        };
+
+        users.delete = function(user){
+            user.isDeleted(true);
+        };
+    },  
+    "{root}.users[i]":function(user){
+        user().isNew = (!user.id === null);
+    }
+  }
+};
+
+viewmodel = ko.viewmodel.fromModel(model,mapping);
+
+ko.applyBindings(viewmodel);
+                </code></pre>
+            </div>
+            <div style="width: 45%; float: left;">
+                <strong>The Old Mapping Plugin</strong>
+                <pre><code>
+var model, mapping, viewmodel;
+
+//Normally this JSON model 
+//would be returned via ajax.
+model = {
+  users:[ 
+     {
+       firstName:"John", 
+       lastName:"Doe",
+       id:1,
+       isDeleted:false
+     },
+     {
+       firstName:"James", 
+       lastName:"Smith",
+       id:2,
+       isDeleted:false
+     }
+    ]
+};
+
+mapping = {
+    users:{
+        key:function(user){
+            return user.id();
+        },
+        create:function(options){
+            var newUser = ko.mapping.fromJS(options.data);
+            newUser().isNew = (newUser().id !== null);
+        }
+    }
+};
+
+viewmodel = ko.mapping.fromJS(model, mapping);
+
+viewmodel.users.delete = function(user){
+   user.isDeleted(true);
+};
+
+viewmodel.users.addNew = function(){
+    var newUser = {
+        firstName:"",
+        lastName:"",
+        id:null,
+        isDeleted: false
+    };
+
+    newUser = ko.mapping.fromJs(newUser);
+
+    viewmodel.users.push(newUser);
+};
+
+viewmodel.Save = function(){
+    $.ajax({
+        url: 'ajax/test.html',
+        data:ko.mapping.toJs(viewmodel),
+        success: function(data) {
+            ko.viewmodel.fromJs(data);
+        }
+    });
+};
+
+ko.applyBindings(viewmodel);
+                </code></pre>
+            </div>
+            <br style="clear: both" />
+            <h3>Creating a simple viewmodel with ko.viewmodel</h3>
+
+            <p>Creating a viewmodel from a model is simple.</p>
+
+            <pre><code>var model, viewmodel;
 
 //Normally this JSON model would be returned via ajax.
 model = {
@@ -52,13 +184,13 @@ model = {
 viewmodel = ko.viewmodel.fromModel(model);
 </code></pre>
 
-<p>This code creates an observable viewModel with an observable array of users whose properties are observable.</p>
+            <p>This code creates an observable viewModel with an observable array of users whose properties are observable.</p>
 
-<h3>Creating an extended viewmodel</h3>
+            <h3>Creating an extended viewmodel</h3>
 
-<p>Now lets say that you want to extend each object in the users array with an isDeleted flag. You would do this by specifying custom mapping options.</p>
+            <p>Now lets say that you want to extend each object in the users array with an isDeleted flag. You would do this by specifying custom mapping options.</p>
 
-<pre><code>options:{ 
+            <pre><code>options:{ 
     extend:{
         "{root}.users[i]": function(user){
             //note that user is an observable
@@ -71,11 +203,11 @@ viewmodel = ko.viewmodel.fromModel(model);
 viewmodel = ko.viewmodel.fromModel(model,options));
 </code></pre>
 
-<p>We've now extended each object in the users array with an isDeleted flag. With ko.viewmodel all objects and properties are observable by default so it's up to you whether you extend the object or observable. </p>
+            <p>We've now extended each object in the users array with an isDeleted flag. With ko.viewmodel all objects and properties are observable by default so it's up to you whether you extend the object or observable. </p>
 
-<p>If we also wanted to add a delete method to an array we would use the following options:</p>
+            <p>If we also wanted to add a delete method to an array we would use the following options:</p>
 
-<pre><code>options:{ 
+            <pre><code>options:{ 
     extend:{
         "{root}.users[i]": function(user){
             user().isDeleted= ko.observable(false);
@@ -89,48 +221,50 @@ viewmodel = ko.viewmodel.fromModel(model,options));
 };
 </code></pre>
 
-<p>Note we've extending the observable array with the Delete function. Here's a jsFiddle that shows the code bound to a view: <a href="http://jsfiddle.net/CodeRenaissance/ytjns/5/">http://jsfiddle.net/CodeRenaissance/ytjns/5/</a></p>
+            <p>Note we've extending the observable array with the Delete function. Here's a jsFiddle that shows the code bound to a view: <a href="http://jsfiddle.net/CodeRenaissance/ytjns/5/">http://jsfiddle.net/CodeRenaissance/ytjns/5/</a></p>
 
-<h3>Getting an updated model from your viewmodel</h3>
+            <h3>Getting an updated model from your viewmodel</h3>
 
-<p>At somepoint you'll need to get an updated model to send back up to the server. This can be done by calling toModel.</p>
+            <p>At somepoint you'll need to get an updated model to send back up to the server. This can be done by calling toModel.</p>
 
-<pre><code>
+            <pre><code>
 
 viewmodel = ko.viewmodel.toModel(viewmodel);
 
 </code></pre>
 
-Options can also be passed in to customize converting to a viewmodel.
+            Options can also be passed in to customize converting to a viewmodel.
 
-<h3>Custom Processing</h3>
+            <h3>Custom Processing</h3>
 
-<p>Every property can have custom processing specified for it. Custom processing is specified for an item by it's path. </p>
+            <p>Every property can have custom processing specified for it. Custom processing is specified for an item by it's path. </p>
 
 
-<h3>Path Types</h3>
+            <h3>Path Types</h3>
 
-<p>Every full path starts with {root}. Items in an array are referred to as [i]. So a path of "{root}.users[i].firstName" would be used to specify custom processing for the firstName property of every object in the users array. That is its full path name, but it's not necessary to refer to every item by it's -full path name. There are three ways of referencing a path:</p>
+            <p>Every full path starts with {root}. Items in an array are referred to as [i]. So a path of "{root}.users[i].firstName" would be used to specify custom processing for the firstName property of every object in the users array. That is its full path name, but it's not necessary to refer to every item by it's -full path name. There are three ways of referencing a path:</p>
 
-<ul>
-<li>Full Path Name - Matches only the specific path, e.g. "{root}.users[i].firstName".</li>
-<li>Parent Child Name - Matches the parent child combination specified. So "users[i].firstName" will only match the first name property on objects in the users array. Since this is an array we can also specify this as "[i].firstName" which would match every firstName property on an array child.</li>
-<li>Property Name - Matches every property with that name. So a partial path of "firstName" would match every firstName property in your model.</li>
-</ul><h3>Processing Types</h3>
+            <ul>
+                <li>Full Path Name - Matches only the specific path, e.g. "{root}.users[i].firstName".</li>
+                <li>Parent Child Name - Matches the parent child combination specified. So "users[i].firstName" will only match the first name property on objects in the users array. Since this is an array we can also specify this as "[i].firstName" which would match every firstName property on an array child.</li>
+                <li>Property Name - Matches every property with that name. So a partial path of "firstName" would match every firstName property in your model.</li>
+            </ul>
+            <h3>Processing Types</h3>
 
-<p>There four types of custom processing: map, append, exclude, override, and extend.</p>
+            <p>There four types of custom processing: map, append, exclude, override, and extend.</p>
 
-<ul>
-<li>map - the path and all of it's children are processed only as you specify</li>
-<li>append - the path and it's children are appended as is </li>
-<li>exclude - the path is excluded from processing</li>
-<li>override - exempts a path from certain default processing assumptions</li>
-<li>extend - the path and it's children are processed normally but then extended/modified as specified</li>
-</ul><p>All processing types are exclusive. All options can be specified both for fromModel and toModel.</p>
+            <ul>
+                <li>map - the path and all of it's children are processed only as you specify</li>
+                <li>append - the path and it's children are appended as is </li>
+                <li>exclude - the path is excluded from processing</li>
+                <li>override - exempts a path from certain default processing assumptions</li>
+                <li>extend - the path and it's children are processed normally but then extended/modified as specified</li>
+            </ul>
+            <p>All processing types are exclusive. All options can be specified both for fromModel and toModel.</p>
 
-<h3>The map processing option</h3>
-With the map processing option the path and all of it's children are processed only as you specify.
-<pre><code>
+            <h3>The map processing option</h3>
+            With the map processing option the path and all of it's children are processed only as you specify.
+            <pre><code>
 options:{ 
     extend:{
         "{root}.users[i]": function(user){
@@ -145,40 +279,44 @@ Note:
 <li>The object passed into map is the unaltered object from your viewmodel or model (depending on if you are calling fromModel or toModel).</li></ul>
 </code></pre>
 
-<h3>The append processing option</h3>
-With the append processing option the path and all of it's children are appended as is.
-<pre><code>
+            <h3>The append processing option</h3>
+            With the append processing option the path and all of it's children are appended as is.
+            <pre><code>
 options:{ 
     append:["{root}.users[i]"]
 };
 </code></pre>
-In this case none of the users have been altered and are appended unchanged.
+            In this case none of the users have been altered and are appended unchanged.
 
-<h3>The exclude processing option</h3>
-With the exclude processing option the path and it's children are excluded from processing and will not be included.
-<pre><code>
+            <h3>The exclude processing option</h3>
+            With the exclude processing option the path and it's children are excluded from processing and will not be included.
+            <pre><code>
 options:{ 
     exclude:["{root}.users[i].firstName"]
 };
 </code></pre>
-The firstName property is not included.
+            The firstName property is not included.
 
-<h3>The override processing option</h3>
-The override processing option exempts a path from certain default processing assumptions. It does not affect processing of the paths children. It is meant to be a quick way to do handle common situations that the map options would otherwise need to be used for.
-<pre><code>
+            <h3>The override processing option</h3>
+            The override processing option exempts a path from certain default processing assumptions. It does not affect processing of the paths children. It is meant to be a quick way to do handle common situations that the map options would otherwise need to be used for.
+            <pre><code>
 options:{ 
     override:["{root}.someProperty"]
 };
 </code></pre>
-When calling fromModel:
-    <ul><li>the path specified will not be wrapped in an observable.</li></ul>
-When calling toModel:
-    <ul><li>if the path is for a computed value it will be unwrapped.</li>
-    <li>if the path is for a non-observable value it will be included.</li></ul>
+            When calling fromModel:
+    <ul>
+        <li>the path specified will not be wrapped in an observable.</li>
+    </ul>
+            When calling toModel:
+    <ul>
+        <li>if the path is for a computed value it will be unwrapped.</li>
+        <li>if the path is for a non-observable value it will be included.</li>
+    </ul>
 
-<h3>The extend processing option</h3>
-With the extend processing option the path and it's children are processed normally but then extended/modified as specified.
-<pre><code>
+            <h3>The extend processing option</h3>
+            With the extend processing option the path and it's children are processed normally but then extended/modified as specified.
+            <pre><code>
 options:{ 
     extend:{
         "{root}.users[i]": function(user){
@@ -189,20 +327,22 @@ options:{
     }
 };
 </code></pre>
-The value of the path is passed to the extend function after processing has been completed on the path and its children. Objects can be modified without being returned. 
+            The value of the path is passed to the extend function after processing has been completed on the path and its children. Objects can be modified without being returned. 
 Note: Whatever is returned from the extend function will be persisted and replace the default processing.
-</section>
+
+Can you trust that it works? We have a growing <a href="Tests.htm">suite of unit-tests</a> that say that it can.
+        </section>
     </div>
 
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Knockout.viewmodel maintained by <a href="https://github.com/coderenaissance">coderenaissance</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
-      </footer>
+        <footer class="inner">
+            <p class="copyright">Knockout.viewmodel maintained by <a href="https://github.com/coderenaissance">coderenaissance</a></p>
+            <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+        </footer>
     </div>
 
-    
 
-  </body>
+
+</body>
 </html>
