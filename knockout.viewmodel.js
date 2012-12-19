@@ -193,7 +193,7 @@ ko["viewmodel"] = (function () {
                     found = false;
                     modelId = modelObj[p][idName];
                     for (q = unwrapped.length - 1; q >= 0; q--) {
-                        if (modelId === unwrapped[q]()[idName]()) {
+                        if (modelId === unwrapped[q][idName]()) {
                             fnRecursiveUpdate(modelObj[p], unwrapped[p], {
                                 name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
                             });
