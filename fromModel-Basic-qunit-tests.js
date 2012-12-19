@@ -21,10 +21,10 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel().stringProp(), model.stringProp, "String Test");
-        deepEqual(viewmodel().number(), model.number, "Number Test");
-        deepEqual(viewmodel().date(), model.date, "Date Test");
-        deepEqual(viewmodel().emptyArray(), model.emptyArray, "Array Test");
+        deepEqual(viewmodel.stringProp(), model.stringProp, "String Test");
+        deepEqual(viewmodel.number(), model.number, "Number Test");
+        deepEqual(viewmodel.date(), model.date, "Date Test");
+        deepEqual(viewmodel.emptyArray(), model.emptyArray, "Array Test");
     });
 
 
@@ -42,10 +42,10 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel().nestedObject().stringProp(), model.nestedObject.stringProp, "String Test");
-        deepEqual(viewmodel().nestedObject().number(), model.nestedObject.number, "Number Test");
-        deepEqual(viewmodel().nestedObject().date(), model.nestedObject.date, "Date Test");
-        deepEqual(viewmodel().nestedObject().emptyArray(), model.nestedObject.emptyArray, "Array Test");
+        deepEqual(viewmodel.nestedObject.stringProp(), model.nestedObject.stringProp, "String Test");
+        deepEqual(viewmodel.nestedObject.number(), model.nestedObject.number, "Number Test");
+        deepEqual(viewmodel.nestedObject.date(), model.nestedObject.date, "Date Test");
+        deepEqual(viewmodel.nestedObject.emptyArray(), model.nestedObject.emptyArray, "Array Test");
     });
 
 
@@ -60,7 +60,7 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel().objectArray()[0](), model.objectArray[0], "Object Test");
+        deepEqual(viewmodel.objectArray()[0], model.objectArray[0], "Object Test");
     });
 
 
@@ -80,10 +80,10 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel().objectArray()[0]().stringProp(), model.objectArray[0].stringProp, "String Test");
-        deepEqual(viewmodel().objectArray()[0]().number(), model.objectArray[0].number, "Number Test");
-        deepEqual(viewmodel().objectArray()[0]().date(), model.objectArray[0].date, "Date Test");
-        deepEqual(viewmodel().objectArray()[0]().emptyArray(), model.objectArray[0].emptyArray, "Array Test");
+        deepEqual(viewmodel.objectArray()[0].stringProp(), model.objectArray[0].stringProp, "String Test");
+        deepEqual(viewmodel.objectArray()[0].number(), model.objectArray[0].number, "Number Test");
+        deepEqual(viewmodel.objectArray()[0].date(), model.objectArray[0].date, "Date Test");
+        deepEqual(viewmodel.objectArray()[0].emptyArray(), model.objectArray[0].emptyArray, "Array Test");
     });
 
 
@@ -96,7 +96,7 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
     
-        deepEqual(viewmodel().nestedArray()[0](), model.nestedArray[0], "Array Test");
+        deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "Array Test");
     });
 
 
@@ -109,7 +109,7 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel().nestedArray()[0](), model.nestedArray[0], "String Array Test");
+        deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "String Array Test");
     });
 
 
