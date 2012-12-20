@@ -1,5 +1,0 @@
-// ==ClosureCompiler==
-// @compilation_level SIMPLE_OPTIMIZATIONS
-// @output_file_name knockout.viewmodel.current.min.js
-// @code_url https://github.com/downloads/coderenaissance/knockout.viewmodel/knockout.viewmodel.current.js
-// ==/ClosureCompiler==
