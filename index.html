@@ -35,10 +35,12 @@
             <h2>The Knockout Viewmodel Plugin (ko.viewmodel)</h2>
 
             <p>The knockout viewmodel plugin let's you create complex observable viewmodels easily and with more structure and control than ever before.</p>
-            <p>Consider this simple example done with both the new viewmodel plugin and the old mapping plugin:</p>
+            <p>Consider this comparison between the new viewmodel plugin and the old mapping plugin. Both examples extend a model so that users can be added and
+            deleted and updated to it's users array.
+            </p>
             <div style="width: 45%; margin-right: 5%; float: left;">
 
-                <strong>The New Viewmodel Plugin</strong><br />
+                <strong>The New Viewmodel Plugin (3KB)</strong><br />
                 With the new viewmodel plugin all extensions needed for your viewmodel can be specified in your mapping using either full or partial paths. 
 			This provides a natural orgainization to your code.
                 <pre><code>
@@ -95,7 +97,7 @@ ko.applyBindings(viewmodel);
                 </code></pre>
             </div>
             <div style="width: 45%; float: left;">
-                <strong>The Old Mapping Plugin</strong><br />
+                <strong>The Old Mapping Plugin (8.6KB)</strong><br />
                 With the original mapping plugin there is no logical grouping which allows larger viewmodels to become disorganized and hard to follow.
 			It also allows related code to easily become separated.
                 <pre><code>
