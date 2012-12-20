@@ -43,21 +43,13 @@
 			This provides a natural orgainization to your code.
                 <pre><code>
 var model, mapping, viewmodel;
-
-//Normally this JSON model 
-//would be returned via ajax.
+//Normally this JSON would be returned via ajax.
 model = {
     users:[ 
         {
             firstName:"John", 
             lastName:"Doe",
             id:1,
-            isDeleted: false
-        },
-        {
-            firstName:"James", 
-            lastName:"Smith",
-            id:2,
             isDeleted: false
         }
     ]
@@ -108,23 +100,15 @@ ko.applyBindings(viewmodel);
 			It also allows related code to easily become separated.
                 <pre><code>
 var model, mapping, viewmodel;
-
-//Normally this JSON model 
-//would be returned via ajax.
+//Normally this JSON would be returned via ajax.
 model = {
-  users:[ 
-     {
-       firstName:"John", 
-       lastName:"Doe",
-       id:1,
-       isDeleted:false
-     },
-     {
-       firstName:"James", 
-       lastName:"Smith",
-       id:2,
-       isDeleted:false
-     }
+    users:[ 
+        {
+            firstName:"John", 
+            lastName:"Doe",
+            id:1,
+            isDeleted: false
+        }
     ]
 };
 
