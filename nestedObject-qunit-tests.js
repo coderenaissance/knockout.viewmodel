@@ -38,7 +38,7 @@ test("Basic", function () {
     deepEqual(viewmodel.data.id(), model.data.id, "From Model Number Test");
     deepEqual(viewmodel.data.date(), model.data.date, "From Model Date Test");
 
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.data.stringProp(), updatedModel.data.stringProp, "Update String Test");
     deepEqual(viewmodel.data.id(), updatedModel.data.id, "Update Number Test");
@@ -81,7 +81,7 @@ test("Extend", function () {
     deepEqual(viewmodel.data.date(), model.data.date, "From Model Date Test");
     deepEqual(viewmodel.isValid(), true, "Extension check");
 
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.data.stringProp(), updatedModel.data.stringProp, "Update String Test");
     deepEqual(viewmodel.data.id(), updatedModel.data.id, "Update Number Test");
@@ -101,7 +101,7 @@ test("Append object", function () {
 	
     deepEqual(viewmodel, model, "From Model Test");
 	
-	ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	
 	notEqual(viewmodel, updatedModel, "Update Fail Test");
 	
@@ -120,7 +120,7 @@ test("Append object property", function () {
     deepEqual(viewmodel.data.id(), model.data.id, "From Model Number Test");
     deepEqual(viewmodel.data.date(), model.data.date, "From Model Date Test");
 	
-	ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	
 	notEqual(viewmodel.data.stringProp, updatedModel.data.stringProp, "From Model String Test Fail");
 	deepEqual(viewmodel.data.id(), updatedModel.data.id, "Update Number Test");
@@ -147,7 +147,7 @@ test("Custom basic", function () {
     deepEqual(viewmodel.data.id(), model.data.id, "From Model Number Test");
     deepEqual(viewmodel.data.date(), model.data.date.valueOf(), "From Model Date Test");
 
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.data.stringProp(), updatedModel.data.stringProp, "Update String Test");
     deepEqual(viewmodel.data.id(), updatedModel.data.id, "Update Number Test");
@@ -179,7 +179,7 @@ test("Custom map and unmap", function () {
     deepEqual(viewmodel.data.id(), model.data.id, "From Model Number Test");
     deepEqual(viewmodel.data.date(), model.data.date.valueOf(), "From Model Date Test");
 
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.data.stringProp(), updatedModel.data.stringProp, "Update String Test");
     deepEqual(viewmodel.data.id(), updatedModel.data.id, "Update Number Test");
@@ -202,7 +202,7 @@ test("Exclude", function () {
     deepEqual(viewmodel.data.id(), model.data.id, "From Model Number Test");
     deepEqual(viewmodel.data.date(), model.data.date, "From Model Date Test");
 
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     equal(viewmodel.data.hasOwnProperty("stringProp"), false, "Update... String Prop Not Exist");
     deepEqual(viewmodel.data.id(), updatedModel.data.id, "Update Number Test");
