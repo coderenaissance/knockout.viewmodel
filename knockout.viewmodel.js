@@ -239,7 +239,7 @@ ko["viewmodel"] = (function () {
             if (ko.viewmodel.logging && window.console) window.console.log("Mapping To Model");
             return fnRecursiveTo(viewmodel, rootContext);
         },
-        "updateFromModel": function fnUpdateFromModel(model, viewmodel) {
+        "updateFromModel": function fnUpdateFromModel(viewmodel, model) {
             if (ko.viewmodel.logging && window.console) window.console.log("Update From Model");
             return fnRecursiveUpdate(model, viewmodel, rootContext);
         }

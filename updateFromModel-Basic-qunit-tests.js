@@ -39,7 +39,7 @@ test("Default simple types", function () {
     };
 
     viewmodel = ko.viewmodel.fromModel(model);
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.stringProp(), updatedModel.stringProp, "String Test");
     deepEqual(viewmodel.number(), updatedModel.number, "Number Test");
@@ -66,7 +66,7 @@ test("nested object simple types", function () {
     };
 
     viewmodel = ko.viewmodel.fromModel(model);
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.test.stringProp(), updatedModel.test.stringProp, "String Test");
     deepEqual(viewmodel.test.number(), updatedModel.test.number, "Number Test");
@@ -101,7 +101,7 @@ test("nested object override success simple types", function () {
     deepEqual(viewmodel.test.number(), model.test.number, "Viewmodel Number Test");
     deepEqual(viewmodel.test.date(), model.test.date, "Viewmodel Date Test");
 
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.test.stringProp(), updatedModel.test.stringProp, "UpdatedModel String Test");
     deepEqual(viewmodel.test.number(), updatedModel.test.number, "UpdatedModel Number Test");
@@ -144,7 +144,7 @@ test("ID option match array object simple types", function () {
     }
 
     viewmodel = ko.viewmodel.fromModel(model, options);
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.items()[0].id(), updatedModel.items[0].id, "String Test");
     deepEqual(viewmodel.items()[0].stringProp(), updatedModel.items[0].stringProp, "String Test");
@@ -182,7 +182,7 @@ test("ID option swapped array item item", function () {
     }
 
     viewmodel = ko.viewmodel.fromModel(model, options);
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.items().length, updatedModel.items.length, "Array Length Test");
     deepEqual(viewmodel.items()[0].id(), updatedModel.items[0].id, "Array Item id Test");
@@ -214,7 +214,7 @@ test("array item item", function () {
     };
 
     viewmodel = ko.viewmodel.fromModel(model);
-    ko.viewmodel.updateFromModel(updatedModel, viewmodel);
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.items().length, updatedModel.items.length, "Array Length Test");
     deepEqual(viewmodel.items()[0].stringProp(), updatedModel.items[0].stringProp, "String Test");
