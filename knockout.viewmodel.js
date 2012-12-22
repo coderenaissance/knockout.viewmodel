@@ -131,7 +131,7 @@ ko["viewmodel"] = (function () {
         if (viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
         }
-        else if (unwrapped.hasOwnProperty("..appended")) {
+        else if (unwrapped != null && unwrapped.hasOwnProperty("..appended")) {
             mapped = unwrapped;
         }
         else if (isStandardProperty(unwrapped, objType) && !wasNotWrapped) {

@@ -23,76 +23,58 @@ module("Null Tests", {
     }
 });
 
+//test("Extend", function () {
 
-test("Basic", function () {
+//    var viewmodel = ko.viewmodel.fromModel(model, {
+//        extend: {
+//            "{root}.Prop1": function (val) {
+//                val.isValid = ko.computed(function () {
+//                    return val() && val().length;
+//                });
+//            },
+//            "{root}.Prop2": function (val) {
+//                val.isValid = ko.computed(function () {
+//                    return val() && val() > 0;
+//                });
+//            }
+//        }
+//    });
 
-    var viewmodel = ko.viewmodel.fromModel(model);
+//    deepEqual(viewmodel.Prop1(), model.Prop1, "Null Prop Test");
+//    deepEqual(viewmodel.Prop2(), model.Prop2, "String Prop Test");
+//    deepEqual(viewmodel.isValid(), true, "Extension check");
 
-    deepEqual(viewmodel.Prop1(), model.Prop1, "Null Prop Test");
-    deepEqual(viewmodel.Prop2(), model.Prop2, "String Prop Test");
+//    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
-    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+//    deepEqual(viewmodel.Prop1(), updatedModel.Prop1, "Null to Value Update Test");
+//    deepEqual(viewmodel.Prop2(), updatedModel.Prop2, "Value to Null Update Test");
+//    deepEqual(viewmodel.isValid(), true, "Extension check");
 
-    deepEqual(viewmodel.Prop1(), updatedModel.Prop1, "Null to Value Update Test");
-    deepEqual(viewmodel.Prop2(), updatedModel.Prop2, "Value to Null Update Test");
+//    modelResult = ko.viewmodel.toModel(viewmodel);
 
-    modelResult = ko.viewmodel.toModel(viewmodel);
+//    deepEqual(modelResult, updatedModel, "Result Object Comparison");
+//});
 
-    deepEqual(modelResult, updatedModel, "Result Object Comparison");
-});
+//test("Append property", function () {
 
-test("Extend", function () {
-
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        extend: {
-            "{root}.Prop1": function (val) {
-                stringProp.isValid = ko.computed(function () {
-                    return val() && val().length;
-                });
-            },
-            "{root}.Prop2": function (val) {
-                id.isValid = ko.computed(function () {
-                    return val() && val() > 0;
-                });
-            }
-        }
-    });
-
-    deepEqual(viewmodel.Prop1(), model.Prop1, "Null Prop Test");
-    deepEqual(viewmodel.Prop2(), model.Prop2, "String Prop Test");
-    deepEqual(viewmodel.isValid(), true, "Extension check");
-
-    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
-
-    deepEqual(viewmodel.Prop1(), updatedModel.Prop1, "Null to Value Update Test");
-    deepEqual(viewmodel.Prop2(), updatedModel.Prop2, "Value to Null Update Test");
-    deepEqual(viewmodel.isValid(), true, "Extension check");
-
-    modelResult = ko.viewmodel.toModel(viewmodel);
-
-    deepEqual(modelResult, updatedModel, "Result Object Comparison");
-});
-
-test("Append property", function () {
-
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        append: ["{root}.Prop1", "{root}.Prop2"]
-    });
+//    var viewmodel = ko.viewmodel.fromModel(model, {
+//        append: ["{root}.Prop1", "{root}.Prop2"]
+//    });
 	
-    deepEqual(viewmodel.Prop1, model.Prop1, "Null to Value Update Test");
-    deepEqual(viewmodel.Prop2, model.Prop2, "Value to Null Update Test");
+//    deepEqual(viewmodel.Prop1, model.Prop1, "Null to Value Update Test");
+//    deepEqual(viewmodel.Prop2, model.Prop2, "Value to Null Update Test");
 	
-	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+//	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	
-	notEqual(viewmodel.Prop1, updatedModel.Prop1, "Null to Value Update Test");
-	notEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Null Update Test");
+//	notEqual(viewmodel.Prop1, updatedModel.Prop1, "Null to Value Update Test");
+//	notEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Null Update Test");
 	
-	modelResult = ko.viewmodel.toModel(viewmodel);
+//	modelResult = ko.viewmodel.toModel(viewmodel);
 	
-	notEqual(modelResult.Prop1, updatedModel.Prop1, "Null to Value Update Test");
-	notEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Null Update Test");
+//	notEqual(modelResult.Prop1, updatedModel.Prop1, "Null to Value Update Test");
+//	notEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Null Update Test");
 
-});
+//});
 
 //test("Custom basic", function () {
 
