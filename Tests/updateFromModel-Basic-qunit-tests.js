@@ -1,24 +1,9 @@
-/*
-Processing rules:
-All object properties are replaced with new values if changed.
-An object is assumed to be the same object unless it has an id.
-An observable object with a non matching id gets replaced.
-An observable array whose items do not have ids has it's array replaced.
-Non observable objects are never updated (what would be the point)
-Children of non observables are not checked for changes unless there is an override.
-Append will still work even though it's probably useless except in edge cases.
-new array items are pushed to the end o
-Exclude excludes a path from being updated.
-map allows you to update a branch manually
-extend allows you to extend the default processing
-*/
-
 module("updateFromModel Basic", {
     setup: function () {
-        ko.viewmodel.logging = true;
+        //ko.viewmodel.logging = true;
     },
     teardown: function () {
-        ko.viewmodel.logging = false;
+        //ko.viewmodel.logging = false;
     }
 });
 

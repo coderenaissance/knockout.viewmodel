@@ -1,9 +1,9 @@
 ﻿module("toModel Basic", {
     setup: function () {
-        ko.viewmodel.logging = true;
+        //ko.viewmodel.logging = true;
     },
     teardown: function () {
-        ko.viewmodel.logging = false;
+        //ko.viewmodel.logging = false;
     }
 });
 

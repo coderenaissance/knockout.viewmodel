@@ -2,7 +2,7 @@
 var model, updatedModel, modelResult;
 module("Basic Null Tests", {
     setup: function () {
-        ko.viewmodel.logging = true;
+        //ko.viewmodel.logging = true;
 
         model = {
             Prop1: null,
@@ -25,7 +25,7 @@ module("Basic Null Tests", {
 
     },
     teardown: function () {
-        ko.viewmodel.logging = false;
+        //ko.viewmodel.logging = false;
         model = undefined;
         updatedModel = undefined;
         modelResult = undefined;
@@ -47,12 +47,17 @@ test("Basic", function () {
     deepEqual(viewmodel.Prop1(), updatedModel.Prop1, "Null to Value Update Test");//5
     deepEqual(viewmodel.Prop2(), updatedModel.Prop2, "Value to Null Update Test");//6
     deepEqual(viewmodel.Prop3(), updatedModel.Prop3, "Null to Object Update Test");//7
-    deepEqual(viewmodel.Prop4, updatedModel.Prop4, "Object to Null Update Test");//8
+    notEqual(viewmodel.Prop4, updatedModel.Prop4, "Object to Null Update Test");//8
     deepEqual(viewmodel.Prop5(), updatedModel.Prop5, "Null to Array Update Test");//9
     notEqual(typeof viewmodel.Prop5.push, "function", "Null to Array Update Is Not Observable Array Test");//10
     deepEqual(viewmodel.Prop6(), updatedModel.Prop6, "Array to Null Update Test");//11
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(modelResult, updatedModel, "Result Object Comparison");//12
+    deepEqual(modelResult.Prop1, updatedModel.Prop1, "Null to Value Update Test");//12
+    deepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Null Update Test");//13
+    deepEqual(modelResult.Prop3, updatedModel.Prop3, "Null to Object Update Test");//14
+    notEqual(modelResult.Prop4, updatedModel.Prop4, "Object to Null Update Test");//15
+    deepEqual(modelResult.Prop5, updatedModel.Prop5, "Null to Array Update Test");//16
+    deepEqual(modelResult.Prop6, updatedModel.Prop6, "Array to Null Update Test");//17
 });

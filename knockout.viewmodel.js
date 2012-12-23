@@ -57,7 +57,7 @@ ko["viewmodel"] = (function () {
 
     function isNullOrUndefined(obj, objType) { return obj === null || objType === "undefined"; }
     function isStandardProperty(obj, objType) { return obj === null || objType === "undefined" || objType === "string" || objType === "number" || objType === "boolean" || (objType === "object" && typeof obj.getMonth === "function"); }
-    function isObjectProperty(obj, objType) { return objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
+    function isObjectProperty(obj, objType) { return obj != null && objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
     function isArrayProperty(obj, objType) { return objType === "object" && obj.length !== undefined; }
 
     function fnRecursiveFrom(modelObj, settings, context) {
