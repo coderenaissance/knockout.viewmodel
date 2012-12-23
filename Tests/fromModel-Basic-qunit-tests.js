@@ -109,7 +109,7 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel.stringArray()[0](), model.stringArray[0], "String Array Test");
+        deepEqual(viewmodel.stringArray()[0], model.stringArray[0], "String Array Test");
     });
 
 
