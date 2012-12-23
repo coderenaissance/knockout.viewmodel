@@ -128,7 +128,10 @@ ko["viewmodel"] = (function () {
             wasNotWrapped = (viewModelObj === unwrapped),
             objType = typeof unwrapped;
         updateConsole(context, null);
-        if (viewModelObj["..unmap"]) {
+        if (viewModelObj === null) {
+            return null;
+        }
+        else if (viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
         }
         else if (unwrapped != null && unwrapped.hasOwnProperty("..appended")) {
@@ -175,6 +178,9 @@ ko["viewmodel"] = (function () {
                     else {
                         unwrapped[p] = unwrapped[p]["..map"](modelObj[p]);
                     }
+                }
+                else if (modelObj && modelObj[p] === null && isObjectProperty(unwrapped[p], typeof unwrapped[p])) {
+                    unwrapped[p] = null;
                 }
                 else {
                     fnRecursiveUpdate(modelObj[p], unwrapped[p], {
