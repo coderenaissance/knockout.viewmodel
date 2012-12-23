@@ -83,7 +83,7 @@ ko["viewmodel"] = (function () {
         }
         else if (pathSettings["exclude"]) return;
         else if (isStandardProperty(modelObj, objType)) {
-            mapped = makeObservable(modelObj);
+            mapped = context.parentIsArray ? modelObj : makeObservable(modelObj);
             if (pathSettings["id"]) {
                 mapped["..isid"] = true;
             }
@@ -107,11 +107,11 @@ ko["viewmodel"] = (function () {
             }
         }
         else if (isArrayProperty(modelObj, objType)) {
-            mapped = makeObservableArray([]);
+            mapped = context.parentIsArray ? [] : makeObservableArray([]);
             mapped["..push"] = mapped["push"];
             mapped["push"] = function (item) {
                 item = fnRecursiveFrom(item, settings, {
-                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
+                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true
                 });
                 if (item === undefined) return;
                 mapped["..push"](item);
