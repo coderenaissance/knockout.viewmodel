@@ -1,10 +1,10 @@
 ﻿/// <reference path="FromTo-Mapping-qunit-tests.js" />
 module("fromModel Basic", {
     setup: function () {
-        ko.viewmodel.logging = true;
+        //ko.viewmodel.logging = true;
     },
     teardown: function () {
-        ko.viewmodel.logging = false;
+        //ko.viewmodel.logging = false;
     }
 });
 
@@ -96,7 +96,19 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
     
-        deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "Array Test");
+        deepEqual(viewmodel.nestedArray()[0], model.nestedArray[0], "Array Test");
+    });
+
+    test("Default double nested array", function () {
+        var model, viewmodel;
+
+        model = {
+            nestedArray: [[[]]]
+        };
+
+        viewmodel = ko.viewmodel.fromModel(model);
+
+        deepEqual(viewmodel.nestedArray()[0][0], model.nestedArray[0][0], "Array Test");
     });
 
 
@@ -104,12 +116,12 @@ module("fromModel Basic", {
         var model, viewmodel;
 
         model = {
-            nestedArray: ["Test", "Test"]
+            stringArray: ["Test", "Test"]
         };
 
         viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "String Array Test");
+        deepEqual(viewmodel.stringArray()[0], model.stringArray[0], "String Array Test");
     });
 
 

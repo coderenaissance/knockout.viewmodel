@@ -2,7 +2,7 @@
 var model, updatedModel, modelResult;
 module("Nested Object Types", {
     setup: function () {
-        ko.viewmodel.logging = true;
+        //ko.viewmodel.logging = true;
 
         model = {
             data: {
@@ -22,7 +22,7 @@ module("Nested Object Types", {
 
     },
     teardown: function () {
-        ko.viewmodel.logging = false;
+        //ko.viewmodel.logging = false;
         model = undefined;
         updatedModel = undefined;
         modelResult = undefined;

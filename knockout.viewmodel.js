@@ -6,7 +6,6 @@
 ko["viewmodel"] = (function () {
     //Declarations for compatibility with closure compiler
     var unwrapObservable = ko["utils"]["unwrapObservable"],
-        isComputed = ko["isComputed"],
         isObservable = ko["isObservable"],
         makeObservable = ko["observable"],
         makeObservableArray = ko["observableArray"],
@@ -55,13 +54,13 @@ ko["viewmodel"] = (function () {
         return mapping;
     }
 
-    function isNullOrUndefined(obj, objType) { return obj === null || objType === "undefined"; }
+    function isNullOrUndefined(obj) { return obj === null || obj === undefined;}
     function isStandardProperty(obj, objType) { return obj === null || objType === "undefined" || objType === "string" || objType === "number" || objType === "boolean" || (objType === "object" && typeof obj.getMonth === "function"); }
-    function isObjectProperty(obj, objType) { return objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
+    function isObjectProperty(obj, objType) { return obj != null && objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
     function isArrayProperty(obj, objType) { return objType === "object" && obj.length !== undefined; }
 
     function fnRecursiveFrom(modelObj, settings, context) {
-        var mapped, p, idName, objType = typeof modelObj,
+        var temp, mapped, p, idName, objType = typeof modelObj,
         pathSettings = GetPathSettings(settings, context);
         if (pathSettings["custom"]) {
             if (typeof pathSettings["custom"] === "function") {
@@ -69,7 +68,7 @@ ko["viewmodel"] = (function () {
             }
             else {
                 mapped = pathSettings["custom"]["map"](modelObj);
-                if (mapped != undefined && mapped != null) {
+                if (!isNullOrUndefined(mapped)) {
                     mapped["..map"] = pathSettings["custom"]["map"];
                     if (pathSettings["custom"]["unmap"]) {
                         mapped["..unmap"] = pathSettings["custom"]["unmap"];
@@ -83,7 +82,7 @@ ko["viewmodel"] = (function () {
         }
         else if (pathSettings["exclude"]) return;
         else if (isStandardProperty(modelObj, objType)) {
-            mapped = makeObservable(modelObj);
+            mapped = context.parentIsArray ? modelObj : makeObservable(modelObj);
             if (pathSettings["id"]) {
                 mapped["..isid"] = true;
             }
@@ -107,11 +106,11 @@ ko["viewmodel"] = (function () {
             }
         }
         else if (isArrayProperty(modelObj, objType)) {
-            mapped = makeObservableArray([]);
+            mapped = context.parentIsArray ? [] : makeObservableArray([]);
             mapped["..push"] = mapped["push"];
             mapped["push"] = function (item) {
                 item = fnRecursiveFrom(item, settings, {
-                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
+                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true
                 });
                 if (item === undefined) return;
                 mapped["..push"](item);
@@ -124,14 +123,17 @@ ko["viewmodel"] = (function () {
     }
 
     function fnRecursiveTo(viewModelObj, context) {
-        var mapped, p, temp, unwrapped = unwrapObservable(viewModelObj),
+        var mapped, p, unwrapped = unwrapObservable(viewModelObj),
             wasNotWrapped = (viewModelObj === unwrapped),
             objType = typeof unwrapped;
         updateConsole(context, null);
-        if (viewModelObj["..unmap"]) {
+        if (viewModelObj === null) {
+            return null;
+        }
+        else if (viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
         }
-        else if (unwrapped.hasOwnProperty("..appended")) {
+        else if (unwrapped != null && unwrapped.hasOwnProperty("..appended")) {
             mapped = unwrapped;
         }
         else if (isStandardProperty(unwrapped, objType) && !wasNotWrapped) {
@@ -159,11 +161,11 @@ ko["viewmodel"] = (function () {
     }
 
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
-        var p, q, found, newValue, foundModels, modelId, idName, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
+        var p, q, found, foundModels, modelId, idName, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped);
         updateConsole(context, null);
         if (viewModelObj === undefined || unwrapped === modelObj) return;
-        else if (wasWrapped && (isNullOrUndefined(unwrapped, unwrappedType) ^ isNullOrUndefined(modelObj, viewModelObj))) {
+        else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
             viewModelObj(modelObj);
         }
         else if (isObjectProperty(unwrapped, unwrappedType) && isObjectProperty(modelObj, unwrappedType)) {
@@ -175,6 +177,9 @@ ko["viewmodel"] = (function () {
                     else {
                         unwrapped[p] = unwrapped[p]["..map"](modelObj[p]);
                     }
+                }
+                else if (modelObj && modelObj[p] === null && isObjectProperty(unwrapped[p], typeof unwrapped[p])) {
+                    unwrapped[p] = null;
                 }
                 else {
                     fnRecursiveUpdate(modelObj[p], unwrapped[p], {

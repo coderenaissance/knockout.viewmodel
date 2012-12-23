@@ -6,16 +6,21 @@
     <link href="http://code.jquery.com/qunit/qunit-1.10.0.css" rel="stylesheet" />
     <script src="http://code.jquery.com/qunit/qunit-1.10.0.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.0/knockout-min.js"></script>
-    <script src="knockout.viewmodel.js"></script>
+    <script src="knockout.mapping-latest.js"></script>
+	<script type="text/javascript">
+		ko.viewmodel = {
+			fromModel: ko.mapping.fromJS,
+			toModel: ko.mapping.toJS,
+			updateFromModel: function(viewmodel, model){
+				ko.mapping.fromJS(model, viewmodel);
+			}
+		}
+	</script>
 </head>
 <body>
     <div id="qunit"></div>
     <script src="Tests/null-Basic-qunit-tests.js"></script>
-    <script src="Tests/null-Mapping-qunit-tests.js"></script>
-    <script src="Tests/simpleTypes-qunit-tests.js"></script>
-	<script src="Tests/nestedObject-qunit-tests.js"></script>
     <script src="Tests/fromModel-Basic-qunit-tests.js"></script>
-    <script src="Tests/fromModel-Mapping-qunit-tests.js"></script>
     <script src="Tests/toModel-Basic-qunit-tests.js"></script>
     <script src="Tests/fromModelToModel-Basic-qunit-tests.js"></script>
     <script src="Tests/updateFromModel-Basic-qunit-tests.js"></script>
