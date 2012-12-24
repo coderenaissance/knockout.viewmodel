@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/prism.css">
 
-    <title>Knockout Viewmodel Plugin</title>
+    <title>Knockout Viewmodel - The Smaller, Faster Mapping Plugin</title>
 </head>
 
 <body class="language-javascript">
@@ -19,8 +19,8 @@
         <header class="inner">
             <a id="forkme_banner" href="https://github.com/coderenaissance/knockout.viewmodel">View on GitHub</a>
 
-            <h1 id="project_title">Knockout Viewmodel Plugin (only 3KB)</h1>
-            <h2 id="project_tagline"></h2>
+            <h1 id="project_title">Knockout Viewmodel Plugin  </h1>
+            <h2 id="project_tagline">Cleaner, Faster, Better Knockout Mapping in only 3KB</h2>
 
             <section id="downloads">
                 <a class="zip_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/zipball/master">Download this project as a .zip file</a>
@@ -34,7 +34,8 @@
         <section id="main_content" class="inner">
             <h2>The Knockout Viewmodel Plugin (ko.viewmodel)</h2>
 
-            <p>The knockout viewmodel plugin let's you create complex observable viewmodels easily and with more structure and control than ever before.</p>
+            <p>The knockout viewmodel let's you create complex observable viewmodels easily and with more structure and control than ever before. It also 
+			runs 15% faster than ko.mapping and allows you to fine tune your viewmodel creation for even more speed.</p>
             <p>Consider this comparison between the new viewmodel plugin and the old mapping plugin. Both examples extend a model so that users can be added,
             deleted and updated to it's users array.
             </p>
@@ -116,12 +117,13 @@ model = {
 
 mapping = {
     users:{
-        key:function(user){
-            return user.id();
+        key: function(data) {
+            return ko.utils.unwrapObservable(data.id);
         },
         create:function(options){
             var newUser = ko.mapping.fromJS(options.data);
-            newUser.isNew = (newUser().id !== null);
+            newUser.isNew = (newUser.id !== null);
+            return newUser;
         }
     }
 };
@@ -134,10 +136,10 @@ viewmodel.users.delete = function(user){
 
 viewmodel.Save = function(){
     $.ajax({
-        url: 'ajax/test.html',
+        url: 'ajax/nonexistant',
         data:ko.mapping.toJs(viewmodel),
         success: function(data) {
-            ko.viewmodel.fromJs(data);
+            ko.viewmodel.fromJS(data);
         }
     });
 };
@@ -150,19 +152,23 @@ viewmodel.users.addNew = function(){
         isDeleted: false
     };
 
-    newUser = ko.mapping.fromJs(newUser);
+    newUser = ko.mapping.fromJS(newUser);
 
     viewmodel.users.push(newUser);
 };
 
 ko.applyBindings(viewmodel);
+
                 </code></pre>
             </div>
             <br style="clear: both" />
             <p>
-                Note that the old mapping plugin only lets you specify part of your viewmodel creation (array items) in your mapping. 
-			 In the viewmodel plugin example the addNew and delete functions are being added to the same object
-			so they are naturally grouped together, but in the mapping plugin they are allowed to be separated. 
+                Note that the old mapping plugin only lets you specify part of your viewmodel creation in your mapping. It also 
+				doesn't allow you to specify a full path. This means that you could have a collision with another property named users somewhere
+				else in your model.</p>
+            <p> In the viewmodel plugin example everything can be specified in the mapping. Partial paths or full paths are allowed.
+				Also note that the code is more organized. The addNew and delete functions 
+				are being added to the same object so they are naturally grouped together; in the mapping plugin they are allowed to be separated. 
             </p>
 
             <p>
@@ -347,11 +353,13 @@ options:{
 }
 </code></pre>
 
-
             <h3>Can you trust that it works?</h3>
-            There is a growing <a href="Tests.htm">suite of unit-tests</a> that say that you can. If you think you've found a bug please create a failing <a href="http://jsfiddle.net/CodeRenaissance/nx2yx/">jsfiddle unit test</a> 
+            <p>There is a growing <a href="Tests.htm">suite of unit-tests</a> that say that you can. If you think you've found a bug please create a failing <a href="http://jsfiddle.net/CodeRenaissance/nx2yx/">jsfiddle unit test</a> 
             and submit the link in a <a href="https://github.com/coderenaissance/knockout.viewmodel/issues?state=open">new issue ticket </a>.
-        </section>
+			The viewmodel plugin follows ko.mappings rules closely 
+			(they both pass the same unit tests) which means that if you're not passing in any mapping options they should 
+			work exactly the same. If you find that's not the case please submit an issue ticket and unit test for that as well.			
+		</section>
     </div>
 
     <!-- FOOTER  -->
