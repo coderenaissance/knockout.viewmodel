@@ -54,10 +54,10 @@ ko["viewmodel"] = (function () {
         return mapping;
     }
 
-    function isNullOrUndefined(obj) { return obj === null || obj === undefined;}
+    function isNullOrUndefined(obj) { return obj === null || obj === undefined; }
     function isStandardProperty(obj, objType) { return obj === null || objType === "undefined" || objType === "string" || objType === "number" || objType === "boolean" || (objType === "object" && typeof obj.getMonth === "function"); }
     function isObjectProperty(obj, objType) { return obj != null && objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
-    function isArrayProperty(obj, objType) { return objType === "object" && obj.length !== undefined; }
+    function isArrayProperty(obj, objType) { return obj != null && objType === "object" && obj.length !== undefined; }
 
     function fnRecursiveFrom(modelObj, settings, context) {
         var temp, mapped, p, idName, objType = typeof modelObj,
@@ -77,7 +77,9 @@ ko["viewmodel"] = (function () {
             }
         }
         else if (pathSettings["append"]) {
-            modelObj["..appended"] = undefined;
+            if (modelObj != null) {
+                modelObj["..appended"] = undefined;
+            }
             mapped = modelObj;
         }
         else if (pathSettings["exclude"]) return;
@@ -130,10 +132,10 @@ ko["viewmodel"] = (function () {
         if (viewModelObj === null) {
             return null;
         }
-        else if (viewModelObj["..unmap"]) {
+        else if (viewModelObj !== undefined && viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
         }
-        else if (unwrapped != null && unwrapped.hasOwnProperty("..appended")) {
+        else if (unwrapped === null || unwrapped.hasOwnProperty("..appended")) {
             mapped = unwrapped;
         }
         else if (isStandardProperty(unwrapped, objType) && !wasNotWrapped) {
@@ -164,7 +166,8 @@ ko["viewmodel"] = (function () {
         var p, q, found, foundModels, modelId, idName, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped);
         updateConsole(context, null);
-        if (viewModelObj === undefined || unwrapped === modelObj) return;
+        if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended")) return;
+        else if (viewModelObj === undefined || unwrapped === modelObj) return;
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
             viewModelObj(modelObj);
         }
