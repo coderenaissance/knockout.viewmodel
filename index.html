@@ -264,7 +264,7 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
             <ul>
                 <li>Full Path Name - Matches only the specific path, e.g. "{root}.users[i].firstName".</li>
-                <li>Parent Child Name - Matches the parent child combination specified. So "users[i].firstName" will only match the first name property on objects in the users array. Since this is an array we can also specify this as "[i].firstName" which would match every firstName property on an array child.</li>
+                <li>Parent Child-Name - Matches the parent child combination specified. So "users[i].firstName" will only match the first name property on objects in the users array. Array items have to be referenced as ParentName[i].ChildName but for all other objects the proper reference is ParentName.ChildName</li>
                 <li>Property Name - Matches every property with that name. So a partial path of "firstName" would match every firstName property in your model.</li>
             </ul>
             <h3>Processing Types</h3>
