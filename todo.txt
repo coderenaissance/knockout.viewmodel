@@ -1,0 +1,31 @@
+Possible Problems
+Creating observable arrays within arrays of objects is inefficient
+	Can always map or append
+		so is this a prob?
+			no.
+
+Nested arrays are currently not observable but are getting extended, is this a prob?
+
+Nested arrays are currently not observable, is this a prob?
+		
+	
+Need a way to map and continue processing
+		Why
+			as a way to not have an observable array but still have observable children
+				are there any alternatives
+					not without more mapping options
+			what is the main purpose of map
+							to translate values
+			as a way to manually map an object in part?
+				in what way that the current options don't allow?
+					not sure
+					convert from undesireable enum format to better one
+						does tnis need additional mapping?
+							No
+					what else?
+						make an object and its children observable
+							why would you want to make an object observable?
+								swap it out?
+									how would you map it's children later
+										they could manually do the same technique
+				

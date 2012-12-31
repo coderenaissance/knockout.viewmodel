@@ -110,12 +110,30 @@ ko["viewmodel"] = (function () {
         else if (isArrayProperty(modelObj, objType)) {
             mapped = context.parentIsArray ? [] : makeObservableArray([]);
             mapped["..push"] = mapped["push"];
-            mapped["push"] = function (item) {
-                item = fnRecursiveFrom(item, settings, {
+            mapped["..unshift"] = mapped["unshift"];
+            mapped["..shift"] = mapped["shift"];
+            mapped["..pop"] = mapped["pop"];
+            mapped["push"] = function (item, doNotMap) {
+                if (item === undefined) return;
+                item = doNotMap ? item : fnRecursiveFrom(item, settings, {
                     name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true
                 });
-                if (item === undefined) return;
                 mapped["..push"](item);
+            };
+            mapped["unshift"] = function (item, doNotMap) {
+                if (item === undefined) return;
+                item = doNotMap ? item : fnRecursiveFrom(item, settings, {
+                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true
+                });
+                mapped["..unshift"](item);
+            };
+            mapped["pop"] = function (unmap) {
+                var result = mapped["..pop"](item);
+                return unmap ? fnRecursiveTo(result) : result;
+            };
+            mapped["shift"] = function (unmap) {
+                var result = mapped["..shift"](item);
+                return unmap ? fnRecursiveTo(result) : result;
             };
             for (p = 0; p < modelObj.length; p++) {
                 mapped["push"](modelObj[p]);
