@@ -1,4 +1,4 @@
-﻿/*ko.viewmodel.js - version 1.0.0
+﻿/*ko.viewmodel.js - version 1.1.0
 * Copyright 2012, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
@@ -60,7 +60,7 @@ ko["viewmodel"] = (function () {
     function isArrayProperty(obj, objType) { return obj != null && objType === "object" && obj.length !== undefined; }
 
     function fnRecursiveFrom(modelObj, settings, context) {
-        var temp, mapped, p, idName, objType = typeof modelObj,
+        var temp, mapped, p, idName, objType = typeof modelObj, newContext,
         pathSettings = GetPathSettings(settings, context);
         if (pathSettings["custom"]) {
             if (typeof pathSettings["custom"] === "function") {
@@ -108,36 +108,41 @@ ko["viewmodel"] = (function () {
             }
         }
         else if (isArrayProperty(modelObj, objType)) {
-            mapped = context.parentIsArray ? [] : makeObservableArray([]);
-            mapped["..push"] = mapped["push"];
-            mapped["..unshift"] = mapped["unshift"];
-            mapped["..shift"] = mapped["shift"];
-            mapped["..pop"] = mapped["pop"];
-            mapped["push"] = function (item, doNotMap) {
-                if (item === undefined) return;
-                item = doNotMap ? item : fnRecursiveFrom(item, settings, {
-                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true
-                });
-                mapped["..push"](item);
-            };
-            mapped["unshift"] = function (item, doNotMap) {
-                if (item === undefined) return;
-                item = doNotMap ? item : fnRecursiveFrom(item, settings, {
-                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true
-                });
-                mapped["..unshift"](item);
-            };
-            mapped["pop"] = function (unmap) {
-                var result = mapped["..pop"](item);
-                return unmap ? fnRecursiveTo(result) : result;
-            };
-            mapped["shift"] = function (unmap) {
-                var result = mapped["..shift"](item);
-                return unmap ? fnRecursiveTo(result) : result;
-            };
+            mapped = [];
+
             for (p = 0; p < modelObj.length; p++) {
-                mapped["push"](modelObj[p]);
+                mapped[p] = fnRecursiveFrom(modelObj[p], settings, {
+                    name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true
+                });
             }
+
+            if (!context.parentIsArray) {
+                newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true};
+                mapped = ko.observableArray(mapped);
+                mapped["..push"] = mapped["push"];
+                mapped["..unshift"] = mapped["unshift"];
+                mapped["..shift"] = mapped["shift"];
+                mapped["..pop"] = mapped["pop"];
+                mapped["push"] = function (item, doNotMap) {
+                    if (item === undefined) return;
+                    item = doNotMap ? item : fnRecursiveFrom(item, settings, newContext);
+                    mapped["..push"](item);
+                };
+                mapped["unshift"] = function (item, doNotMap) {
+                    if (item === undefined) return;
+                    item = doNotMap ? item : fnRecursiveFrom(item, settings, newContext);
+                    mapped["..unshift"](item);
+                };
+                mapped["pop"] = function (unmap) {
+                    var result = mapped["..pop"](item);
+                    return unmap ? fnRecursiveTo(result) : result;
+                };
+                mapped["shift"] = function (unmap) {
+                    var result = mapped["..shift"](item);
+                    return unmap ? fnRecursiveTo(result) : result;
+                };
+            }
+
         }
         return pathSettings["extend"] ? (pathSettings["extend"](mapped) || mapped) : mapped;
     }
