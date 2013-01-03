@@ -123,23 +123,23 @@ ko["viewmodel"] = (function () {
                 mapped["..unshift"] = mapped["unshift"];
                 mapped["..shift"] = mapped["shift"];
                 mapped["..pop"] = mapped["pop"];
-                mapped["push"] = function (item, doNotMap) {
+                mapped["push"] = function (item, options) {
                     if (item === undefined) return;
-                    item = doNotMap ? item : fnRecursiveFrom(item, settings, newContext);
+                    item = options && options.map ? item : fnRecursiveFrom(item, settings, newContext);
                     mapped["..push"](item);
                 };
-                mapped["unshift"] = function (item, doNotMap) {
+                mapped["unshift"] = function (item, options) {
                     if (item === undefined) return;
-                    item = doNotMap ? item : fnRecursiveFrom(item, settings, newContext);
+                    item = options && options.map ? item : fnRecursiveFrom(item, settings, newContext);
                     mapped["..unshift"](item);
                 };
-                mapped["pop"] = function (unmap) {
+                mapped["pop"] = function (options) {
                     var result = mapped["..pop"](item);
-                    return unmap ? fnRecursiveTo(result) : result;
+                    return options && options.unmap ? fnRecursiveTo(result) : result;
                 };
                 mapped["shift"] = function (unmap) {
                     var result = mapped["..shift"](item);
-                    return unmap ? fnRecursiveTo(result) : result;
+                    return options && options.unmap ? fnRecursiveTo(result) : result;
                 };
             }
 
