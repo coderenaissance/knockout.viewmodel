@@ -116,7 +116,7 @@ ko["viewmodel"] = (function () {
                 });
             }
 
-            if (!context.parentIsArray) {
+            if (ko.viewmodel.mappingCompatability !== true || !context.parentIsArray) {
                 newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true};
                 mapped = ko.observableArray(mapped);
                 mapped["..push"] = mapped["push"];
@@ -125,12 +125,12 @@ ko["viewmodel"] = (function () {
                 mapped["..pop"] = mapped["pop"];
                 mapped["push"] = function (item, options) {
                     if (item === undefined) return;
-                    item = options && options.map ? item : fnRecursiveFrom(item, settings, newContext);
+                    item = options && options.map ? fnRecursiveFrom(item, settings, newContext) : item;
                     mapped["..push"](item);
                 };
                 mapped["unshift"] = function (item, options) {
                     if (item === undefined) return;
-                    item = options && options.map ? item : fnRecursiveFrom(item, settings, newContext);
+                    item = options && options.map ? fnRecursiveFrom(item, settings, newContext) : item;
                     mapped["..unshift"](item);
                 };
                 mapped["pop"] = function (options) {
@@ -260,6 +260,7 @@ ko["viewmodel"] = (function () {
         }
     }
     return {
+        "mappingCompatability":false,
         "logging": false,
         "fromModel": function fnFromModel(model, options) {
             var settings = GetSettingsFromOptions(options);
