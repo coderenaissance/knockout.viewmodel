@@ -288,7 +288,23 @@ test("Extended Array Push with Map", function () {
         }
     }, { map: true });
 
-    notStrictEqual(viewmodel.items()[0], viewmodel.items()[1]);
+    actual = viewmodel.items()[0];
+    expected = viewmodel.items.pop()
+
+    notStrictEqual(actual, expected);
+
+    viewmodel.items.push(expected, { map: false });
+
+    actual = viewmodel.items()[0];
+    expected = viewmodel.items.pop()
+
+    notStrictEqual(actual, expected);
+
+    actual = ko.viewmodel.toModel(actual);
+    expected = ko.viewmodel.toModel(expected);
+
+    deepEqual(actual, expected);
+
 });
 
 test("Extended Array Push without Map", function () {
@@ -318,7 +334,7 @@ test("Extended Array Push without Map", function () {
         }
     }, {map:false});
 
-    notEqual(viewmodel.items()[0], viewmodel.items()[1]);
+    notEqual(viewmodel.items.pop(), viewmodel.items()[0]);
 });
 
 test("Exclude full path", function () {

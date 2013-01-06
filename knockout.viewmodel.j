@@ -1,4 +1,4 @@
-﻿/*ko.viewmodel.js - version 1.1.0
+/*ko.viewmodel.js - version 1.1.0
 * Copyright 2012, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
@@ -125,13 +125,21 @@ ko["viewmodel"] = (function () {
                 mapped["..pop"] = mapped["pop"];
                 mapped["push"] = function (item, options) {
                     if (item === undefined) return;
-                    item = (!options || options.map) ? fnRecursiveFrom(item, settings, newContext) : item;
+                    item = options && options.map ? fnRecursiveFrom(item, settings, newContext) : item;
                     mapped["..push"](item);
                 };
                 mapped["unshift"] = function (item, options) {
                     if (item === undefined) return;
-                    item = (!options || options.map) ? fnRecursiveFrom(item, settings, newContext) : item;
+                    item = options && options.map ? fnRecursiveFrom(item, settings, newContext) : item;
                     mapped["..unshift"](item);
+                };
+                mapped["pop"] = function (options) {
+                    var result = mapped["..pop"](item);
+                    return options && options.unmap ? fnRecursiveTo(result) : result;
+                };
+                mapped["shift"] = function (unmap) {
+                    var result = mapped["..shift"](item);
+                    return options && options.unmap ? fnRecursiveTo(result) : result;
                 };
             }
 
