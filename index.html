@@ -35,7 +35,7 @@
         <section id="main_content" class="inner">
             <h2>The Knockout Viewmodel Plugin (ko.viewmodel)</h2>
 
-            <p>The knockout viewmodel plugin runs <a href="http://jsfiddle.net/CodeRenaissance/DrjRf/" >over 85% faster</a> than the knockout mapping plugin and allows you to fine tune your viewmodel creation for even more speed. Now you can create complex observable viewmodels easily and with more structure and control than ever before.</p>
+            <p>The knockout viewmodel plugin runs <a href="http://jsfiddle.net/CodeRenaissance/DrjRf/" >over 50% faster</a> than the knockout mapping plugin at processing object arrays (savings increase as the number of records increase). It also allows you to fine tune your viewmodel creation for even more speed. Now you can create complex observable viewmodels easily and with more structure and control than ever before.</p>
             <p>Consider this comparison between the new viewmodel plugin and the old mapping plugin. Both examples extend a model so that users can be added,
             deleted and updated to it's users array.
             </p>
@@ -264,7 +264,7 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
             <ul>
                 <li>Full Path Name - Matches only the specific path, e.g. "{root}.users[i].firstName".</li>
-                <li>Parent Child Name - Matches the parent child combination specified. So "users[i].firstName" will only match the first name property on objects in the users array. Since this is an array we can also specify this as "[i].firstName" which would match every firstName property on an array child.</li>
+                <li>Parent Child-Name - Matches the parent child combination specified. So "users[i].firstName" will only match the first name property on objects in the users array. Array items have to be referenced as ParentName[i].ChildName but for all other objects the proper reference is ParentName.ChildName</li>
                 <li>Property Name - Matches every property with that name. So a partial path of "firstName" would match every firstName property in your model.</li>
             </ul>
             <h3>Processing Types</h3>
