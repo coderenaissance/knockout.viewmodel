@@ -1,14 +1,14 @@
 ﻿/*ko.viewmodel.js - version 1.1.0
-* Copyright 2012, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
+* Copyright 2013, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
 /*global ko:false */
-ko["viewmodel"] = (function () {
+ko.viewmodel = (function () {
     //Declarations for compatibility with closure compiler
-    var unwrapObservable = ko["utils"]["unwrapObservable"],
-        isObservable = ko["isObservable"],
-        makeObservable = ko["observable"],
-        makeObservableArray = ko["observableArray"],
+    var unwrapObservable = ko.utils.unwrapObservable,
+        isObservable = ko.isObservable,
+        makeObservable = ko.observable,
+        makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" };
 
     function updateConsole(context, pathSettings) {
@@ -55,7 +55,7 @@ ko["viewmodel"] = (function () {
     }
 
     function isNullOrUndefined(obj) { return obj === null || obj === undefined; }
-    function isStandardProperty(obj, objType) { return obj === null || objType === "undefined" || objType === "string" || objType === "number" || objType === "boolean" || (objType === "object" && typeof obj.getMonth === "function"); }
+    function isStandardProperty(obj, objType) { return obj === null || objType === "string" || objType === "number" || objType === "boolean" || (objType === "object" && typeof obj.getMonth === "function"); }
     function isObjectProperty(obj, objType) { return obj != null && objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
     function isArrayProperty(obj, objType) { return obj != null && objType === "object" && obj.length !== undefined; }
 
@@ -118,7 +118,7 @@ ko["viewmodel"] = (function () {
 
             if (ko.viewmodel.mappingCompatability !== true || !context.parentIsArray) {
                 newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true};
-                mapped = ko.observableArray(mapped);
+                mapped = makeObservableArray(mapped);
                 mapped["..push"] = mapped["push"];
                 mapped["..unshift"] = mapped["unshift"];
                 mapped["..shift"] = mapped["shift"];
@@ -179,7 +179,7 @@ ko["viewmodel"] = (function () {
 
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
-            wasWrapped = (viewModelObj !== unwrapped);
+            wasWrapped = (viewModelObj !== unwrapped), child;
         updateConsole(context, null);
         if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended")) return;
         else if (viewModelObj === undefined || unwrapped === modelObj) return;
@@ -188,9 +188,10 @@ ko["viewmodel"] = (function () {
         }
         else if (isObjectProperty(unwrapped, unwrappedType) && isObjectProperty(modelObj, unwrappedType)) {
             for (p in modelObj) {
-                if (unwrapped[p] && typeof unwrapped[p]["..map"] === "function") {
-                    if (isObservable(unwrapped[p])) {
-                        unwrapped[p](unwrapObservable(unwrapped[p]["..map"](modelObj[p])));
+                child = unwrapped[p];
+                if (child && typeof child["..map"] === "function") {
+                    if (isObservable(child)) {
+                        child(unwrapObservable(child["..map"](modelObj[p])));
                     }
                     else {
                         unwrapped[p] = unwrapped[p]["..map"](modelObj[p]);
@@ -209,15 +210,14 @@ ko["viewmodel"] = (function () {
             }
         }
         else if (isArrayProperty(unwrapped, unwrappedType)) {
-            if (unwrapped[0]["..idName"]) {//array
-                idName = unwrapped[0]["..idName"];
+            if (idName = unwrapped[0]["..idName"]) {//array
                 foundModels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
                     found = false;
                     modelId = modelObj[p][idName];
                     for (q = unwrapped.length - 1; q >= 0; q--) {
                         if (modelId === unwrapped[q][idName]()) {
-                            fnRecursiveUpdate(modelObj[p], unwrapped[p], {
+                            fnRecursiveUpdate(modelObj[p], unwrapped[q], {
                                 name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
                             });
                             found = true;
@@ -252,18 +252,18 @@ ko["viewmodel"] = (function () {
         }
     }
     return {
-        "mappingCompatability":false,
-        "logging": false,
-        "fromModel": function fnFromModel(model, options) {
+        mappingCompatability:false,
+        logging: false,
+        fromModel: function fnFromModel(model, options) {
             var settings = GetSettingsFromOptions(options);
             if (ko.viewmodel.logging && window.console) window.console.log("Mapping From Model");
             return fnRecursiveFrom(model, settings, rootContext);
         },
-        "toModel": function fnToModel(viewmodel) {
+        toModel: function fnToModel(viewmodel) {
             if (ko.viewmodel.logging && window.console) window.console.log("Mapping To Model");
             return fnRecursiveTo(viewmodel, rootContext);
         },
-        "updateFromModel": function fnUpdateFromModel(viewmodel, model) {
+        updateFromModel: function fnUpdateFromModel(viewmodel, model) {
             if (ko.viewmodel.logging && window.console) window.console.log("Update From Model");
             return fnRecursiveUpdate(model, viewmodel, rootContext);
         }
