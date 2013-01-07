@@ -260,6 +260,83 @@ test("Extend all array items", function () {
     deepEqual(actual, expected);
 });
 
+
+test("Extended Array Push with Map", function () {
+    var model, viewmodel, modelResult, actual, expected;
+
+    model = {
+        items: [{
+            test: {
+                stringProp: "test"
+            }
+        }]
+    };
+
+    var customMapping = {
+        extend: {
+            "[i]": function (obj) {
+                obj.IsNew = false;
+            }
+        }
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+
+    viewmodel.items.push({
+        test: {
+            stringProp: "test"
+        }
+    }, { map: true });
+
+    actual = viewmodel.items()[0];
+    expected = viewmodel.items.pop()
+
+    notStrictEqual(actual, expected);
+
+    viewmodel.items.push(expected, { map: false });
+
+    actual = viewmodel.items()[0];
+    expected = viewmodel.items.pop()
+
+    notStrictEqual(actual, expected);
+
+    actual = ko.viewmodel.toModel(actual);
+    expected = ko.viewmodel.toModel(expected);
+
+    deepEqual(actual, expected);
+
+});
+
+test("Extended Array Push without Map", function () {
+    var model, viewmodel, modelResult, actual, expected;
+
+    model = {
+        items: [{
+            test: {
+                stringProp: "test"
+            }
+        }]
+    };
+
+    var customMapping = {
+        extend: {
+            "[i]": function (obj) {
+                obj.IsNew = false;
+            }
+        }
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+
+    viewmodel.items.push({
+        test: {
+            stringProp: "test"
+        }
+    }, {map:false});
+
+    notEqual(viewmodel.items.pop(), viewmodel.items()[0]);
+});
+
 test("Exclude full path", function () {
     var model, viewmodel, modelResult, actual, expected;
 

@@ -5,6 +5,7 @@ module("fromModel Basic", {
     },
     teardown: function () {
         //ko.viewmodel.logging = false;
+	ko.viewmodel.mappingCompatability = false;
     }
 });
 
@@ -87,7 +88,33 @@ module("fromModel Basic", {
     });
 
 
-    test("Default nested array", function () {
+    test("Compatability Mode Default nested array", function () {
+        var model, viewmodel;
+
+        model = {
+            nestedArray: [[]]
+        };
+	    
+	    ko.viewmodel.mappingCompatability = true;
+        viewmodel = ko.viewmodel.fromModel(model);
+    
+        deepEqual(viewmodel.nestedArray()[0], model.nestedArray[0], "Array Test");
+    });
+
+    test("Compatability Mode Default double nested array", function () {
+        var model, viewmodel;
+
+        model = {
+            nestedArray: [[[]]]
+        };
+
+	ko.viewmodel.mappingCompatability = true;
+        viewmodel = ko.viewmodel.fromModel(model);
+
+        deepEqual(viewmodel.nestedArray()[0][0], model.nestedArray[0][0], "Array Test");
+    });
+
+    test("No Compatability Mode Default nested array", function () {
         var model, viewmodel;
 
         model = {
@@ -95,11 +122,11 @@ module("fromModel Basic", {
         };
 
         viewmodel = ko.viewmodel.fromModel(model);
-    
-        deepEqual(viewmodel.nestedArray()[0], model.nestedArray[0], "Array Test");
+
+        deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "Array Test");
     });
 
-    test("Default double nested array", function () {
+    test("No Compatability Mode Default double nested array", function () {
         var model, viewmodel;
 
         model = {
@@ -108,7 +135,7 @@ module("fromModel Basic", {
 
         viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel.nestedArray()[0][0], model.nestedArray[0][0], "Array Test");
+        deepEqual(viewmodel.nestedArray()[0]()[0](), model.nestedArray[0][0], "Array Test");
     });
 
 

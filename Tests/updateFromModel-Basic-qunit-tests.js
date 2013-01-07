@@ -197,8 +197,14 @@ test("array item item", function () {
             }
         ]
     };
-
+    
     viewmodel = ko.viewmodel.fromModel(model);
+    
+    deepEqual(viewmodel.items().length, model.items.length, "Array Length Test");
+    deepEqual(viewmodel.items()[0].stringProp(), model.items[0].stringProp, "String Test");
+    deepEqual(viewmodel.items()[0].number(), model.items[0].number, "String Test");
+    deepEqual(viewmodel.items()[0].date(), model.items[0].date, "String Test");
+    
     ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.items().length, updatedModel.items.length, "Array Length Test");
