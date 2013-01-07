@@ -1,4 +1,4 @@
-﻿/*ko.viewmodel.js - version 1.1.0
+﻿/*ko.viewmodel.js - version 1.1.2
 * Copyright 2013, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
@@ -11,24 +11,22 @@ ko.viewmodel = (function () {
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" };
 
-    function updateConsole(context, pathSettings) {
+    function updateConsole(context, pathSettings, settings) {
         var msg;
-        if (ko.viewmodel.logging && window.console) {
-            if (pathSettings && pathSettings.settingType) {
-                msg = pathSettings.settingType + " " + context.qualifiedName + " (matched: '" + (
-                    (pathSettings[context.qualifiedName + ":" + pathSettings.settingType] ? context.qualifiedName : "") ||
-                    (pathSettings[context.parentChildName + ":" + pathSettings.settingType] ? context.parentChildName : "") ||
-                    (context.name)
-                ) + "')";
-            } else {
-                msg = "default " + context.qualifiedName;
-            }
-            window.console.log("- " + msg);
+        if (pathSettings && pathSettings.settingType) {
+            msg = pathSettings.settingType + " " + context.qualifiedName + " (matched: '" + (
+                (settings[context.qualifiedName] ? context.qualifiedName : "") ||
+                (settings[context.parentChildName] ? context.parentChildName : "") ||
+                (context.name)
+            ) + "')";
+        } else {
+            msg = "default " + context.qualifiedName;
         }
+        window.console.log("- " + msg);
     }
     function GetPathSettings(settings, context) {
         var pathSettings = settings ? settings[context.qualifiedName] || settings[context.parentChildName] || settings[context.name] || {} : {};
-        updateConsole(context, pathSettings);
+        ko.viewmodel.logging && window.console && updateConsole(context, pathSettings, settings);
         return pathSettings;
     }
     function GetSettingsFromOptions(options) {
@@ -117,12 +115,10 @@ ko.viewmodel = (function () {
             }
 
             if (ko.viewmodel.mappingCompatability !== true || !context.parentIsArray) {
-                newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true};
+                newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true };
                 mapped = makeObservableArray(mapped);
                 mapped["..push"] = mapped["push"];
                 mapped["..unshift"] = mapped["unshift"];
-                mapped["..shift"] = mapped["shift"];
-                mapped["..pop"] = mapped["pop"];
                 mapped["push"] = function (item, options) {
                     if (item === undefined) return;
                     item = (!options || options.map) ? fnRecursiveFrom(item, settings, newContext) : item;
@@ -252,7 +248,7 @@ ko.viewmodel = (function () {
         }
     }
     return {
-        mappingCompatability:false,
+        mappingCompatability: false,
         logging: false,
         fromModel: function fnFromModel(model, options) {
             var settings = GetSettingsFromOptions(options);
