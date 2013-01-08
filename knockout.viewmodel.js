@@ -1,4 +1,13 @@
-﻿        makeObservable = ko.observable,
+﻿/*ko.viewmodel.js - version 1.1.2
+* Copyright 2013, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
+* License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
+/*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
+/*global ko:false */
+ko.viewmodel = (function () {
+    //Declarations for compatibility with closure compiler
+    var unwrapObservable = ko.utils.unwrapObservable,
+        isObservable = ko.isObservable,
+        makeObservable = ko.observable,
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" };
 
