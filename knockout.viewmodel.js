@@ -1,4 +1,4 @@
-﻿/*ko.viewmodel.js - version 1.1.3
+﻿/*ko.viewmodel.js - version 1.1.4
 * Copyright 2013, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
@@ -139,7 +139,7 @@ ko.viewmodel = (function () {
         var mapped, p, length, unwrapped = unwrapObservable(viewModelObj),
             wasNotWrapped = (viewModelObj === unwrapped),
             objType = typeof unwrapped;
-        updateConsole(context, null);
+        ko.viewmodel.logging && window.console && updateConsole(context, null);
         if (viewModelObj === null) {
             return null;
         }
@@ -173,7 +173,7 @@ ko.viewmodel = (function () {
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped), child;
-        updateConsole(context, null);
+        ko.viewmodel.logging && window.console && updateConsole(context, null);
         if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended")) return;
         else if (viewModelObj === undefined || unwrapped === modelObj) return;
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
