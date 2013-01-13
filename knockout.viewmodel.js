@@ -56,7 +56,7 @@ ko.viewmodel = (function () {
     function isStandardProperty(obj, objType) { return objType === "string" || objType === "number" || objType === "boolean" || obj === null || obj.constructor === Date; }
     function isObjectProperty(obj, objType) { return obj != null && objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
 
-    function fnRecursiveFrom(modelObj, settings, context) {
+    function fnRecursiveFrom(modelObj, settings, context, internalDoNotWrapArray) {
         var temp, mapped, p, length, idName, objType = typeof modelObj, newContext,
         pathSettings = GetPathSettings(settings, context);
         if (pathSettings["custom"]) {
@@ -113,7 +113,7 @@ ko.viewmodel = (function () {
                 });
             }
 
-            if (ko.viewmodel.mappingCompatability !== true || !context.parentIsArray) {
+            if ((ko.viewmodel.mappingCompatability !== true || !context.parentIsArray) && !internalDoNotWrapArray) {
                 newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true };
                 mapped = makeObservableArray(mapped);
                 mapped["..push"] = mapped["push"];
@@ -161,9 +161,9 @@ ko.viewmodel = (function () {
         else if (unwrapped && unwrapped.constructor === Array) {
             mapped = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
-                mapped.push(fnRecursiveTo(unwrapped[p], {
+                mapped[p] = fnRecursiveTo(unwrapped[p], {
                     name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
-                }));
+                });
             }
         }
         return mapped;
@@ -171,7 +171,7 @@ ko.viewmodel = (function () {
 
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
-            wasWrapped = (viewModelObj !== unwrapped), child;
+            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray;
         ko.viewmodel.logging && window.console && updateConsole(context, null);
         if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended")) return;
         else if (viewModelObj === undefined || unwrapped === modelObj) return;
@@ -228,12 +228,17 @@ ko.viewmodel = (function () {
                 }
             }
             else {
-                viewModelObj([]);
-                for (p = 0, length = modelObj.length; p < length; p++) {
-                    if (typeof viewModelObj["..map"] === "function") {
-                        viewModelObj.push(viewModelObj["..map"](modelObj));
+                tempArray = [];
+                map = viewModelObj["..map"];
+                if (typeof map === "function") {
+                    for (p = 0, length = modelObj.length; p < length; p++) {
+                        tempArray[p] = modelObj[p];
                     }
-                    else {
+                    viewModelObj(map(tempArray));
+                }
+                else {//Can't use indexer for assignment; have to preserve original mapping with push
+                    viewModelObj(tempArray);
+                    for (p = 0, length = modelObj.length; p < length; p++) {
                         viewModelObj.push(modelObj[p]);
                     }
                 }
