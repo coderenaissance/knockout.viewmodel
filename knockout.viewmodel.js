@@ -30,11 +30,11 @@ ko.viewmodel = (function () {
         return pathSettings;
     }
     function GetSettingsFromOptions(options) {
-        var mapping = {}, settings, index, key, settingType;
+        var mapping = {}, settings, index, key, length, settingType;
         for (settingType in options) {
             settings = options[settingType] || {};
             if (settings.length !== undefined) {
-                for (index = 0; index < settings.length; index++) {
+                for (index = 0, length = settings.length; index < length; index++) {
                     key = settings[index];
                     mapping[key] = {};
                     mapping[key][settingType] = true;
