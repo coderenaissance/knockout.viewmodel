@@ -55,7 +55,6 @@ ko.viewmodel = (function () {
     function isNullOrUndefined(obj) { return obj === null || obj === undefined; }
     function isStandardProperty(obj, objType) { return obj === null || objType === "string" || objType === "number" || objType === "boolean" || (objType === "object" && typeof obj.getMonth === "function"); }
     function isObjectProperty(obj, objType) { return obj != null && objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
-    function isArrayProperty(obj, objType) { return obj != null && objType === "object" && obj.length !== undefined; }
 
     function fnRecursiveFrom(modelObj, settings, context) {
         var temp, mapped, p, length, idName, objType = typeof modelObj, newContext,
@@ -105,7 +104,7 @@ ko.viewmodel = (function () {
                 mapped["..idName"] = idName;
             }
         }
-        else if (isArrayProperty(modelObj, objType)) {
+        else if (modelObj && modelObj.constructor === Array) {
             mapped = [];
 
             for (p = 0, length = modelObj.length; p < length; p++) {
@@ -159,7 +158,7 @@ ko.viewmodel = (function () {
                 });
             }
         }
-        else if (isArrayProperty(unwrapped, objType)) {
+        else if (unwrapped && unwrapped.constructor === Array) {
             mapped = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
                 mapped.push(fnRecursiveTo(unwrapped[p], {
@@ -202,7 +201,7 @@ ko.viewmodel = (function () {
                 }
             }
         }
-        else if (isArrayProperty(unwrapped, unwrappedType)) {
+        else if (unwrapped && unwrapped.constructor === Array) {
             if (idName = unwrapped[0]["..idName"]) {//array
                 foundModels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
