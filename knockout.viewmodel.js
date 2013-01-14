@@ -10,30 +10,43 @@ ko.viewmodel = (function () {
         makeObservable = ko.observable,
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" };
-
+    
+    //Updates the console with information about what has been mapped and how
+    //Note: All calls to this function should be preceeded by if(ko.viewmodel.logging) in order
+    //to reduce the number of statements executed in the loop when logging is turned off
+    //and reduce long running script errors in older versions of IE
     function updateConsole(context, pathSettings, settings) {
         var msg;
-        if (pathSettings && pathSettings.settingType) {
-            msg = pathSettings.settingType + " " + context.qualifiedName + " (matched: '" + (
-                (settings[context.qualifiedName] ? context.qualifiedName : "") ||
-                (settings[context.parentChildName] ? context.parentChildName : "") ||
-                (context.name)
-            ) + "')";
-        } else {
-            msg = "default " + context.qualifiedName;
+        if (ko.viewmodel.logging && window.console) {
+            if (pathSettings && pathSettings.settingType) {
+                msg = pathSettings.settingType + " " + context.qualifiedName + " (matched: '" + (
+                    (settings[context.qualifiedName] ? context.qualifiedName : "") ||
+                    (settings[context.parentChildName] ? context.parentChildName : "") ||
+                    (context.name)
+                ) + "')";
+            } else {
+                msg = "default " + context.qualifiedName;
+            }
+            window.console.log("- " + msg);
         }
-        window.console.log("- " + msg);
     }
+
+    //Gets settings for the specified path
     function GetPathSettings(settings, context) {
+        //Settings for more specific paths are chosen over less specific ones.
         var pathSettings = settings ? settings[context.qualifiedName] || settings[context.parentChildName] || settings[context.name] || {} : {};
-        ko.viewmodel.logging && window.console && updateConsole(context, pathSettings, settings);
+        if(ko.viewmodel.logging) updateConsole(context, pathSettings, settings);
         return pathSettings;
     }
-    function GetSettingsFromOptions(options) {
+
+    //Converts options into a dictionary of path settings
+    //This allows for path settings to be looked up efficiently
+    function GetPathSettingsDictionary(options) {
         var mapping = {}, settings, index, key, length, settingType;
         for (settingType in options) {
             settings = options[settingType] || {};
-            if (settings.length !== undefined) {
+            //Settings can either be dictionaries(assiative arrays) or arrays
+            if (settings.constructor === Array) {//process array list for append and exclude
                 for (index = 0, length = settings.length; index < length; index++) {
                     key = settings[index];
                     mapping[key] = {};
@@ -41,7 +54,7 @@ ko.viewmodel = (function () {
                     mapping[key].settingType = settingType;
                 }
             }
-            else {
+            else {//process associative array for extend and map
                 for (key in settings) {
                     mapping[key] = {};
                     mapping[key][settingType] = settings[key];
@@ -138,7 +151,7 @@ ko.viewmodel = (function () {
         var mapped, p, length, unwrapped = unwrapObservable(viewModelObj),
             wasNotWrapped = (viewModelObj === unwrapped),
             objType = typeof unwrapped;
-        ko.viewmodel.logging && window.console && updateConsole(context, null);
+        if(ko.viewmodel.logging) updateConsole(context, null);
         if (viewModelObj === null) {
             return null;
         }
@@ -172,7 +185,7 @@ ko.viewmodel = (function () {
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray;
-        ko.viewmodel.logging && window.console && updateConsole(context, null);
+        if(ko.viewmodel.logging) updateConsole(context, null);
         if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended")) return;
         else if (viewModelObj === undefined || unwrapped === modelObj) return;
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
@@ -252,7 +265,7 @@ ko.viewmodel = (function () {
         mappingCompatability: false,
         logging: false,
         fromModel: function fnFromModel(model, options) {
-            var settings = GetSettingsFromOptions(options);
+            var settings = GetPathSettingsDictionary(options);
             if (ko.viewmodel.logging && window.console) window.console.log("Mapping From Model");
             return fnRecursiveFrom(model, settings, rootContext);
         },
