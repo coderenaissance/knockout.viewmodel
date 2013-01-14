@@ -42,32 +42,36 @@ ko.viewmodel = (function () {
     //Converts options into a dictionary of path settings
     //This allows for path settings to be looked up efficiently
     function GetPathSettingsDictionary(options) {
-        var mapping = {}, settings, index, key, length, settingType;
+        var result = {}, settings, index, key, length, settingType;
         for (settingType in options) {
             settings = options[settingType] || {};
             //Settings can either be dictionaries(assiative arrays) or arrays
             if (settings.constructor === Array) {//process array list for append and exclude
                 for (index = 0, length = settings.length; index < length; index++) {
                     key = settings[index];
-                    mapping[key] = {};
-                    mapping[key][settingType] = true;
-                    mapping[key].settingType = settingType;
+                    result[key] = {};
+                    result[key][settingType] = true;
+                    result[key].settingType = settingType;
                 }
             }
             else {//process associative array for extend and map
                 for (key in settings) {
-                    mapping[key] = {};
-                    mapping[key][settingType] = settings[key];
-                    mapping[key].settingType = settingType;
+                    result[key] = {};
+                    result[key][settingType] = settings[key];
+                    result[key].settingType = settingType;
                 }
             }
-        }
-        return mapping;
+        } 
+        return result;
     }
 
     function isNullOrUndefined(obj) { return obj === null || obj === undefined; }
-    function isStandardProperty(obj, objType) { return objType === "string" || objType === "number" || objType === "boolean" || obj === null || obj.constructor === Date; }
-    function isObjectProperty(obj, objType) { return obj != null && objType === "object" && obj.length === undefined && !isStandardProperty(obj, objType); }
+
+    //Returns true for types that are wrapped in standard observables... this excludes arrays which are wrapped in observable arrays and objects which are not wrapped by default
+    function isOfTypeThatReceivesStandardObservation(obj, objType) { return objType === "string" || objType === "number" || objType === "boolean" || obj === null || obj.constructor === Date; }
+
+    //Returns true if plain old object
+    function isObjectProperty(obj, objType) { return obj !== null && objType === "object" && obj.constructor !== Array && obj.constructor !== Date; }
 
     function fnRecursiveFrom(modelObj, settings, context, internalDoNotWrapArray) {
         var temp, mapped, p, length, idName, objType = typeof modelObj, newContext,
@@ -93,13 +97,13 @@ ko.viewmodel = (function () {
             mapped = modelObj;
         }
         else if (pathSettings["exclude"]) return;
-        else if (isStandardProperty(modelObj, objType)) {
+        else if (isOfTypeThatReceivesStandardObservation(modelObj, objType)) {
             mapped = context.parentIsArray ? modelObj : makeObservable(modelObj);
             if (pathSettings["id"]) {
                 mapped["..isid"] = true;
             }
         }
-        else if (isObjectProperty(modelObj, objType)) {
+        else if (objType === "object" && modelObj !== null && modelObj.constructor !== Array) {
             mapped = {};
             idName = undefined;
             for (p in modelObj) {
@@ -150,7 +154,7 @@ ko.viewmodel = (function () {
     function fnRecursiveTo(viewModelObj, context) {
         var mapped, p, length, unwrapped = unwrapObservable(viewModelObj),
             wasNotWrapped = (viewModelObj === unwrapped),
-            objType = typeof unwrapped;
+            unwrappedObjType = typeof unwrapped;
         if(ko.viewmodel.logging) updateConsole(context, null);
         if (viewModelObj === null) {
             return null;
@@ -158,10 +162,10 @@ ko.viewmodel = (function () {
         else if (viewModelObj !== undefined && viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
         }
-        else if (unwrapped === null || unwrapped.hasOwnProperty("..appended") || (!wasNotWrapped && isStandardProperty(unwrapped, objType))) {
+        else if (unwrapped === null || unwrapped.hasOwnProperty("..appended") || (!wasNotWrapped && isOfTypeThatReceivesStandardObservation(unwrapped, unwrappedObjType))) {
             mapped = unwrapped;
         }
-        else if (isObjectProperty(unwrapped, objType)) {
+        else if (unwrappedObjType === "object" && unwrapped !== null && unwrapped.constructor !== Array) {
             mapped = {};
             for (p in unwrapped) {
                 mapped[p] = fnRecursiveTo(unwrapped[p], {
