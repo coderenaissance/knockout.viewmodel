@@ -1,4 +1,4 @@
-﻿/*ko.viewmodel.js - version 1.1.4
+﻿/*ko.viewmodel.js - version 1.1.5
 * Copyright 2013, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
@@ -10,7 +10,7 @@ ko.viewmodel = (function () {
         makeObservable = ko.observable,
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" };
-    
+
     //Updates the console with information about what has been mapped and how
     //Note: All calls to this function should be preceeded by if(ko.viewmodel.logging) in order
     //to reduce the number of statements executed in the loop when logging is turned off
@@ -35,7 +35,7 @@ ko.viewmodel = (function () {
     function GetPathSettings(settings, context) {
         //Settings for more specific paths are chosen over less specific ones.
         var pathSettings = settings ? settings[context.qualifiedName] || settings[context.parentChildName] || settings[context.name] || {} : {};
-        if(ko.viewmodel.logging) updateConsole(context, pathSettings, settings);
+        if (ko.viewmodel.logging) updateConsole(context, pathSettings, settings);
         return pathSettings;
     }
 
@@ -61,31 +61,27 @@ ko.viewmodel = (function () {
                     result[key].settingType = settingType;
                 }
             }
-        } 
+        }
         return result;
     }
 
     function isNullOrUndefined(obj) { return obj === null || obj === undefined; }
-
-    //Returns true for types that are wrapped in standard observables... this excludes arrays which are wrapped in observable arrays and objects which are not wrapped by default
-    function isOfTypeThatReceivesStandardObservation(obj, objType) { return objType === "string" || objType === "number" || objType === "boolean" || obj === null || obj.constructor === Date; }
-
-    //Returns true if plain old object
-    function isObjectProperty(obj, objType) { return obj !== null && objType === "object" && obj.constructor !== Array && obj.constructor !== Date; }
+    function isPrimativeOrDate(obj, objType) { return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj.constructor === Date; }
 
     function fnRecursiveFrom(modelObj, settings, context, internalDoNotWrapArray) {
-        var temp, mapped, p, length, idName, objType = typeof modelObj, newContext,
+        var temp, mapped, p, length, idName, objType, newContext, customPathSettings,
         pathSettings = GetPathSettings(settings, context);
-        if (pathSettings["custom"]) {
-            if (typeof pathSettings["custom"] === "function") {
-                mapped = pathSettings["custom"](modelObj);
+
+        if (customPathSettings = pathSettings["custom"]) {
+            if (typeof customPathSettings === "function") {
+                mapped = customPathSettings(modelObj);
             }
             else {
-                mapped = pathSettings["custom"]["map"](modelObj);
+                mapped = customPathSettings["map"](modelObj);
                 if (!isNullOrUndefined(mapped)) {
-                    mapped["..map"] = pathSettings["custom"]["map"];
-                    if (pathSettings["custom"]["unmap"]) {
-                        mapped["..unmap"] = pathSettings["custom"]["unmap"];
+                    mapped["..map"] = customPathSettings["map"];
+                    if (customPathSettings["unmap"]) {
+                        mapped["..unmap"] = customPathSettings["unmap"];
                     }
                 }
             }
@@ -97,31 +93,13 @@ ko.viewmodel = (function () {
             mapped = modelObj;
         }
         else if (pathSettings["exclude"]) return;
-        else if (isOfTypeThatReceivesStandardObservation(modelObj, objType)) {
+        else if (isPrimativeOrDate(modelObj)) {
             mapped = context.parentIsArray ? modelObj : makeObservable(modelObj);
             if (pathSettings["id"]) {
                 mapped["..isid"] = true;
             }
         }
-        else if (objType === "object" && modelObj !== null && modelObj.constructor !== Array) {
-            mapped = {};
-            idName = undefined;
-            for (p in modelObj) {
-                temp = fnRecursiveFrom(modelObj[p], settings, {
-                    name: p,
-                    parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
-                    qualifiedName: context.qualifiedName + "." + p
-                });
-                if (temp !== undefined) {
-                    mapped[p] = temp;
-                    idName = mapped[p] && mapped[p]["..isid"] ? p : idName;
-                }
-            }
-            if (idName) {
-                mapped["..idName"] = idName;
-            }
-        }
-        else if (modelObj && modelObj.constructor === Array) {
+        else if (modelObj.constructor === Array) {
             mapped = [];
 
             for (p = 0, length = modelObj.length; p < length; p++) {
@@ -148,32 +126,39 @@ ko.viewmodel = (function () {
             }
 
         }
+        else if (modelObj.constructor === Object) {
+            mapped = {};
+            idName = undefined;
+            for (p in modelObj) {
+                temp = fnRecursiveFrom(modelObj[p], settings, {
+                    name: p,
+                    parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                    qualifiedName: context.qualifiedName + "." + p
+                });
+                if (temp !== undefined) {
+                    mapped[p] = temp;
+                    idName = mapped[p] && mapped[p]["..isid"] ? p : idName;
+                }
+            }
+            if (idName) {
+                mapped["..idName"] = idName;
+            }
+        }
+
         return pathSettings["extend"] ? (pathSettings["extend"](mapped) || mapped) : mapped;
     }
 
     function fnRecursiveTo(viewModelObj, context) {
         var mapped, p, length, unwrapped = unwrapObservable(viewModelObj),
-            wasNotWrapped = (viewModelObj === unwrapped),
-            unwrappedObjType = typeof unwrapped;
-        if(ko.viewmodel.logging) updateConsole(context, null);
-        if (viewModelObj === null) {
-            return null;
-        }
-        else if (viewModelObj !== undefined && viewModelObj["..unmap"]) {
+            wasWrapped = !(viewModelObj === unwrapped);
+
+        if (ko.viewmodel.logging) updateConsole(context, null);
+
+        if (viewModelObj && viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
         }
-        else if (unwrapped === null || unwrapped.hasOwnProperty("..appended") || (!wasNotWrapped && isOfTypeThatReceivesStandardObservation(unwrapped, unwrappedObjType))) {
+        else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) || unwrapped.hasOwnProperty("..appended")) {
             mapped = unwrapped;
-        }
-        else if (unwrappedObjType === "object" && unwrapped !== null && unwrapped.constructor !== Array) {
-            mapped = {};
-            for (p in unwrapped) {
-                mapped[p] = fnRecursiveTo(unwrapped[p], {
-                    name: p,
-                    parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
-                    qualifiedName: context.qualifiedName + "." + p
-                });
-            }
         }
         else if (unwrapped && unwrapped.constructor === Array) {
             mapped = [];
@@ -183,19 +168,30 @@ ko.viewmodel = (function () {
                 });
             }
         }
+        else if (unwrapped.constructor === Object) {
+            mapped = {};
+            for (p in unwrapped) {
+                mapped[p] = fnRecursiveTo(unwrapped[p], {
+                    name: p,
+                    parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                    qualifiedName: context.qualifiedName + "." + p
+                });
+            }
+        }
+
         return mapped;
     }
 
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
-        var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrapObservable(viewModelObj), unwrappedType = typeof unwrapped,
+        var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrapObservable(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray;
-        if(ko.viewmodel.logging) updateConsole(context, null);
-        if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended")) return;
-        else if (viewModelObj === undefined || unwrapped === modelObj) return;
+        if (ko.viewmodel.logging) updateConsole(context, null);
+
+        if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended") || unwrapped === modelObj) return;
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
             viewModelObj(modelObj);
         }
-        else if (isObjectProperty(unwrapped, unwrappedType) && isObjectProperty(modelObj, unwrappedType)) {
+        else if (unwrapped.constructor == Object && modelObj.constructor === Object) {
             for (p in modelObj) {
                 child = unwrapped[p];
                 if (child && typeof child["..map"] === "function") {
@@ -206,7 +202,7 @@ ko.viewmodel = (function () {
                         unwrapped[p] = unwrapped[p]["..map"](modelObj[p]);
                     }
                 }
-                else if (modelObj && modelObj[p] === null && isObjectProperty(unwrapped[p], typeof unwrapped[p])) {
+                else if (modelObj[p] === null && unwrapped[p] && unwrapped[p].constructor === Object) {
                     unwrapped[p] = null;
                 }
                 else {
@@ -219,13 +215,13 @@ ko.viewmodel = (function () {
             }
         }
         else if (unwrapped && unwrapped.constructor === Array) {
-            if (idName = unwrapped[0]["..idName"]) {//array
+            if (idName = unwrapped[0]["..idName"]) {//id is specified, create, update, and delete by id
                 foundModels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
                     found = false;
                     modelId = modelObj[p][idName];
                     for (q = unwrapped.length - 1; q >= 0; q--) {
-                        if (modelId === unwrapped[q][idName]()) {
+                        if (modelId === unwrapped[q][idName]()) {//If updated model id equals viewmodel id then update viewmodel object with model data
                             fnRecursiveUpdate(modelObj[p], unwrapped[q], {
                                 name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]"
                             });
@@ -234,20 +230,20 @@ ko.viewmodel = (function () {
                             break;
                         }
                     }
-                    if (!found) {
+                    if (!found) {//If not found in updated model then remove from viewmodel
                         viewModelObj.splice(p, 1);
                     }
                 }
                 for (p = modelObj.length - 1; p >= 0; p--) {
-                    if (!foundModels[p]) {
+                    if (!foundModels[p]) {//If found and updated in viewmodel then add to viewmodel
                         viewModelObj.push(modelObj[p]);
                     }
                 }
             }
-            else {
+            else {//no id specified, replace old array items with new array items
                 tempArray = [];
                 map = viewModelObj["..map"];
-                if (typeof map === "function") {
+                if (typeof map === "function") {//update array with mapped objects, use indexer for performance
                     for (p = 0, length = modelObj.length; p < length; p++) {
                         tempArray[p] = modelObj[p];
                     }
