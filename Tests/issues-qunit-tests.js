@@ -52,16 +52,25 @@ test("Issue 18 - toModel call fails to completely strip extended functions and i
             "{root}.obj": function (obj) {
                 obj.getTextLength = function () {
                     return obj.text().length;
-                }
+                };
+
+                obj.textLength = ko.computed(function () {
+                    return obj.text().length;
+                });
+
             }
         }
     });
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(modelResult.items[0].hasOwnProperty("..idName"), false);
-    deepEqual(typeof modelResult.obj.getTextLength, "undefined");
-    deepEqual(modelResult.obj.hasOwnProperty("getTextLength"), false);
+    deepEqual(modelResult.items[0].hasOwnProperty("..idName"), false, "hasOwnProperty of internal idName property returns true");
+
+    deepEqual(typeof modelResult.obj.getTextLength, "undefined", "function not removed");
+    deepEqual(modelResult.obj.hasOwnProperty("getTextLength"), false, "hasOwnProperty of function extension returns true");
+    
+    deepEqual(typeof modelResult.obj.textLength, "undefined", "property extension not removed");
+    deepEqual(modelResult.obj.hasOwnProperty("textLength"), false, "hasOwnProperty of property extension returns true");
 
 });
 

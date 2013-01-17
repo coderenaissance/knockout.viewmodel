@@ -149,18 +149,18 @@ ko.viewmodel = (function () {
     }
 
     function fnRecursiveTo(viewModelObj, context) {
-        var mapped, p, length, unwrapped = unwrapObservable(viewModelObj),
-            wasWrapped = !(viewModelObj === unwrapped);
+        var mapped, p, length, temp, unwrapped = unwrapObservable(viewModelObj), child, recursiveResult,
+            wasWrapped = !(viewModelObj === unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
         if (ko.viewmodel.logging) updateConsole(context, null);
-
+        if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) return;
         if (viewModelObj && viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
         }
         else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) || unwrapped.hasOwnProperty("..appended")) {
             mapped = unwrapped;
         }
-        else if (unwrapped && unwrapped.constructor === Array) {
+        else if (unwrapped.constructor === Array) {
             mapped = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
                 mapped[p] = fnRecursiveTo(unwrapped[p], {
@@ -171,15 +171,28 @@ ko.viewmodel = (function () {
         else if (unwrapped.constructor === Object) {
             mapped = {};
             for (p in unwrapped) {
-                mapped[p] = fnRecursiveTo(unwrapped[p], {
-                    name: p,
-                    parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
-                    qualifiedName: context.qualifiedName + "." + p
-                });
+                if (p.substr(0,2) !== ".."){
+                    child = unwrapped[p];
+                    if (!ko.isComputed(child) && !((temp = unwrapObservable(child)) && temp.constructor === Function)) {
+
+                        recursiveResult = fnRecursiveTo(child, {
+                            name: p,
+                            parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                            qualifiedName: context.qualifiedName + "." + p
+                        });
+
+                        //since undefined is returned for functions... check undefined result to check that the child wasn't a function... need to performance test alternatives
+                        if (recursiveResult !== undefined || !((temp = unwrapObservable(child)) && temp.constructor === Function)) {
+                            mapped[p] = recursiveResult;
+                        }
+                    }
+                }
             }
         }
         else {
-            mapped = unwrapped;
+            if (!wasWrapped && (typeof unwrapped !== "function")) {
+                mapped = unwrapped;
+            }
         }
 
         return mapped;
