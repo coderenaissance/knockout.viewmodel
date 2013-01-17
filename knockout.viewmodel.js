@@ -215,7 +215,7 @@ ko.viewmodel = (function () {
             }
         }
         else if (unwrapped && unwrapped.constructor === Array) {
-            if (idName = unwrapped[0]["..idName"]) {//id is specified, create, update, and delete by id
+            if (idName = unwrapped["..idName"]) {//id is specified, create, update, and delete by id
                 foundModels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
                     found = false;
