@@ -178,6 +178,9 @@ ko.viewmodel = (function () {
                 });
             }
         }
+        else {
+            mapped = unwrapped;
+        }
 
         return mapped;
     }
