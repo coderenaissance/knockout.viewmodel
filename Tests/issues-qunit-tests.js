@@ -14,8 +14,19 @@ module("Basic Null Tests", {
     }
 });
 
+test("Issue 17 - toModel call fails to correctly unwrap fromModel with nested observableArray of strings", function () {
 
-test("Issue 206 - empty array throws an exception on update", function () {
+    model = { items: [["a", "b", "c", "d"]] };
+
+    viewmodel = ko.viewmodel.fromModel(model);
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    deepEqual(model, modelResult);
+
+});
+
+test("Issue 19 - empty array throws an exception on update", function () {
 
     model = { items: [] };
 
