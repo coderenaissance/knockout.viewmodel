@@ -3,8 +3,16 @@
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
 /*global ko:false */
+
+//The following recursive algorithms, functions which call themselves, but are conceptually just loops
+//Like all loops when executed over a large enough number of items every statement executed bears a noticible load 
+//Performance is of key concern in this project, so in many cases terse code is used to reduce the number of statements executed
+//which is especially important in older versions of IE; Given equal performance less terse code is to be prefered.
 ko.viewmodel = (function () {
-    //Declarations for compatibility with closure compiler
+    //Module declarations. For increased compression with simple settings on the closure compiler,
+    //the ko functions are stored in variables. These variable names will be shortened by the compiler, 
+    //whereas references to ko would not be. There is also supposed to be performance savings from this,
+    //though I have not verified it.
     var unwrapObservable = ko.utils.unwrapObservable,
         isObservable = ko.isObservable,
         makeObservable = ko.observable,
@@ -35,7 +43,7 @@ ko.viewmodel = (function () {
     function GetPathSettings(settings, context) {
         //Settings for more specific paths are chosen over less specific ones.
         var pathSettings = settings ? settings[context.qualifiedName] || settings[context.parentChildName] || settings[context.name] || {} : {};
-        if (ko.viewmodel.logging) updateConsole(context, pathSettings, settings);
+        if (ko.viewmodel.logging) updateConsole(context, pathSettings, settings);//log what mapping will be used
         return pathSettings;
     }
 
@@ -72,15 +80,18 @@ ko.viewmodel = (function () {
         var temp, mapped, p, length, idName, objType, newContext, customPathSettings,
         pathSettings = GetPathSettings(settings, context);
 
+        if (ko.viewmodel.logging) updateConsole(context, null);//Log object being mapped
         if (customPathSettings = pathSettings["custom"]) {
+            //custom can either be specified as a single map function or as an 
+            //object with map and unmap properties
             if (typeof customPathSettings === "function") {
                 mapped = customPathSettings(modelObj);
             }
             else {
                 mapped = customPathSettings["map"](modelObj);
-                if (!isNullOrUndefined(mapped)) {
-                    mapped["..map"] = customPathSettings["map"];
-                    if (customPathSettings["unmap"]) {
+                if (!isNullOrUndefined(mapped)) {//extend object with mapping info where possible
+                    mapped["..map"] = customPathSettings["map"];//preserve map function for updateFromModel calls
+                    if (customPathSettings["unmap"]) {//perserve unmap function for toModel calls
                         mapped["..unmap"] = customPathSettings["unmap"];
                     }
                 }
@@ -111,6 +122,10 @@ ko.viewmodel = (function () {
             if ((ko.viewmodel.mappingCompatability !== true || !context.parentIsArray) && !internalDoNotWrapArray) {
                 newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true };
                 mapped = makeObservableArray(mapped);
+
+                //wrap push and unshift with functions that will map objects
+                //the functions close over settings and context allowing the objects and their children
+                //to be corre correctly mapped. Options allow mapping to be overridden for already mapped objects.
                 mapped["..push"] = mapped["push"];
                 mapped["..unshift"] = mapped["unshift"];
                 mapped["push"] = function (item, options) {
@@ -129,22 +144,31 @@ ko.viewmodel = (function () {
         else if (modelObj.constructor === Object) {
             mapped = {};
             idName = undefined;
+            //create mapped object
             for (p in modelObj) {
-                temp = fnRecursiveFrom(modelObj[p], settings, {
+                temp = fnRecursiveFrom(modelObj[p], settings, {//call recursive from on each child property
                     name: p,
                     parentChildName: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
                     qualifiedName: context.qualifiedName + "." + p
                 });
+
                 if (temp !== undefined) {
                     mapped[p] = temp;
                     idName = mapped[p] && mapped[p]["..isid"] ? p : idName;
                 }
             }
+
+            //add id name to object so it can be accessed later when updating object
+            //only used for updating objects in arrays
             if (idName) {
                 mapped["..idName"] = idName;
             }
         }
 
+        //Extend can either modify the mapped value or replace it
+        //Undefined is returned if the user didn't return a value, in which case it is assumed mapped was altered
+        //If a value is returned it replaces mapped... the most likely scenario being wrapping the object in an observable.
+        //Falsy values are ignored and assumed to be undefined... better type checking of returned values is avoided for performance reasons.
         return pathSettings["extend"] ? (pathSettings["extend"](mapped) || mapped) : mapped;
     }
 
@@ -152,7 +176,7 @@ ko.viewmodel = (function () {
         var mapped, p, length, temp, unwrapped = unwrapObservable(viewModelObj), child, recursiveResult,
             wasWrapped = !(viewModelObj === unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
-        if (ko.viewmodel.logging) updateConsole(context, null);
+        if (ko.viewmodel.logging) updateConsole(context, null);//log object being unmapped
         if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) return;
         if (viewModelObj && viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
@@ -201,7 +225,7 @@ ko.viewmodel = (function () {
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrapObservable(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray;
-        if (ko.viewmodel.logging) updateConsole(context, null);
+        if (ko.viewmodel.logging) updateConsole(context, null);//Log object being updated
 
         if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended") || unwrapped === modelObj) return;
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
