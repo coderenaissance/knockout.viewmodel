@@ -8,6 +8,8 @@
 //Like all loops when executed over a large enough number of items every statement executed bears a noticible load 
 //Performance is of key concern in this project, so in many cases terse code is used to reduce the number of statements executed
 //which is especially important in older versions of IE; Given equal performance less terse code is to be prefered.
+//To keep performance high and the code simple there are some corner cases this code misses... 
+//these holes and their workarounds will need to be documented.
 ko.viewmodel = (function () {
     //Module declarations. For increased compression with simple settings on the closure compiler,
     //the ko functions are stored in variables. These variable names will be shortened by the compiler, 
@@ -105,6 +107,7 @@ ko.viewmodel = (function () {
         }
         else if (pathSettings["exclude"]) return;
         else if (isPrimativeOrDate(modelObj)) {
+            //primative and date children of arrays aren't mapped... all others are
             mapped = context.parentIsArray ? modelObj : makeObservable(modelObj);
             if (pathSettings["id"]) {
                 mapped["..isid"] = true;
@@ -214,6 +217,7 @@ ko.viewmodel = (function () {
             }
         }
         else {
+            //If it wasn't wrapped and it's not a function then return it.
             if (!wasWrapped && (typeof unwrapped !== "function")) {
                 mapped = unwrapped;
             }
@@ -297,7 +301,7 @@ ko.viewmodel = (function () {
                 }
             }
         }
-        else if (wasWrapped) {
+        else if (wasWrapped) {//If it makes it this far and it was wrapped then update it
             viewModelObj(modelObj);
         }
     }
