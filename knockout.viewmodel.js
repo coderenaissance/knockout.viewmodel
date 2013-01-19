@@ -109,9 +109,6 @@ ko.viewmodel = (function () {
         else if (isPrimativeOrDate(modelObj)) {
             //primative and date children of arrays aren't mapped... all others are
             mapped = context.parentIsArray ? modelObj : makeObservable(modelObj);
-            if (pathSettings["id"]) {
-                mapped["..isid"] = true;
-            }
         }
         else if (modelObj instanceof Array) {
             mapped = [];
@@ -123,8 +120,14 @@ ko.viewmodel = (function () {
             }
 
             if ((ko.viewmodel.mappingCompatability !== true || !context.parentIsArray) && !internalDoNotWrapArray) {
+
                 newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true };
                 mapped = makeObservableArray(mapped);
+
+                //add id name to object so it can be accessed later when updating children
+                if (idName = pathSettings["arrayChildId"]) {
+                    mapped["..childIdName"] = idName;
+                }
 
                 //wrap push and unshift with functions that will map objects
                 //the functions close over settings and context allowing the objects and their children
@@ -146,7 +149,7 @@ ko.viewmodel = (function () {
         }
         else if (modelObj.constructor === Object) {
             mapped = {};
-            idName = undefined;
+
             //create mapped object
             for (p in modelObj) {
                 temp = fnRecursiveFrom(modelObj[p], settings, {//call recursive from on each child property
@@ -155,16 +158,9 @@ ko.viewmodel = (function () {
                     qualifiedName: context.qualifiedName + "." + p
                 });
 
-                if (temp !== undefined) {
+                if (temp !== undefined) {//TODO:Why checking for undefined here?
                     mapped[p] = temp;
-                    idName = mapped[p] && mapped[p]["..isid"] ? p : idName;
                 }
-            }
-
-            //add id name to object so it can be accessed later when updating object
-            //only used for updating objects in arrays
-            if (idName) {
-                mapped["..idName"] = idName;
             }
         }
 
@@ -259,7 +255,7 @@ ko.viewmodel = (function () {
             }
         }
         else if (unwrapped && unwrapped instanceof Array) {
-            if (idName = unwrapped["..idName"]) {//id is specified, create, update, and delete by id
+            if (idName = viewModelObj["..childIdName"]) {//id is specified, create, update, and delete by id
                 foundModels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
                     found = false;
