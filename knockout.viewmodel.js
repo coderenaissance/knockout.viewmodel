@@ -22,12 +22,12 @@ ko.viewmodel = (function () {
         rootContext = { name: "{root}", parentChildName: "{root}", qualifiedName: "{root}" };
 
     //Updates the console with information about what has been mapped and how
-    //Note: All calls to this function should be preceeded by if(ko.viewmodel.logging) in order
+    //Note: All calls to this function should be preceeded by if(ko.viewmodel.options.logging) in order
     //to reduce the number of statements executed in the loop when logging is turned off
     //and reduce long running script errors in older versions of IE
     function updateConsole(context, pathSettings, settings) {
         var msg;
-        if (ko.viewmodel.logging && window.console) {
+        if (ko.viewmodel.options.logging && window.console) {
             if (pathSettings && pathSettings.settingType) {
                 msg = pathSettings.settingType + " " + context.qualifiedName + " (matched: '" + (
                     (settings[context.qualifiedName] ? context.qualifiedName : "") ||
@@ -45,7 +45,7 @@ ko.viewmodel = (function () {
     function GetPathSettings(settings, context) {
         //Settings for more specific paths are chosen over less specific ones.
         var pathSettings = settings ? settings[context.qualifiedName] || settings[context.parentChildName] || settings[context.name] || {} : {};
-        if (ko.viewmodel.logging) updateConsole(context, pathSettings, settings);//log what mapping will be used
+        if (ko.viewmodel.options.logging) updateConsole(context, pathSettings, settings);//log what mapping will be used
         return pathSettings;
     }
 
@@ -82,7 +82,7 @@ ko.viewmodel = (function () {
         var temp, mapped, p, length, idName, objType, newContext, customPathSettings,
         pathSettings = GetPathSettings(settings, context);
 
-        if (ko.viewmodel.logging) updateConsole(context, null);//Log object being mapped
+        if (ko.viewmodel.options.logging) updateConsole(context, null);//Log object being mapped
         if (customPathSettings = pathSettings["custom"]) {
             //custom can either be specified as a single map function or as an 
             //object with map and unmap properties
@@ -119,7 +119,7 @@ ko.viewmodel = (function () {
                 });
             }
 
-            if ((ko.viewmodel.mappingCompatability !== true || !context.parentIsArray) && !internalDoNotWrapArray) {
+            if ((ko.viewmodel.options.mappingCompatability !== true || !context.parentIsArray) && !internalDoNotWrapArray) {
 
                 newContext = { name: "[i]", parentChildName: context.name + "[i]", qualifiedName: context.qualifiedName + "[i]", parentIsArray: true };
                 mapped = makeObservableArray(mapped);
@@ -175,7 +175,7 @@ ko.viewmodel = (function () {
         var mapped, p, length, temp, unwrapped = unwrapObservable(viewModelObj), child, recursiveResult,
             wasWrapped = !(viewModelObj === unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
-        if (ko.viewmodel.logging) updateConsole(context, null);//log object being unmapped
+        if (ko.viewmodel.options.logging) updateConsole(context, null);//log object being unmapped
         if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) return;
         if (viewModelObj && viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
@@ -225,7 +225,7 @@ ko.viewmodel = (function () {
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrapObservable(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray;
-        if (ko.viewmodel.logging) updateConsole(context, null);//Log object being updated
+        if (ko.viewmodel.options.logging) updateConsole(context, null);//Log object being updated
 
         if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended") || unwrapped === modelObj) return;
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
@@ -302,19 +302,21 @@ ko.viewmodel = (function () {
         }
     }
     return {
-        mappingCompatability: false,
-        logging: false,
+        options: {
+            mappingCompatability: false,
+            logging: false
+        },
         fromModel: function fnFromModel(model, options) {
             var settings = GetPathSettingsDictionary(options);
-            if (ko.viewmodel.logging && window.console) window.console.log("Mapping From Model");
+            if (ko.viewmodel.options.logging && window.console) window.console.log("Mapping From Model");
             return fnRecursiveFrom(model, settings, rootContext);
         },
         toModel: function fnToModel(viewmodel) {
-            if (ko.viewmodel.logging && window.console) window.console.log("Mapping To Model");
+            if (ko.viewmodel.options.logging && window.console) window.console.log("Mapping To Model");
             return fnRecursiveTo(viewmodel, rootContext);
         },
         updateFromModel: function fnUpdateFromModel(viewmodel, model) {
-            if (ko.viewmodel.logging && window.console) window.console.log("Update From Model");
+            if (ko.viewmodel.options.logging && window.console) window.console.log("Update From Model");
             return fnRecursiveUpdate(model, viewmodel, rootContext);
         }
     };

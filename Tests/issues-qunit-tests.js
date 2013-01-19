@@ -2,11 +2,11 @@
 var model, viewmodel, updatedModel, modelResult;
 module("Issue Tests", {
     setup: function () {
-        //ko.viewmodel.logging = true;
+        //ko.viewmodel.options.logging = true;
 
     },
     teardown: function () {
-        //ko.viewmodel.logging = false;
+        //ko.viewmodel.options.logging = false;
         model = undefined;
         updatedModel = undefined;
         modelResult = undefined;

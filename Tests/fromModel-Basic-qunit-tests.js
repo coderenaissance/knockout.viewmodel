@@ -1,11 +1,11 @@
 ﻿/// <reference path="FromTo-Mapping-qunit-tests.js" />
 module("fromModel Basic", {
     setup: function () {
-        //ko.viewmodel.logging = true;
+        //ko.viewmodel.options.logging = true;
     },
     teardown: function () {
-        //ko.viewmodel.logging = false;
-	ko.viewmodel.mappingCompatability = false;
+        //ko.viewmodel.options.logging = false;
+	ko.viewmodel.options.mappingCompatability = false;
     }
 });
 
@@ -95,7 +95,7 @@ module("fromModel Basic", {
             nestedArray: [[]]
         };
 	    
-	    ko.viewmodel.mappingCompatability = true;
+	    ko.viewmodel.options.mappingCompatability = true;
         viewmodel = ko.viewmodel.fromModel(model);
     
         deepEqual(viewmodel.nestedArray()[0], model.nestedArray[0], "Array Test");
@@ -108,7 +108,7 @@ module("fromModel Basic", {
             nestedArray: [[[]]]
         };
 
-	ko.viewmodel.mappingCompatability = true;
+	ko.viewmodel.options.mappingCompatability = true;
         viewmodel = ko.viewmodel.fromModel(model);
 
         deepEqual(viewmodel.nestedArray()[0][0], model.nestedArray[0][0], "Array Test");

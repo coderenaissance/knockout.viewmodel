@@ -2,7 +2,7 @@
 var model, updatedModel, modelResult;
 module("Basic Null Tests", {
     setup: function () {
-        //ko.viewmodel.logging = true;
+        //ko.viewmodel.options.logging = true;
 
         model = {
             Prop1: null,
@@ -25,7 +25,7 @@ module("Basic Null Tests", {
 
     },
     teardown: function () {
-        //ko.viewmodel.logging = false;
+        //ko.viewmodel.options.logging = false;
         model = undefined;
         updatedModel = undefined;
         modelResult = undefined;
