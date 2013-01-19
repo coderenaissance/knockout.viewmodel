@@ -56,7 +56,7 @@ ko.viewmodel = (function () {
         for (settingType in options) {
             settings = options[settingType] || {};
             //Settings can either be dictionaries(assiative arrays) or arrays
-            if (settings.constructor === Array) {//process array list for append and exclude
+            if (settings instanceof Array) {//process array list for append and exclude
                 for (index = 0, length = settings.length; index < length; index++) {
                     key = settings[index];
                     result[key] = {};
@@ -76,7 +76,7 @@ ko.viewmodel = (function () {
     }
 
     function isNullOrUndefined(obj) { return obj === null || obj === undefined; }
-    function isPrimativeOrDate(obj, objType) { return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj.constructor === Date; }
+    function isPrimativeOrDate(obj, objType) { return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date; }
 
     function fnRecursiveFrom(modelObj, settings, context, internalDoNotWrapArray) {
         var temp, mapped, p, length, idName, objType, newContext, customPathSettings,
@@ -113,7 +113,7 @@ ko.viewmodel = (function () {
                 mapped["..isid"] = true;
             }
         }
-        else if (modelObj.constructor === Array) {
+        else if (modelObj instanceof Array) {
             mapped = [];
 
             for (p = 0, length = modelObj.length; p < length; p++) {
@@ -187,7 +187,7 @@ ko.viewmodel = (function () {
         else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) || unwrapped.hasOwnProperty("..appended")) {
             mapped = unwrapped;
         }
-        else if (unwrapped.constructor === Array) {
+        else if (unwrapped instanceof Array) {
             mapped = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
                 mapped[p] = fnRecursiveTo(unwrapped[p], {
@@ -258,7 +258,7 @@ ko.viewmodel = (function () {
                 }
             }
         }
-        else if (unwrapped && unwrapped.constructor === Array) {
+        else if (unwrapped && unwrapped instanceof Array) {
             if (idName = unwrapped["..idName"]) {//id is specified, create, update, and delete by id
                 foundModels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
