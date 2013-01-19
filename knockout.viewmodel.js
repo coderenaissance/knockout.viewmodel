@@ -75,14 +75,18 @@ ko.viewmodel = (function () {
         return result;
     }
 
-    function isNullOrUndefined(obj) { return obj === null || obj === undefined; }
-    function isPrimativeOrDate(obj, objType) { return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date; }
+    function isNullOrUndefined(obj) {
+        return obj === null || obj === undefined;
+    }
+    function isPrimativeOrDate(obj, objType) {
+        return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
+    }
 
     function fnRecursiveFrom(modelObj, settings, context, internalDoNotWrapArray) {
         var temp, mapped, p, length, idName, objType, newContext, customPathSettings,
         pathSettings = GetPathSettings(settings, context);
 
-        if (ko.viewmodel.options.logging) updateConsole(context, null);//Log object being mapped
+        if (ko.viewmodel.options.logging) updateConsole(context);//Log object being mapped
         if (customPathSettings = pathSettings["custom"]) {
             //custom can either be specified as a single map function or as an 
             //object with map and unmap properties
@@ -100,7 +104,7 @@ ko.viewmodel = (function () {
             }
         }
         else if (pathSettings["append"]) {
-            if (modelObj != null) {
+            if (!isNullOrUndefined(modelObj)) {
                 modelObj["..appended"] = undefined;
             }
             mapped = modelObj;
@@ -175,7 +179,7 @@ ko.viewmodel = (function () {
         var mapped, p, length, temp, unwrapped = unwrapObservable(viewModelObj), child, recursiveResult,
             wasWrapped = !(viewModelObj === unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
-        if (ko.viewmodel.options.logging) updateConsole(context, null);//log object being unmapped
+        if (ko.viewmodel.options.logging) updateConsole(context);//log object being unmapped
         if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) return;
         if (viewModelObj && viewModelObj["..unmap"]) {
             mapped = viewModelObj["..unmap"](viewModelObj);
@@ -225,13 +229,13 @@ ko.viewmodel = (function () {
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrapObservable(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray;
-        if (ko.viewmodel.options.logging) updateConsole(context, null);//Log object being updated
+        if (ko.viewmodel.options.logging) updateConsole(context);//Log object being updated
 
-        if (isNullOrUndefined(viewModelObj) || viewModelObj.hasOwnProperty("..appended") || unwrapped === modelObj) return;
+        if (!isNullOrUndefined(viewModelObj) && (viewModelObj.hasOwnProperty("..appended") || unwrapped === modelObj)) return;
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
             viewModelObj(modelObj);
         }
-        else if (unwrapped.constructor == Object && modelObj.constructor === Object) {
+        else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
             for (p in modelObj) {
                 child = unwrapped[p];
                 if (child && typeof child["..map"] === "function") {
@@ -242,8 +246,8 @@ ko.viewmodel = (function () {
                         unwrapped[p] = unwrapped[p]["..map"](modelObj[p]);
                     }
                 }
-                else if (modelObj[p] === null && unwrapped[p] && unwrapped[p].constructor === Object) {
-                    unwrapped[p] = null;
+                else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && unwrapped[p].constructor === Object) {
+                    unwrapped[p] = modelObj[p];
                 }
                 else {
                     fnRecursiveUpdate(modelObj[p], unwrapped[p], {
@@ -291,7 +295,7 @@ ko.viewmodel = (function () {
                 }
                 else {//Can't use indexer for assignment; have to preserve original mapping with push
                     viewModelObj(tempArray);
-                    for (p = 0, length = modelObj.length; p < length; p++) {
+                    for (p = 0, length = modelObj ? modelObj.length : 0; p < length; p++) {
                         viewModelObj.push(modelObj[p]);
                     }
                 }

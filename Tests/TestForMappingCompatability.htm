@@ -6,20 +6,22 @@
     <link href="http://code.jquery.com/qunit/qunit-1.10.0.css" rel="stylesheet" />
     <script src="http://code.jquery.com/qunit/qunit-1.10.0.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.0/knockout-min.js"></script>
-    <script src="../knockout.mapping-latest.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.3.5/knockout.mapping.js"></script>
 	<script type="text/javascript">
 		ko.viewmodel = {
 			fromModel: ko.mapping.fromJS,
 			toModel: ko.mapping.toJS,
 			updateFromModel: function(viewmodel, model){
 				ko.mapping.fromJS(model, viewmodel);
-			}
+			},
+			options: {}
 		}
 	</script>
 </head>
 <body>
     <div id="qunit"></div>
     <script src="null-Basic-qunit-tests.js"></script>
+    <script src="undefined-Basic-qunit-tests.js"></script>
     <script src="fromModel-Basic-qunit-tests.js"></script>
     <script src="toModel-Basic-qunit-tests.js"></script>
     <script src="fromModelToModel-Basic-qunit-tests.js"></script>

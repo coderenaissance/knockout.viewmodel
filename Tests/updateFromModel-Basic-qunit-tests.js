@@ -93,56 +93,60 @@ test("nested object override success simple types", function () {
     deepEqual(viewmodel.test.date(), updatedModel.test.date, "UpdatedModel Date Test");
 });
 
-test("ID arrayChildId match array object simple types", function () {
-    var model, updatedModel, viewmodel, options, originalArrayItem;
+//if undefined then we are using facade around ko.mapping
+//used to exclude tests that are incompatable with ko.mapping
+if (ko.viewmodel.options.mappingCompatability !== undefined) {
+    test("ID arrayChildId match array object simple types", function () {
+        var model, updatedModel, viewmodel, options, originalArrayItem;
 
-    model = {
-        items: [
-            {
-                id: 5,
-                stringProp: "test",
-                number: 3,
-                date: new Date("2/04/2001")
+        model = {
+            items: [
+                {
+                    id: 5,
+                    stringProp: "test",
+                    number: 3,
+                    date: new Date("2/04/2001")
+                }
+            ]
+        };
+
+        updatedModel = {
+            items: [
+                {
+                    id: 5,
+                    stringProp: "test2",
+                    number: 6,
+                    date: new Date("12/04/2001")
+                },
+                {
+                    id: 6,
+                    stringProp: "test",
+                    number: 3,
+                    date: new Date("2/04/2001")
+                }
+            ]
+        };
+
+        options = {
+            arrayChildId: {
+                "{root}.items": "id"
             }
-        ]
-    };
+        };
 
-    updatedModel = {
-        items:[
-            {
-                id:5,
-                stringProp: "test2",
-                number: 6,
-                date: new Date("12/04/2001")
-            },
-            {
-                id: 6,
-                stringProp: "test",
-                number: 3,
-                date: new Date("2/04/2001")
-            }
-        ]
-    };
+        viewmodel = ko.viewmodel.fromModel(model, options);
+        originalArrayItem = viewmodel.items()[0];
+        deepEqual(originalArrayItem.id(), 5, "verify id before update");
 
-    options = {
-        arrayChildId: {
-            "{root}.items": "id"
-        }
-    };
+        ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
-    viewmodel = ko.viewmodel.fromModel(model, options);
-    originalArrayItem = viewmodel.items()[0];
-    deepEqual(originalArrayItem.id(), 5, "verify id before update");
-
-    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
-
-    deepEqual(viewmodel.items()[0].id(), 5, "verify id after update");
-    deepEqual(viewmodel.items()[0] === originalArrayItem, true, "verify still same object");
-    deepEqual(viewmodel.items()[0].id(), updatedModel.items[0].id, "String Test");
-    deepEqual(viewmodel.items()[0].stringProp(), updatedModel.items[0].stringProp, "String Test");
-    deepEqual(viewmodel.items()[0].number(), updatedModel.items[0].number, "String Test");
-    deepEqual(viewmodel.items()[0].date(), updatedModel.items[0].date, "String Test");
-});
+        deepEqual(viewmodel.items()[0].id(), 5, "verify id after update");
+        deepEqual(viewmodel.items()[0] === originalArrayItem, true, "verify still same object");
+        deepEqual(viewmodel.items()[0].id(), updatedModel.items[0].id, "String Test");
+        deepEqual(viewmodel.items()[0].stringProp(), updatedModel.items[0].stringProp, "String Test");
+        deepEqual(viewmodel.items()[0].number(), updatedModel.items[0].number, "String Test");
+        deepEqual(viewmodel.items()[0].date(), updatedModel.items[0].date, "String Test");
+    });
+}
 
 test("No arrayChildId option array object simple types", function () {
     var model, updatedModel, viewmodel, options, originalArrayItem;

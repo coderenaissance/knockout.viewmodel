@@ -114,29 +114,34 @@ module("fromModel Basic", {
         deepEqual(viewmodel.nestedArray()[0][0], model.nestedArray[0][0], "Array Test");
     });
 
-    test("No Compatability Mode Default nested array", function () {
-        var model, viewmodel;
+    //if undefined then we are using facade around ko.mapping
+    //used to exclude tests that are incompatable with ko.mapping
+    if (ko.viewmodel.options.mappingCompatability !== undefined) {
+        test("No Compatability Mode Default nested array", function () {
+            var model, viewmodel;
 
-        model = {
-            nestedArray: [[]]
-        };
+            model = {
+                nestedArray: [[]]
+            };
 
-        viewmodel = ko.viewmodel.fromModel(model);
+            viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "Array Test");
-    });
+            deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "Array Test");
+        });
 
-    test("No Compatability Mode Default double nested array", function () {
-        var model, viewmodel;
+        test("No Compatability Mode Default double nested array", function () {
+            var model, viewmodel;
 
-        model = {
-            nestedArray: [[[]]]
-        };
+            model = {
+                nestedArray: [[[]]]
+            };
 
-        viewmodel = ko.viewmodel.fromModel(model);
+            viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel.nestedArray()[0]()[0](), model.nestedArray[0][0], "Array Test");
-    });
+            deepEqual(viewmodel.nestedArray()[0]()[0](), model.nestedArray[0][0], "Array Test");
+        });
+
+    }
 
 
     test("Default string array", function () {
