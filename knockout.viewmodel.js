@@ -21,8 +21,6 @@ ko.viewmodel = (function () {
         rootContext = { name: "{root}", parent: "{root}", full: "{root}" },
         fnLog, isCompat;
 
-    
-
     //Gets settings for the specified path
     function GetPathSettings(settings, context) {
         //Settings for more specific paths are chosen over less specific ones.
@@ -34,11 +32,14 @@ ko.viewmodel = (function () {
     //Converts options into a dictionary of path settings
     //This allows for path settings to be looked up efficiently
     function GetPathSettingsDictionary(options) {
-        var result = {}, settings, index, key, length, settingType;
+        var result = {}, shared = options ? options.shared || {} : {},
+            settings, fn, index, key, length, settingType;
         for (settingType in options) {
             settings = options[settingType] || {};
             //Settings can either be dictionaries(assiative arrays) or arrays
-            if (settings instanceof Array) {//process array list for append and exclude
+            //ignore shared option... contains functions that can be assigned by name
+            if (settingType === "shared") continue;
+            else if (settings instanceof Array) {//process array list for append and exclude
                 for (index = 0, length = settings.length; index < length; index++) {
                     key = settings[index];
                     result[key] = {};
@@ -49,7 +50,9 @@ ko.viewmodel = (function () {
             else {//process associative array for extend and map
                 for (key in settings) {
                     result[key] = {};
-                    result[key][settingType] = settings[key];
+                    fn = settings[key];
+                    fn = settingType !== "arrayChildId" && fn && fn.constructor === String && shared[fn] ? shared[fn] : fn;
+                    result[key][settingType] = fn;
                     result[key].settingType = settingType;
                 }
             }
@@ -60,6 +63,9 @@ ko.viewmodel = (function () {
     function isNullOrUndefined(obj) {
         return obj === null || obj === undefined;
     }
+
+    //while dates aren't part of the JSON spec it doesn't hurt to support them as it's not unreasonable to think they might be added to the model manually.
+    //undefined is also not part of the spec, but it's currently be supported to be more in line with ko.mapping and probably doesn't hurt.
     function isPrimativeOrDate(obj) {
         return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
     }
@@ -121,12 +127,10 @@ ko.viewmodel = (function () {
                 mapped.$$$push = mapped.push;
                 mapped.$$$unshift = mapped.unshift;
                 mapped.push = function (item, options) {
-                    if (item === undefined) return;
                     item = (!options || options.map) ? fnRecursiveFrom(item, settings, newContext) : item;
                     mapped.$$$push(item);
                 };
                 mapped.unshift = function (item, options) {
-                    if (item === undefined) return;
                     item = (!options || options.map) ? fnRecursiveFrom(item, settings, newContext) : item;
                     mapped.$$$unshift(item);
                 };
@@ -318,7 +322,7 @@ ko.viewmodel = (function () {
             logging: false
         },
         fromModel: function fnFromModel(model, options) {
-            var settings = GetPathSettingsDictionary(options);
+                settings = GetPathSettingsDictionary(options);
             initInternals(this.options, "Mapping From Model");
             return fnRecursiveFrom(model, settings, rootContext);
         },

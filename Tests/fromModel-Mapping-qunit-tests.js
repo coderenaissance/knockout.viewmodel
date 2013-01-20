@@ -32,6 +32,34 @@ test("Extend full path", function () {
     deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
 
+test("Extend full path with shared", function () {
+    var model, viewmodel, modelResult;
+
+    model = {
+        test: {
+            stringProp: "test"
+        }
+    };
+
+    var customMapping = {
+        extend: {
+            "{root}.test.stringProp": "test"
+        },
+        shared: {
+            "test": function (obj) {
+                obj.repeat = ko.computed(function () {
+                    return obj() + obj();
+                });
+                return obj;
+            }
+        }
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+
+    deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
+});
+
 test("Extend object property path", function () {
     var model, viewmodel, modelResult;
 
@@ -516,7 +544,7 @@ test("Override object", function () {
     deepEqual(actual, expected, "Item Not Mapped");
 });
 
-test("Map Success", function () {
+test("Custom Success", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -540,7 +568,34 @@ test("Map Success", function () {
     deepEqual(viewmodel.items()[0].test, true, "Item Not Mapped");
 });
 
-test("Map Fail", function () {
+test("Custom Success with shared", function () {
+    var model, viewmodel, modelResult, actual, expected;
+
+    model = {
+        items: [{
+            test: {
+                stringProp: "test"
+            }
+        }]
+    };
+
+    var customMapping = {
+        custom: {
+            "test": "test"
+        },
+        shared: {
+            "test": function (obj) {
+                return obj ? true : false;
+            }
+        }
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+
+    deepEqual(viewmodel.items()[0].test, true, "Item Not Mapped");
+});
+
+test("Custom Fail", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -564,7 +619,7 @@ test("Map Fail", function () {
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
-test("Map Obsevable", function () {
+test("Custom Obsevable", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
