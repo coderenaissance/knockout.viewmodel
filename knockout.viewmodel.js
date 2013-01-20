@@ -124,15 +124,21 @@ ko.viewmodel = (function () {
                 //wrap push and unshift with functions that will map objects
                 //the functions close over settings and context allowing the objects and their children
                 //to be corre correctly mapped. Options allow mapping to be overridden for already mapped objects.
-                mapped.$$$push = mapped.push;
-                mapped.$$$unshift = mapped.unshift;
-                mapped.push = function (item, options) {
-                    item = (!options || options.map) ? fnRecursiveFrom(item, settings, newContext) : item;
-                    mapped.$$$push(item);
+                mapped.pushFromModel = function (item) {
+                    item = fnRecursiveFrom(item, settings, newContext);
+                    mapped.push(item);
                 };
-                mapped.unshift = function (item, options) {
-                    item = (!options || options.map) ? fnRecursiveFrom(item, settings, newContext) : item;
-                    mapped.$$$unshift(item);
+                mapped.unshiftFromModel = function (item) {
+                    item = fnRecursiveFrom(item, settings, newContext);
+                    mapped.unshift(item);
+                };
+                mapped.popToModel = function (item) {
+                    item = mapped.pop();
+                    return fnRecursiveTo(item, newContext);
+                };
+                mapped.shiftToModel = function (item) {
+                    item = mapped.shift();
+                    return fnRecursiveTo(item, newContext);
                 };
             }
 

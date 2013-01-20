@@ -310,18 +310,18 @@ test("Extended Array Push with Map", function () {
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    viewmodel.items.push({
+    viewmodel.items.pushFromModel({
         test: {
             stringProp: "test"
         }
-    }, { map: true });
+    });
 
     actual = viewmodel.items()[0];
     expected = viewmodel.items.pop()
 
     notStrictEqual(actual, expected);
 
-    viewmodel.items.push(expected, { map: false });
+    viewmodel.items.push(expected);
 
     actual = viewmodel.items()[0];
     expected = viewmodel.items.pop()
@@ -330,6 +330,11 @@ test("Extended Array Push with Map", function () {
 
     actual = ko.viewmodel.toModel(actual);
     expected = ko.viewmodel.toModel(expected);
+
+    deepEqual(actual, expected);
+
+    expected = model.items[0];
+    actual = viewmodel.items.popToModel();
 
     deepEqual(actual, expected);
 
