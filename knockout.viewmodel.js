@@ -71,7 +71,7 @@ ko.viewmodel = (function () {
     }
 
     function fnRecursiveFrom(modelObj, settings, context, internalDoNotWrapArray) {
-        var temp, mapped, p, length, idName, newContext, customPathSettings,
+        var temp, result, p, length, idName, newContext, customPathSettings,
         pathSettings = GetPathSettings(settings, context);
 
         if (fnLog) fnLog(context);//Log object being mapped
@@ -79,14 +79,14 @@ ko.viewmodel = (function () {
             //custom can either be specified as a single map function or as an 
             //object with map and unmap properties
             if (typeof customPathSettings === "function") {
-                mapped = customPathSettings(modelObj);
+                result = customPathSettings(modelObj);
             }
             else {
-                mapped = customPathSettings.map(modelObj);
-                if (!isNullOrUndefined(mapped)) {//extend object with mapping info where possible
-                    mapped.$$$map = customPathSettings.map;//preserve map function for updateFromModel calls
+                result = customPathSettings.map(modelObj);
+                if (!isNullOrUndefined(result)) {//extend object with mapping info where possible
+                    result.$$$map = customPathSettings.map;//preserve map function for updateFromModel calls
                     if (customPathSettings.unmap) {//perserve unmap function for toModel calls
-                        mapped.$$$unmap = customPathSettings.unmap;
+                        result.$$$unmapCustom = customPathSettings.unmap;
                     }
                 }
             }
@@ -95,18 +95,18 @@ ko.viewmodel = (function () {
             if (!isNullOrUndefined(modelObj)) {
                 modelObj.$$$appended = undefined;
             }
-            mapped = modelObj;
+            result = modelObj;
         }
         else if (pathSettings.exclude) return;
         else if (isPrimativeOrDate(modelObj)) {
             //primative and date children of arrays aren't mapped... all others are
-            mapped = context.parentIsArray ? modelObj : makeObservable(modelObj);
+            result = context.parentIsArray ? modelObj : makeObservable(modelObj);
         }
         else if (modelObj instanceof Array) {
-            mapped = [];
+            result = [];
 
             for (p = 0, length = modelObj.length; p < length; p++) {
-                mapped[p] = fnRecursiveFrom(modelObj[p], settings, {
+                result[p] = fnRecursiveFrom(modelObj[p], settings, {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true
                 });
             }
@@ -114,37 +114,37 @@ ko.viewmodel = (function () {
             if ((isCompat !== true || !context.parentIsArray) && !internalDoNotWrapArray) {
 
                 newContext = { name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true };
-                mapped = makeObservableArray(mapped);
+                result = makeObservableArray(result);
 
                 //add id name to object so it can be accessed later when updating children
                 if (idName = pathSettings.arrayChildId) {
-                    mapped.$$$childIdName = idName;
+                    result.$$$childIdName = idName;
                 }
 
                 //wrap push and unshift with functions that will map objects
                 //the functions close over settings and context allowing the objects and their children
                 //to be corre correctly mapped. Options allow mapping to be overridden for already mapped objects.
-                mapped.pushFromModel = function (item) {
+                result.pushFromModel = function (item) {
                     item = fnRecursiveFrom(item, settings, newContext);
-                    mapped.push(item);
+                    result.push(item);
                 };
-                mapped.unshiftFromModel = function (item) {
+                result.unshiftFromModel = function (item) {
                     item = fnRecursiveFrom(item, settings, newContext);
-                    mapped.unshift(item);
+                    result.unshift(item);
                 };
-                mapped.popToModel = function (item) {
-                    item = mapped.pop();
+                result.popToModel = function (item) {
+                    item = result.pop();
                     return fnRecursiveTo(item, newContext);
                 };
-                mapped.shiftToModel = function (item) {
-                    item = mapped.shift();
+                result.shiftToModel = function (item) {
+                    item = result.shift();
                     return fnRecursiveTo(item, newContext);
                 };
             }
 
         }
         else if (modelObj.constructor === Object) {
-            mapped = {};
+            result = {};
 
             //create mapped object
             for (p in modelObj) {
@@ -155,7 +155,7 @@ ko.viewmodel = (function () {
                 });
 
                 if (temp !== undefined) {//TODO:Why checking for undefined here?
-                    mapped[p] = temp;
+                    result[p] = temp;
                 }
             }
         }
@@ -165,11 +165,11 @@ ko.viewmodel = (function () {
             if (typeof pathSettings.extend === "function") {
                 //Extend can either modify the mapped value or replace it
                 //Falsy values assumed to be undefined
-                mapped = pathSettings.extend(mapped) || mapped;
+                result = pathSettings.extend(result) || result;
             }
             else if (pathSettings.extend.constructor === Object){
                 if (typeof pathSettings.extend.map === "function") {
-                    mapped = pathSettings.extend.map(mapped) || mapped;
+                    result = pathSettings.extend.map(result) || result;
                 }
 
                 if (typeof pathSettings.extend.unmap === "function") {
@@ -177,31 +177,31 @@ ko.viewmodel = (function () {
                 }
             }
         }
-        return mapped;
+        return result;
     }
 
     function fnRecursiveTo(viewModelObj, context) {
-        var mapped, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
+        var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
         if (fnLog) fnLog(context);//log object being unmapped
         if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) return;
-        if (viewModelObj && viewModelObj.$$$unmap) {
-            mapped = viewModelObj.$$$unmap(viewModelObj);
+        if (viewModelObj && viewModelObj.$$$unmapCustom) {
+            result = viewModelObj.$$$unmapCustom(viewModelObj);
         }
         else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) || unwrapped.hasOwnProperty("$$$appended")) {
-            mapped = unwrapped;
+            result = unwrapped;
         }
         else if (unwrapped instanceof Array) {
-            mapped = [];
+            result = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
-                mapped[p] = fnRecursiveTo(unwrapped[p], {
+                result[p] = fnRecursiveTo(unwrapped[p], {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                 });
             }
         }
         else if (unwrapped.constructor === Object) {
-            mapped = {};
+            result = {};
             for (p in unwrapped) {
                 if (p.substr(0,2) !== "$$$"){
                     child = unwrapped[p];
@@ -215,7 +215,7 @@ ko.viewmodel = (function () {
 
                         //since undefined is returned for functions... check undefined result to check that the child wasn't a function... need to performance test alternatives
                         if (recursiveResult !== undefined || !((temp = unwrap(child)) && temp.constructor === Function)) {
-                            mapped[p] = recursiveResult;
+                            result[p] = recursiveResult;
                         }
                     }
                 }
@@ -224,11 +224,15 @@ ko.viewmodel = (function () {
         else {
             //If it wasn't wrapped and it's not a function then return it.
             if (!wasWrapped && (typeof unwrapped !== "function")) {
-                mapped = unwrapped;
+                result = unwrapped;
             }
         }
 
-        return mapped;
+        if (viewModelObj && viewModelObj.$$$unmapExtend) {
+            result = viewModelObj.$$$unmapExtend(result, viewModelObj) || result;
+        }
+
+        return result;
     }
 
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
