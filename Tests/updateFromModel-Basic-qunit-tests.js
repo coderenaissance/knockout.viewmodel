@@ -1,9 +1,9 @@
 module("updateFromModel Basic", {
     setup: function () {
-        //ko.viewmodel.options.logging = true;
+        ko.viewmodel.options.logging = true;
     },
     teardown: function () {
-        //ko.viewmodel.options.logging = false;
+        ko.viewmodel.options.logging = false;
     }
 });
 
@@ -196,7 +196,7 @@ test("No arrayChildId option array object simple types", function () {
 });
 
 test("arrayChildId option swapped array item item", function () {
-    var model, updatedModel, viewmodel, options;
+    var model, updatedModel, viewmodel, options, originalArrayItem;
 
     model = {
         items: [
