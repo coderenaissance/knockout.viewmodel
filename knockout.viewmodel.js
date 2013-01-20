@@ -272,7 +272,7 @@ ko.viewmodel = (function () {
                 }
                 for (p = modelObj.length - 1; p >= 0; p--) {
                     if (!foundModels[p]) {//If found and updated in viewmodel then add to viewmodel
-                        viewModelObj.push(modelObj[p]);
+                        viewModelObj.pushFromModel(modelObj[p]);
                     }
                 }
             }
@@ -288,7 +288,7 @@ ko.viewmodel = (function () {
                 else {//Can't use indexer for assignment; have to preserve original mapping with push
                     viewModelObj(tempArray);
                     for (p = 0, length = modelObj ? modelObj.length : 0; p < length; p++) {
-                        viewModelObj.push(modelObj[p]);
+                        viewModelObj.pushFromModel(modelObj[p]);
                     }
                 }
             }
