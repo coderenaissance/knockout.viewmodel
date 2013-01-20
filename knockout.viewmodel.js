@@ -160,11 +160,24 @@ ko.viewmodel = (function () {
             }
         }
 
-        //Extend can either modify the mapped value or replace it
-        //Undefined is returned if the user didn't return a value, in which case it is assumed mapped was altered
-        //If a value is returned it replaces mapped... the most likely scenario being wrapping the object in an observable.
-        //Falsy values are ignored and assumed to be undefined... better type checking of returned values is avoided for performance reasons.
-        return pathSettings.extend ? (pathSettings.extend(mapped) || mapped) : mapped;
+        
+        if(pathSettings.extend){
+            if (typeof pathSettings.extend === "function") {
+                //Extend can either modify the mapped value or replace it
+                //Falsy values assumed to be undefined
+                mapped = pathSettings.extend(mapped) || mapped;
+            }
+            else if (pathSettings.extend.constructor === Object){
+                if (typeof pathSettings.extend.map === "function") {
+                    mapped = pathSettings.extend.map(mapped) || mapped;
+                }
+
+                if (typeof pathSettings.extend.unmap === "function") {
+                    //store unmap
+                }
+            }
+        }
+        return mapped;
     }
 
     function fnRecursiveTo(viewModelObj, context) {
