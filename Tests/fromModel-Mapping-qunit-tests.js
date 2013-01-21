@@ -296,47 +296,53 @@ test("Extended Array Push with Map", function () {
         items: [{
             test: {
                 stringProp: "test"
-            }
+            },
+            id: 1259
         }]
     };
 
     var customMapping = {
         extend: {
-            "[i]": function (obj) {
-                obj.IsNew = false;
+            "{root}.items[i]": {
+                map: function (obj) {
+                    obj.IsNew = (obj.id() > 0) ? false : true;
+                },
+                unmap: function (obj, vm) {
+                    delete obj.IsNew;
+                }
             }
         }
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
+    deepEqual(viewmodel.items()[0].IsNew, false, "Extend logic - object with id is not new");//1
+
     viewmodel.items.pushFromModel({
         test: {
             stringProp: "test"
-        }
+        },
+        id: null
     });
+
+    deepEqual(viewmodel.items()[1].IsNew, true, "Extend logic applied to pushFromModel - object with id OF null is not new");//2
 
     actual = viewmodel.items()[0];
     expected = viewmodel.items.pop()
 
-    notStrictEqual(actual, expected);
+    notStrictEqual(actual, expected, "Pop does not change object");//3
 
     viewmodel.items.push(expected);
 
     actual = viewmodel.items()[0];
     expected = viewmodel.items.pop()
 
-    notStrictEqual(actual, expected);
-
-    actual = ko.viewmodel.toModel(actual);
-    expected = ko.viewmodel.toModel(expected);
-
-    deepEqual(actual, expected);
+    notStrictEqual(actual, expected, "Pushing and popping does not change object");//4
 
     expected = model.items[0];
     actual = viewmodel.items.popToModel();
 
-    deepEqual(actual, expected);
+    deepEqual(actual, expected, "popToModel calls unmap and removes IsNew property");//5
 
 });
 

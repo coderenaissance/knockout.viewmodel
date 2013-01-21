@@ -84,7 +84,7 @@ ko.viewmodel = (function () {
             else {
                 result = customPathSettings.map(modelObj);
                 if (!isNullOrUndefined(result)) {//extend object with mapping info where possible
-                    result.$$$map = customPathSettings.map;//preserve map function for updateFromModel calls
+                    result.$$$mapCustom = customPathSettings.map;//preserve map function for updateFromModel calls
                     if (customPathSettings.unmap) {//perserve unmap function for toModel calls
                         result.$$$unmapCustom = customPathSettings.unmap;
                     }
@@ -173,7 +173,7 @@ ko.viewmodel = (function () {
                 }
 
                 if (typeof pathSettings.extend.unmap === "function") {
-                    //store unmap
+                    result.$$$unmapExtend = pathSettings.extend.unmap;
                 }
             }
         }
@@ -247,12 +247,12 @@ ko.viewmodel = (function () {
         else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
             for (p in modelObj) {
                 child = unwrapped[p];
-                if (child && typeof child.$$$map === "function") {
+                if (child && typeof child.$$$mapCustom === "function") {
                     if (isObservable(child)) {
-                        child(unwrap(child.$$$map(modelObj[p])));
+                        child(unwrap(child.$$$mapCustom(modelObj[p])));
                     }
                     else {
-                        unwrapped[p] = unwrapped[p].$$$map(modelObj[p]);
+                        unwrapped[p] = unwrapped[p].$$$mapCustom(modelObj[p]);
                     }
                 }
                 else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && unwrapped[p].constructor === Object) {
@@ -295,7 +295,7 @@ ko.viewmodel = (function () {
             }
             else {//no id specified, replace old array items with new array items
                 tempArray = [];
-                map = viewModelObj.$$$map;
+                map = viewModelObj.$$$mapCustom;
                 if (typeof map === "function") {//update array with mapped objects, use indexer for performance
                     for (p = 0, length = modelObj.length; p < length; p++) {
                         tempArray[p] = modelObj[p];
