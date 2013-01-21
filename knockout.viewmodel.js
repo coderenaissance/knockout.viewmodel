@@ -35,24 +35,24 @@ ko.viewmodel = (function () {
             settings, fn, index, key, length, settingType;
         for (settingType in options) {
             settings = options[settingType] || {};
-            //Settings can either be dictionaries(assiative arrays) or arrays
+            //Settings can either be dictionaries(associative arrays) or arrays
             //ignore shared option... contains functions that can be assigned by name
             if (settingType === "shared") continue;
             else if (settings instanceof Array) {//process array list for append and exclude
                 for (index = 0, length = settings.length; index < length; index++) {
                     key = settings[index];
-                    result[key] = {};
+                    result[key] = result[key] || {};
                     result[key][settingType] = true;
-                    result[key].settingType = settingType;
+                    result[key].settingType = result[key].settingType ? "multiple" : settingType;
                 }
             }
             else {//process associative array for extend and map
                 for (key in settings) {
-                    result[key] = {};
+                    result[key] = result[key] || {};
                     fn = settings[key];
                     fn = settingType !== "arrayChildId" && fn && fn.constructor === String && shared[fn] ? shared[fn] : fn;
                     result[key][settingType] = fn;
-                    result[key].settingType = settingType;
+                    result[key].settingType = result[key].settingType ? "multiple" : settingType;
                 }
             }
         }
@@ -70,7 +70,7 @@ ko.viewmodel = (function () {
     }
 
     function fnRecursiveFrom(modelObj, settings, context) {
-        var temp, result, p, length, idName, newContext, customPathSettings, extend,
+        var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
         pathSettings = GetPathSettings(settings, context);
 
         if (fnLog) {//Log object being mapped
@@ -78,6 +78,7 @@ ko.viewmodel = (function () {
         }
 
         if (customPathSettings = pathSettings.custom) {
+            optionProcessed = true;
             //custom can either be specified as a single map function or as an 
             //object with map and unmap properties
             if (typeof customPathSettings === "function") {
@@ -94,13 +95,17 @@ ko.viewmodel = (function () {
             }
         }
         else if (pathSettings.append) {//append property
+            optionProcessed = true;
             //Q:Can't mark null or undefined as appended, all others are ok
             if (!isNullOrUndefined(modelObj)) {
                 modelObj.___$appended = undefined;
             }
             result = modelObj;//append
         }
-        else if (pathSettings.exclude) return badResult;
+        else if (pathSettings.exclude) {
+            optionProcessed = true;
+            return badResult;
+        }
         else if (isPrimativeOrDate(modelObj)) {
             //primative and date children of arrays aren't mapped... all others are
             result = context.parentIsArray ? modelObj : makeObservable(modelObj);
@@ -162,7 +167,7 @@ ko.viewmodel = (function () {
         }
 
         
-        if (extend = pathSettings.extend) {
+        if (!optionProcessed && (extend = pathSettings.extend)) {
             if (typeof extend === "function") {//single map function specified
                 //Extend can either modify the mapped value or replace it
                 //Falsy values assumed to be undefined

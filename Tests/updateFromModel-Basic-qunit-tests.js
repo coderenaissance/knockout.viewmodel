@@ -1,9 +1,9 @@
 module("updateFromModel Basic", {
     setup: function () {
-        ko.viewmodel.options.logging = true;
+        //ko.viewmodel.options.logging = true;
     },
     teardown: function () {
-        ko.viewmodel.options.logging = false;
+        //ko.viewmodel.options.logging = false;
     }
 });
 
