@@ -17,7 +17,8 @@ ko.viewmodel = (function () {
         makeObservable = ko.observable,
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parent: "{root}", full: "{root}" },
-        fnLog, isCompat;
+        fnLog, useMappingLogic,
+        badResult = function fnBadResult() { };
 
     //Gets settings for the specified path
     function GetPathSettings(settings, context) {
@@ -58,7 +59,7 @@ ko.viewmodel = (function () {
         return result;
     }
 
-    function isNullOrUndefined(obj) {
+    function isNullOrUndefined(obj) {//checks if obj is null or undefined
         return obj === null || obj === undefined;
     }
 
@@ -68,11 +69,14 @@ ko.viewmodel = (function () {
         return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
     }
 
-    function fnRecursiveFrom(modelObj, settings, context, internalDoNotWrapArray) {
+    function fnRecursiveFrom(modelObj, settings, context) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend,
         pathSettings = GetPathSettings(settings, context);
 
-        if (fnLog) fnLog(context);//Log object being mapped
+        if (fnLog) {//Log object being mapped
+            fnLog(context);
+        }
+
         if (customPathSettings = pathSettings.custom) {
             //custom can either be specified as a single map function or as an 
             //object with map and unmap properties
@@ -82,20 +86,21 @@ ko.viewmodel = (function () {
             else {
                 result = customPathSettings.map(modelObj);
                 if (!isNullOrUndefined(result)) {//extend object with mapping info where possible
-                    result.$$$mapCustom = customPathSettings.map;//preserve map function for updateFromModel calls
+                    result.___$mapCustom = customPathSettings.map;//preserve map function for updateFromModel calls
                     if (customPathSettings.unmap) {//perserve unmap function for toModel calls
-                        result.$$$unmapCustom = customPathSettings.unmap;
+                        result.___$unmapCustom = customPathSettings.unmap;
                     }
                 }
             }
         }
-        else if (pathSettings.append) {
+        else if (pathSettings.append) {//append property
+            //Q:Can't mark null or undefined as appended, all others are ok
             if (!isNullOrUndefined(modelObj)) {
-                modelObj.$$$appended = undefined;
+                modelObj.___$appended = undefined;
             }
-            result = modelObj;
+            result = modelObj;//append
         }
-        else if (pathSettings.exclude) return;
+        else if (pathSettings.exclude) return badResult;
         else if (isPrimativeOrDate(modelObj)) {
             //primative and date children of arrays aren't mapped... all others are
             result = context.parentIsArray ? modelObj : makeObservable(modelObj);
@@ -109,19 +114,19 @@ ko.viewmodel = (function () {
                 });
             }
 
-            if ((isCompat !== true || !context.parentIsArray) && !internalDoNotWrapArray) {
+            //only makeObservableArray extend with mapping functions if it's not a nested array or mapping compatabitlity is off
+            if (useMappingLogic !== true || !context.parentIsArray) {
 
                 newContext = { name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true };
                 result = makeObservableArray(result);
 
-                //add id name to object so it can be accessed later when updating children
+                //if available add id name to object so it can be accessed later when updating children
                 if (idName = pathSettings.arrayChildId) {
-                    result.$$$childIdName = idName;
+                    result.___$childIdName = idName;
                 }
 
-                //wrap push and unshift with functions that will map objects
-                //the functions close over settings and context allowing the objects and their children
-                //to be corre correctly mapped. Options allow mapping to be overridden for already mapped objects.
+                //wrap array methods for adding and removing items in functions that
+                //close over settings and context allowing the objects and their children to be correctly mapped.
                 result.pushFromModel = function (item) {
                     item = fnRecursiveFrom(item, settings, newContext);
                     result.push(item);
@@ -143,8 +148,6 @@ ko.viewmodel = (function () {
         }
         else if (modelObj.constructor === Object) {
             result = {};
-
-            //create mapped object
             for (p in modelObj) {
                 temp = fnRecursiveFrom(modelObj[p], settings, {//call recursive from on each child property
                     name: p,
@@ -152,7 +155,7 @@ ko.viewmodel = (function () {
                     full: context.full + "." + p
                 });
 
-                if (temp !== undefined) {//TODO:Why checking for undefined here?
+                if (temp !== badResult) {//properties that couldn't be mapped return badResult
                     result[p] = temp;
                 }
             }
@@ -160,18 +163,18 @@ ko.viewmodel = (function () {
 
         
         if (extend = pathSettings.extend) {
-            if (typeof extend === "function") {
+            if (typeof extend === "function") {//single map function specified
                 //Extend can either modify the mapped value or replace it
                 //Falsy values assumed to be undefined
                 result = extend(result) || result;
             }
-            else if (extend.constructor === Object){
+            else if (extend.constructor === Object) {//map and/or unmap were specified as part of object
                 if (typeof extend.map === "function") {
-                    result = extend.map(result) || result;
+                    result = extend.map(result) || result;//use map to get result
                 }
 
                 if (typeof extend.unmap === "function") {
-                    result.$$$unmapExtend = extend.unmap;
+                    result.___$unmapExtend = extend.unmap;//store unmap for use by toModel
                 }
             }
         }
@@ -182,15 +185,21 @@ ko.viewmodel = (function () {
         var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
-        if (fnLog) fnLog(context);//log object being unmapped
-        if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) return;
-        if (viewModelObj && viewModelObj.$$$unmapCustom) {
-            result = viewModelObj.$$$unmapCustom(viewModelObj);
+        if (fnLog) {
+            fnLog(context);//log object being unmapped
         }
-        else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) || unwrapped.hasOwnProperty("$$$appended")) {
+
+        if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) {//Exclude functions
+            return badResult;
+        }
+        else if (viewModelObj && viewModelObj.___$unmapCustom) {//Defer to customUnmapping where specified
+            result = viewModelObj.___$unmapCustom(viewModelObj);
+        }
+        else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) || unwrapped.hasOwnProperty("___$appended")) {
+            //return null, undefined, appended values, and wrapped primativish values as is
             result = unwrapped;
         }
-        else if (unwrapped instanceof Array) {
+        else if (unwrapped instanceof Array) {//create new array to return and add unwrapped values to it
             result = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
                 result[p] = fnRecursiveTo(unwrapped[p], {
@@ -198,10 +207,10 @@ ko.viewmodel = (function () {
                 });
             }
         }
-        else if (unwrapped.constructor === Object) {
+        else if (unwrapped.constructor === Object) {//create new object to return and add unwrapped values to it
             result = {};
             for (p in unwrapped) {
-                if (p.substr(0,2) !== "$$$"){
+                if (p.substr(0, 2) !== "___$") {//ignore all properties starting with the magic string as internal
                     child = unwrapped[p];
                     if (!ko.isComputed(child) && !((temp = unwrap(child)) && temp.constructor === Function)) {
 
@@ -211,8 +220,8 @@ ko.viewmodel = (function () {
                             full: context.full + "." + p
                         });
 
-                        //since undefined is returned for functions... check undefined result to check that the child wasn't a function... need to performance test alternatives
-                        if (recursiveResult !== undefined || !((temp = unwrap(child)) && temp.constructor === Function)) {
+                        //if badResult wasn't returned then add property
+                        if (recursiveResult !== badResult) {
                             result[p] = recursiveResult;
                         }
                     }
@@ -226,8 +235,8 @@ ko.viewmodel = (function () {
             }
         }
 
-        if (viewModelObj && viewModelObj.$$$unmapExtend) {
-            result = viewModelObj.$$$unmapExtend(result, viewModelObj);
+        if (viewModelObj && viewModelObj.___$unmapExtend) {//if available call extend unmap function
+            result = viewModelObj.___$unmapExtend(result, viewModelObj);
         }
 
         return result;
@@ -235,28 +244,40 @@ ko.viewmodel = (function () {
 
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrap(viewModelObj),
-            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray;
+            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp;
         if (fnLog) fnLog(context);//Log object being updated
 
-        if (!isNullOrUndefined(viewModelObj) && (viewModelObj.hasOwnProperty("$$$appended") || unwrapped === modelObj)) return;
-        else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
+        if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
+            //if you have an observable to update and either the new or old value is 
+            //null or undefined then update the observable
             viewModelObj(modelObj);
         }
         else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
-            for (p in modelObj) {
+            for (p in modelObj) {//loop through object properties and update them
                 child = unwrapped[p];
-                if (child && typeof child.$$$mapCustom === "function") {
+                if (!isNullOrUndefined(child) && viewModelObj.hasOwnProperty("___$appended")) {
+                    //update appended child for round trip to server... 
+                    //this probably won't affect view in most cases, though it could
+                    //Q: what would be the work around if the user didn't want this updated?
+                    unwrapped[p] = modelObj;
+                }
+                else if (child && typeof child.___$mapCustom === "function") {
                     if (isObservable(child)) {
-                        child(unwrap(child.$$$mapCustom(modelObj[p])));
+                        childTemp = child.___$mapCustom(modelObj[p])//get child value mapped by custom maping
+                        childTemp = unwrap(childTemp);//don't nest observables... what you want is the value from the customMapping
+                        child(childTemp);//update child;
                     }
-                    else {
-                        unwrapped[p] = unwrapped[p].$$$mapCustom(modelObj[p]);
+                    else {//property wasn't observable? update it anyway for return to server
+                        unwrapped[p] = unwrapped[p].___$mapCustom(modelObj[p]);
                     }
                 }
                 else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && unwrapped[p].constructor === Object) {
+                    //Replace null or undefined with object for round trip to server; probably won't affect the view
+                    //WORKAROUND: If values are going to switch between obj and null/undefined and the UI needs to be updated
+                    //then the user should use the extend option to wrap the object in an observable
                     unwrapped[p] = modelObj[p];
                 }
-                else {
+                else {//Recursive update everything else
                     fnRecursiveUpdate(modelObj[p], unwrapped[p], {
                         name: p,
                         parent: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
@@ -266,7 +287,7 @@ ko.viewmodel = (function () {
             }
         }
         else if (unwrapped && unwrapped instanceof Array) {
-            if (idName = viewModelObj.$$$childIdName) {//id is specified, create, update, and delete by id
+            if (idName = viewModelObj.___$childIdName) {//id is specified, create, update, and delete by id
                 foundModels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
                     found = false;
@@ -293,7 +314,7 @@ ko.viewmodel = (function () {
             }
             else {//no id specified, replace old array items with new array items
                 tempArray = [];
-                map = viewModelObj.$$$mapCustom;
+                map = viewModelObj.___$mapCustom;
                 if (typeof map === "function") {//update array with mapped objects, use indexer for performance
                     for (p = 0, length = modelObj.length; p < length; p++) {
                         tempArray[p] = modelObj[p];
@@ -314,26 +335,29 @@ ko.viewmodel = (function () {
     }
 
     function initInternals(options, startMessage) {
-        isCompat = options.mappingCompatability;
+        useMappingLogic = options.mappingCompatability;
         if (window.console && options.logging) {
+            //if logging should be done then log start message and add logging function
             console.log(startMessage);
+
             //Updates the console with information about what has been mapped and how
             fnLog = function fnUpdateConsole(context, pathSettings, settings) {
                 var msg;
-                if (pathSettings && pathSettings.settingType) {
+                if (pathSettings && pathSettings.settingType) {//if a setting will be used log it
+                    //message reads: SettingType FullPath (matched: path that was matched)
                     msg = pathSettings.settingType + " " + context.full + " (matched: '" + (
                         (settings[context.full] ? context.full : "") ||
                         (settings[context.parent] ? context.parent : "") ||
                         (context.name)
                     ) + "')";
-                } else {
+                } else {//log that default mapping was used for the path
                     msg = "default " + context.full;
                 }
                 console.log("- " + msg);
             };
         }
         else {
-            fnLog = undefined;
+            fnLog = undefined;//setting the fn to undefined makes it easy to test if logging should be done
         }
     }
 
