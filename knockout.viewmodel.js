@@ -8,8 +8,6 @@
 //Like all loops when executed over a large enough number of items every statement executed bears a noticible load 
 //Performance is of key concern in this project, so in many cases terse code is used to reduce the number of statements executed
 //which is especially important in older versions of IE; Given equal performance less terse code is to be prefered.
-//To keep performance high and the code simple there are some corner cases this code misses... 
-//these holes and their workarounds will need to be documented.
 ko.viewmodel = (function () {
     //Module declarations. For increased compression with simple settings on the closure compiler,
     //the ko functions are stored in variables. These variable names will be shortened by the compiler, 
