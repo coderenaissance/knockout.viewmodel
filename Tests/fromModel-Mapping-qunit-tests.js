@@ -308,7 +308,9 @@ test("Extended Array Push with Map", function () {
                     obj.IsNew = (obj.id() > 0) ? false : true;
                 },
                 unmap: function (obj, vm) {
-                    delete obj.IsNew;
+                    if (vm) {//not using this param but test will fail if not available, easy way to verify that it is passe in
+                        delete obj.IsNew;
+                    }
                 }
             }
         }
