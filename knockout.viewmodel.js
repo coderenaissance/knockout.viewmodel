@@ -343,7 +343,7 @@ ko.viewmodel = (function () {
             logging: false
         },
         fromModel: function fnFromModel(model, options) {
-                settings = GetPathSettingsDictionary(options);
+            var settings = GetPathSettingsDictionary(options);
             initInternals(this.options, "Mapping From Model");
             return fnRecursiveFrom(model, settings, rootContext);
         },
