@@ -71,7 +71,7 @@ ko.viewmodel = (function () {
     }
 
     function fnRecursiveFrom(modelObj, settings, context, internalDoNotWrapArray) {
-        var temp, result, p, length, idName, newContext, customPathSettings,
+        var temp, result, p, length, idName, newContext, customPathSettings, extend,
         pathSettings = GetPathSettings(settings, context);
 
         if (fnLog) fnLog(context);//Log object being mapped
@@ -161,19 +161,19 @@ ko.viewmodel = (function () {
         }
 
         
-        if(pathSettings.extend){
-            if (typeof pathSettings.extend === "function") {
+        if (extend = pathSettings.extend) {
+            if (typeof extend === "function") {
                 //Extend can either modify the mapped value or replace it
                 //Falsy values assumed to be undefined
-                result = pathSettings.extend(result) || result;
+                result = extend(result) || result;
             }
-            else if (pathSettings.extend.constructor === Object){
-                if (typeof pathSettings.extend.map === "function") {
-                    result = pathSettings.extend.map(result) || result;
+            else if (extend.constructor === Object){
+                if (typeof extend.map === "function") {
+                    result = extend.map(result) || result;
                 }
 
-                if (typeof pathSettings.extend.unmap === "function") {
-                    result.$$$unmapExtend = pathSettings.extend.unmap;
+                if (typeof extend.unmap === "function") {
+                    result.$$$unmapExtend = extend.unmap;
                 }
             }
         }
@@ -229,7 +229,7 @@ ko.viewmodel = (function () {
         }
 
         if (viewModelObj && viewModelObj.$$$unmapExtend) {
-            result = viewModelObj.$$$unmapExtend(result, viewModelObj) || result;
+            result = viewModelObj.$$$unmapExtend(result, viewModelObj);
         }
 
         return result;

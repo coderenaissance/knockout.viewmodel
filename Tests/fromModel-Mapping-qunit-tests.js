@@ -311,6 +311,7 @@ test("Extended Array Push with Map", function () {
                     if (vm) {//not using this param but test will fail if not available, easy way to verify that it is passe in
                         delete obj.IsNew;
                     }
+                    return obj;
                 }
             }
         }
