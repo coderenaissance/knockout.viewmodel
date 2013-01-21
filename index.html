@@ -282,16 +282,19 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel);
             <section id="processingTypes" class="inner">
                 <h3>Processing Option Types</h3>
 
-                <p>There four types of custom processing: map, append, exclude, and extend.</p>
+                <p>There four types of processing options: map, append, exclude, extend, and arrayChildId.</p>
 
                 <ul>
                     <li>custom - the path and all of it's children are processed only as you specify</li>
                     <li>append - the path and it's children are appended as is </li>
                     <li>exclude - the path is excluded from processing</li>
                     <li>extend - the path and it's children are processed normally but then extended/modified as specified</li>
-                    <li>id - used to flag an id on object withing an array... strictly for update purposes</li>
+                    <li>arrayChildId - used to identify the what property of the array's child objects should to identify them for update purposes</li>
                 </ul>
-                <p>All processing types are exclusive.</p>
+                <p>The only processing types that can be used together on a path are extend and arrayChildId. If multiple processing options are specified 
+                    for the same path only one will win. Which one will win is subject to internal processing logic that has been organized for performance reasons
+                    and should not be relied upon as it is subject to change in future versions.
+                </p>
                 <section id="extendOption" class="inner">
                     <h3>The extend processing option</h3>
                     With the extend processing option the path and it's children are processed normally but then extended/modified as specified.
@@ -300,12 +303,33 @@ options:{
     extend:{
         "{root}.users[i]": function(user){
             user.isDeleted = ko.observable(false);
+            return user;
         }
     }
 };
         </code></pre>
-                    The value of the path is passed to the extend function after processing has been completed on the path and its children. Objects can be modified without being returned. 
-        Note: Whatever is returned from the extend function will be persisted and replace the default processing.
+        <p>
+            The value of the path is passed to the extend function after processing has been completed on the path and its children. Objects can be modified without being returned. 
+            Note: Whatever is returned from the extend function will be persisted and replace the default processing.
+        </p>
+        There is also this alternate syntax if you need to do unmapping:
+        <pre><code>
+options:{ 
+    custom:{
+        "{root}.users[i]": {
+            map:function(mapped){
+                mapped.isDeleted= ko.observable(false);
+                return mapped;
+            },
+            unmap:function(unmapped){
+            //Because isDeleted was an observable it was unwrapped and added to the model. 
+                delete unmapped.isDeleted;
+                return unmapped;
+            }
+        }
+    }
+};
+        </code></pre>
                 </section>
                 <section id="customOption" class="inner">
                     <h3>The custom processing option</h3>
@@ -323,7 +347,7 @@ options:{
 };
          </code></pre>
 
-                    There is also this alternate syntax if you need to do unmapping
+            There is also this alternate syntax if you need to do unmapping
         <pre><code>
 options:{ 
     custom:{
