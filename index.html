@@ -260,6 +260,18 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel);
                 </code></pre>
                 <br />
             </section>
+            <section id="arrayMethods" class="inner">
+                <h3>Observable Array Mapping Methods</h3>
+                Once an observable array has been mapped, items which need to be added and removed can be processed through viewmodel mapping using the following
+                methods which are added to the observable array.
+                
+                <ul>
+                    <li>pushFromModel - modifies the object passed in according to the original mapping options, and calls array.push</li>
+                    <li>unshiftFromModel - modifies the object passed in according to the original mapping options and calls array.unshift</li>
+                    <li>popToModel - calls array.pop and unmaps and returns the object according to the original mapping options</li>
+                    <li>shiftToModel - calls array.shift and unmaps and returns the object according to the original mapping options</li>
+                </ul> 
+            </section>
             <section id="processingOptions" class="inner">
                 <h3>Processing Options</h3>
 
@@ -276,22 +288,13 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel);
                     <li>Property Name - Matches every property with that name. So a partial path of "firstName" would match every firstName property in your model.</li>
                 </ul>
             </section>
-            <section id="arrayMethods" class="inner">
-                <h3>Observable Array Mapping Methods</h3>
-                Once an observable array has been mapped, items which need to be added and removed can be processed through viewmodel mapping using the following
-                methods which are added to the observable array.
-                
-                <ul>
-                    <li>pushFromModel - modifies the object passed in according to the original mapping options, and calls array.push</li>
-                    <li>unshiftFromModel - modifies the object passed in according to the original mapping options and calls array.unshift</li>
-                    <li>popToModel - calls array.pop and unmaps and returns the object according to the original mapping options</li>
-                    <li>shiftToModel - calls array.shift and unmaps and returns the object according to the original mapping options</li>
-                </ul> 
-            </section>
             <section id="processingTypes" class="inner">
                 <h3>Processing Option Types</h3>
 
-                <p>There four types of processing options: map, append, exclude, extend, and arrayChildId.</p>
+                <p>
+                    Every part of a model can have processing options specified for it. Processing options are specified for an item by it's path. 
+                    There four types of processing options: map, append, exclude, extend, and arrayChildId.
+                </p>
 
                 <ul>
                     <li>custom - the path and all of it's children are processed only as you specify</li>
