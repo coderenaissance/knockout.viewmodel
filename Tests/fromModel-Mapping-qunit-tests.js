@@ -1,9 +1,9 @@
 ﻿module("fromModel Mapping", {
     setup: function () {
-        //ko.viewmodel.logging = true;
+        //ko.viewmodel.options.logging = true;
     },
     teardown: function () {
-        //ko.viewmodel.logging = false;
+        //ko.viewmodel.options.logging = false;
     }
 });
 
@@ -30,6 +30,41 @@ test("Extend full path", function () {
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
     deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
+});
+
+test("Extend full path with shared", function () {
+    var model, viewmodel, modelResult;
+
+    model = {
+        test: {
+            stringProp: "test"
+        },
+        otherTest: {
+            stringProp: "test"
+        }
+    };
+
+    var customMapping = {
+        extend: {
+            "{root}.test.stringProp": "repeat",
+            "{root}.otherTest.stringProp": {
+                map: "repeat"
+            }
+        },
+        shared: {
+            "repeat": function (obj) {
+                obj.repeat = ko.computed(function () {
+                    return obj() + obj();
+                });
+                return obj;
+            }
+        }
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+
+    deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
+    deepEqual(viewmodel.otherTest.stringProp.repeat(), viewmodel.otherTest.stringProp() + viewmodel.otherTest.stringProp());
 });
 
 test("Extend object property path", function () {
@@ -268,42 +303,56 @@ test("Extended Array Push with Map", function () {
         items: [{
             test: {
                 stringProp: "test"
-            }
+            },
+            id: 1259
         }]
     };
 
     var customMapping = {
         extend: {
-            "[i]": function (obj) {
-                obj.IsNew = false;
+            "{root}.items[i]": {
+                map: function (obj) {
+                    obj.IsNew = (obj.id() > 0) ? false : true;
+                },
+                unmap: function (obj, vm) {
+                    if (vm) {//not using this param but test will fail if not available, easy way to verify that it is passe in
+                        delete obj.IsNew;
+                    }
+                    return obj;
+                }
             }
         }
     };
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
-    viewmodel.items.push({
+    deepEqual(viewmodel.items()[0].IsNew, false, "Extend logic - object with id is not new");//1
+
+    viewmodel.items.pushFromModel({
         test: {
             stringProp: "test"
-        }
-    }, { map: true });
+        },
+        id: null
+    });
+
+    deepEqual(viewmodel.items()[1].IsNew, true, "Extend logic applied to pushFromModel - object with id OF null is not new");//2
 
     actual = viewmodel.items()[0];
     expected = viewmodel.items.pop()
 
-    notStrictEqual(actual, expected);
+    notStrictEqual(actual, expected, "Pop does not change object");//3
 
-    viewmodel.items.push(expected, { map: false });
+    viewmodel.items.push(expected);
 
     actual = viewmodel.items()[0];
     expected = viewmodel.items.pop()
 
-    notStrictEqual(actual, expected);
+    notStrictEqual(actual, expected, "Pushing and popping does not change object");//4
 
-    actual = ko.viewmodel.toModel(actual);
-    expected = ko.viewmodel.toModel(expected);
+    expected = model.items[0];
+    actual = viewmodel.items.popToModel();
 
-    deepEqual(actual, expected);
+    deepEqual(actual, expected, "popToModel calls unmap and removes IsNew property");//5
 
 });
 
@@ -516,7 +565,7 @@ test("Override object", function () {
     deepEqual(actual, expected, "Item Not Mapped");
 });
 
-test("Map Success", function () {
+test("Custom Success", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -540,7 +589,34 @@ test("Map Success", function () {
     deepEqual(viewmodel.items()[0].test, true, "Item Not Mapped");
 });
 
-test("Map Fail", function () {
+test("Custom Success with shared", function () {
+    var model, viewmodel, modelResult, actual, expected;
+
+    model = {
+        items: [{
+            test: {
+                stringProp: "test"
+            }
+        }]
+    };
+
+    var customMapping = {
+        custom: {
+            "test": "test"
+        },
+        shared: {
+            "test": function (obj) {
+                return obj ? true : false;
+            }
+        }
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+
+    deepEqual(viewmodel.items()[0].test, true, "Item Not Mapped");
+});
+
+test("Custom Fail", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -564,7 +640,7 @@ test("Map Fail", function () {
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
-test("Map Obsevable", function () {
+test("Custom Obsevable", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {

@@ -2,7 +2,7 @@
 var model, updatedModel, modelResult;
 module("Simple Types", {
     setup: function () {
-        //ko.viewmodel.logging = true;
+        //ko.viewmodel.options.logging = true;
 
         model = {
             stringProp: "test",
@@ -18,7 +18,7 @@ module("Simple Types", {
 
     },
     teardown: function () {
-        //ko.viewmodel.logging = false;
+        //ko.viewmodel.options.logging = false;
         model = undefined;
         updatedModel = undefined;
         modelResult = undefined;

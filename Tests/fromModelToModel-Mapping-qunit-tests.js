@@ -1,10 +1,10 @@
 ﻿/// <reference path="../Scripts/knockout.viewmodel.js" />
 module("fromModel toModel Mapping", {
     setup: function () {
-        //ko.viewmodel.logging = true;
+        //ko.viewmodel.options.logging = true;
     },
     teardown: function () {
-        //ko.viewmodel.logging = false;
+        //ko.viewmodel.options.logging = false;
     }
 });
 

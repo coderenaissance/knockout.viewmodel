@@ -2,13 +2,13 @@
 var model;
 module("toModel Basic", {
     setup: function () {
-        //ko.viewmodel.logging = true;
+        //ko.viewmodel.options.logging = true;
         model = {
             array: []
         };
     },
     teardown: function () {
-        //ko.viewmodel.logging = false;
+        //ko.viewmodel.options.logging = false;
         model = undefined;
     }
 });

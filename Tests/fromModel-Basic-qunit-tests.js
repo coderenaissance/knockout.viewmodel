@@ -1,11 +1,13 @@
 ﻿/// <reference path="FromTo-Mapping-qunit-tests.js" />
 module("fromModel Basic", {
     setup: function () {
-        //ko.viewmodel.logging = true;
+        //ko.viewmodel.options.logging = true;
+        if(ko.viewmodel.options.hasOwnProperty("makeChildArraysObservable")){
+            ko.viewmodel.options.makeChildArraysObservable = true;
+        }
     },
     teardown: function () {
-        //ko.viewmodel.logging = false;
-	ko.viewmodel.mappingCompatability = false;
+        //ko.viewmodel.options.logging = false;
     }
 });
 
@@ -88,55 +90,63 @@ module("fromModel Basic", {
     });
 
 
-    test("Compatability Mode Default nested array", function () {
+    test("makeChildArraysObservable is false Mode Default nested array", function () {
         var model, viewmodel;
 
         model = {
             nestedArray: [[]]
         };
 	    
-	    ko.viewmodel.mappingCompatability = true;
+        ko.viewmodel.options.makeChildArraysObservable = false;
         viewmodel = ko.viewmodel.fromModel(model);
     
+        deepEqual(ko.viewmodel.options.makeChildArraysObservable, false);
         deepEqual(viewmodel.nestedArray()[0], model.nestedArray[0], "Array Test");
     });
 
-    test("Compatability Mode Default double nested array", function () {
+    test("makeChildArraysObservable is false double nested array", function () {
         var model, viewmodel;
 
         model = {
             nestedArray: [[[]]]
         };
 
-	ko.viewmodel.mappingCompatability = true;
+        ko.viewmodel.options.makeChildArraysObservable = false;
         viewmodel = ko.viewmodel.fromModel(model);
 
+        deepEqual(ko.viewmodel.options.makeChildArraysObservable, false);
         deepEqual(viewmodel.nestedArray()[0][0], model.nestedArray[0][0], "Array Test");
     });
 
-    test("No Compatability Mode Default nested array", function () {
-        var model, viewmodel;
+    //if undefined then we are using facade around ko.mapping
+    //used to exclude tests that are incompatable with ko.mapping
+    if (ko.viewmodel.options.makeChildArraysObservable !== undefined) {
+        test("makeChildArraysObservable is true Default nested array", function () {
+            var model, viewmodel;
 
-        model = {
-            nestedArray: [[]]
-        };
+            model = {
+                nestedArray: [[]]
+            };
 
-        viewmodel = ko.viewmodel.fromModel(model);
+            viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "Array Test");
-    });
+            deepEqual(ko.viewmodel.options.makeChildArraysObservable, true);
+            deepEqual(viewmodel.nestedArray()[0](), model.nestedArray[0], "Array Test");
+        });
 
-    test("No Compatability Mode Default double nested array", function () {
-        var model, viewmodel;
+        test("makeChildArraysObservable is true double nested array", function () {
+            var model, viewmodel;
 
-        model = {
-            nestedArray: [[[]]]
-        };
+            model = {
+                nestedArray: [[[]]]
+            };
 
-        viewmodel = ko.viewmodel.fromModel(model);
+            viewmodel = ko.viewmodel.fromModel(model);
 
-        deepEqual(viewmodel.nestedArray()[0]()[0](), model.nestedArray[0][0], "Array Test");
-    });
+            deepEqual(ko.viewmodel.options.makeChildArraysObservable, true);
+            deepEqual(viewmodel.nestedArray()[0]()[0](), model.nestedArray[0][0], "Array Test");
+        });
+    }
 
 
     test("Default string array", function () {

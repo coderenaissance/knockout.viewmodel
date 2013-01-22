@@ -1,20 +1,20 @@
 ﻿/// <reference path="FromTo-Mapping-qunit-tests.js" />
 var model, updatedModel, modelResult;
-module("Null Mapping Tests", {
+module("Undefined Mapping Tests", {
     setup: function () {
         //ko.viewmodel.options.logging = true;
 
         model = {
-            Prop1: null,
+            Prop1: undefined,
             Prop2: "test2",
             Prop3: {},
-            Prop4: null
+            Prop4: undefined
         };
 
         updatedModel = {
             Prop1: "test2",
-            Prop2: null,
-            Prop3: null,
+            Prop2: undefined,
+            Prop3: undefined,
             Prop4: {}
         };
 
@@ -27,52 +27,52 @@ module("Null Mapping Tests", {
     }
 });
 
-test("Extend String Null", function () {
+test("Extend String Undefined", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
         extend: {
             "{root}.Prop1": function (val) {
                 val.isValid = ko.computed(function () {
-                    return val() != null && val().length > 0;
+                    return val() != undefined && val().length > 0;
                 });
             },
             "{root}.Prop2": function (val) {
                 val.isValid = ko.computed(function () {
-                    return val() != null && val().length > 0;
+                    return val() != undefined && val().length > 0;
                 });
             }
         }
     });
 
-    deepEqual(viewmodel.Prop1(), model.Prop1, "Null Prop Test");
-    deepEqual(viewmodel.Prop1.isValid(), false, "Null Prop Extend Test");
+    deepEqual(viewmodel.Prop1(), model.Prop1, "Undefined Prop Test");
+    deepEqual(viewmodel.Prop1.isValid(), false, "Undefined Prop Extend Test");
     deepEqual(viewmodel.Prop2(), model.Prop2, "String Prop Test");
-    deepEqual(viewmodel.Prop2.isValid(), true, "Null Prop Extend Test");
+    deepEqual(viewmodel.Prop2.isValid(), true, "Undefined Prop Extend Test");
 
     ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
-    deepEqual(viewmodel.Prop1(), updatedModel.Prop1, "Null Prop Test");
-    deepEqual(viewmodel.Prop1.isValid(), true, "Null Prop Extend Test");
+    deepEqual(viewmodel.Prop1(), updatedModel.Prop1, "Undefined Prop Test");
+    deepEqual(viewmodel.Prop1.isValid(), true, "Undefined Prop Extend Test");
     deepEqual(viewmodel.Prop2(), updatedModel.Prop2, "String Prop Test");
-    deepEqual(viewmodel.Prop2.isValid(), false, "Null Prop Extend Test");
+    deepEqual(viewmodel.Prop2.isValid(), false, "Undefined Prop Extend Test");
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(modelResult, updatedModel, "Result Object Comparison");
 });
 
-test("Extend Object Null", function () {
+test("Extend Object Undefined", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
         extend: {
             "{root}.Prop3": function (val) {
                 val.isValid = ko.computed(function () {
-                    return ko.utils.unwrapObservable(val) != null;
+                    return ko.utils.unwrapObservable(val) != undefined;
                 });
             }, 
             "{root}.Prop4": function (val) {
                 val.isValid = ko.computed(function () {
-                    return ko.utils.unwrapObservable(val) != null;
+                    return ko.utils.unwrapObservable(val) != undefined;
                 });
             }
         }
@@ -80,21 +80,21 @@ test("Extend Object Null", function () {
 
     deepEqual(typeof viewmodel.Prop3, "object", "Object Prop Test");
     deepEqual(viewmodel.Prop3.isValid(), true, "Object Prop Extend Test");
-    deepEqual(viewmodel.Prop4(), null, "Null Prop Test");
-    deepEqual(viewmodel.Prop4.isValid(), false, "Null Prop Extend Test");
+    deepEqual(viewmodel.Prop4(), undefined, "Undefined Prop Test");
+    deepEqual(viewmodel.Prop4.isValid(), false, "Undefined Prop Extend Test");
 
     ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
-    deepEqual(viewmodel.Prop3, null, "Object to Null Prop Update Test");
-    deepEqual(viewmodel.Prop4(), updatedModel.Prop4, "Null to Object Update Prop Test");
-    deepEqual(viewmodel.Prop4.isValid(), true, "Null to Object Update Prop Extend Test");
+    deepEqual(viewmodel.Prop3, undefined, "Object to Undefined Prop Update Test");
+    deepEqual(viewmodel.Prop4(), updatedModel.Prop4, "Undefined to Object Update Prop Test");
+    deepEqual(viewmodel.Prop4.isValid(), true, "Undefined to Object Update Prop Extend Test");
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(modelResult, updatedModel, "Result Object Comparison");
 });
 
-test("Extend Object Null", function () {
+test("Extend Object Undefined", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
         extend: {
@@ -148,18 +148,18 @@ test("Append property", function () {
         append: ["{root}.Prop1", "{root}.Prop2"]
     });
 	
-    deepEqual(viewmodel.Prop1, model.Prop1, "Null to Value Update Test");
-    deepEqual(viewmodel.Prop2, model.Prop2, "Value to Null Update Test");
+    deepEqual(viewmodel.Prop1, model.Prop1, "Undefined to Value Update Test");
+    deepEqual(viewmodel.Prop2, model.Prop2, "Value to Undefined Update Test");
 	
 	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	
-	notEqual(viewmodel.Prop1, updatedModel.Prop1, "Null to Value Update Test");
-	notEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Null Update Test");
+	notEqual(viewmodel.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
+	notEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
 	
 	modelResult = ko.viewmodel.toModel(viewmodel);
 	
-	notEqual(modelResult.Prop1, updatedModel.Prop1, "Null to Value Update Test");
-	notDeepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Null Update Test");
+	notEqual(modelResult.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
+	notDeepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
 
 });
 
