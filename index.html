@@ -184,6 +184,15 @@ ko.applyBindings(viewmodel);
 			        from the beginning for those who may be newer to knockout.
                 </p>
             </section>
+            <section id="trust" class="inner">
+                <h3>You can trust that it works!!!</h3>
+                <p>
+                    There is a growing <a href="Tests.htm">suite of unit-tests</a> that ensures that ko.viewmodel works reliably. If you think you've found a bug please create a failing <a href="http://jsfiddle.net/CodeRenaissance/nx2yx/">jsfiddle unit test</a>
+                    and submit the link in a <a href="https://github.com/coderenaissance/knockout.viewmodel/issues?state=open">new issue ticket </a>.
+			        The viewmodel plugin follows ko.mappings rules closely (they both pass the same unit tests) which means that if you're not passing 
+                    in any mapping options they should work exactly the same.
+                </p>
+            </section>
             <section id="create" class="inner" >
                 <h3>Creating a simple viewmodel</h3>
 
@@ -468,16 +477,23 @@ var viewmodel = ko.viewmodel(model, {
             Without the arrayChildId option every time an update came back the array would be populated again and all of the items would be 
             extended with selected set to false. With the arrayChildId specified selected state of all objects will be maintained.
             </section>
-            <section id="trust" class="inner">
-                <h3>Can you trust that it works?</h3>
+            </section>
+            <section id="globalOptions" class="inner">
+                <h3>Global Options</h3>
                 <p>
-                    There is a growing <a href="Tests.htm">suite of unit-tests</a> that say that you can. If you think you've found a bug please create a failing <a href="http://jsfiddle.net/CodeRenaissance/nx2yx/">jsfiddle unit test</a>
-                    and submit the link in a <a href="https://github.com/coderenaissance/knockout.viewmodel/issues?state=open">new issue ticket </a>.
-			    The viewmodel plugin follows ko.mappings rules closely (they both pass the same unit tests) which means that if you're not passing 
-                in any mapping options they should work exactly the same. If you find that's not the case please submit an issue ticket and unit test for that as well.	
+                    Global options affect all calls to ko.viewmodel and are access and set via ko.viewmodel.options. Currently there are two global options:
                 </p>
+
+                <ul>
+                    <li>logging - (default:false) logs viewmodel processing to the console, including all paths processed and mapping options applied.</li>
+                    <li>makeChildArraysObservable - (default:true) determines if nested arrays are converted to observable arrays. 
+                        Set to false for compatibility with original mapping plugin or to improve performance.
+                    </li>
+                    
+                </ul>
             </section>
         </section>
+
     </div>
 
     <!-- FOOTER  -->
