@@ -120,7 +120,7 @@ ko.viewmodel = (function () {
             }
 
             //only makeObservableArray extend with mapping functions if it's not a nested array or mapping compatabitlity is off
-            if (makeChildArraysObservable !== true || !context.parentIsArray) {
+            if (!context.parentIsArray || makeChildArraysObservable) {
 
                 newContext = { name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true };
                 result = makeObservableArray(result);
