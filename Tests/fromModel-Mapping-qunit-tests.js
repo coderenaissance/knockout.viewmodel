@@ -38,15 +38,21 @@ test("Extend full path with shared", function () {
     model = {
         test: {
             stringProp: "test"
+        },
+        otherTest: {
+            stringProp: "test"
         }
     };
 
     var customMapping = {
         extend: {
-            "{root}.test.stringProp": "test"
+            "{root}.test.stringProp": "repeat",
+            "{root}.otherTest.stringProp": {
+                map: "repeat"
+            }
         },
         shared: {
-            "test": function (obj) {
+            "repeat": function (obj) {
                 obj.repeat = ko.computed(function () {
                     return obj() + obj();
                 });
@@ -58,6 +64,7 @@ test("Extend full path with shared", function () {
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
     deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
+    deepEqual(viewmodel.otherTest.stringProp.repeat(), viewmodel.otherTest.stringProp() + viewmodel.otherTest.stringProp());
 });
 
 test("Extend object property path", function () {
