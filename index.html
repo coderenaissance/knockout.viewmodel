@@ -185,7 +185,7 @@ ko.applyBindings(viewmodel);
                 </p>
             </section>
             <section id="create" class="inner" >
-                <h3>Creating a simple viewmodel with ko.viewmodel</h3>
+                <h3>Creating a simple viewmodel</h3>
 
                 <p>Creating a viewmodel from a model is simple.</p>
 
@@ -277,7 +277,16 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel);
                 </ul>
             </section>
             <section id="arrayMethods" class="inner">
-
+                <h3>Observable Array Mapping Methods</h3>
+                Once an observable array has been mapped, items which need to be added and removed can be processed through viewmodel mapping using the following
+                methods which are added to the observable array.
+                
+                <ul>
+                    <li>pushFromModel - modifies the object passed in according to the original mapping options, and calls array.push</li>
+                    <li>unshiftFromModel - modifies the object passed in according to the original mapping options and calls array.unshift</li>
+                    <li>popToModel - calls array.pop and unmaps and returns the object according to the original mapping options</li>
+                    <li>shiftToModel - calls array.shift and unmaps and returns the object according to the original mapping options</li>
+                </ul> 
             </section>
             <section id="processingTypes" class="inner">
                 <h3>Processing Option Types</h3>
@@ -329,7 +338,10 @@ options:{
         }
     }
 };
-        </code></pre>
+                    </code></pre>
+                    Functions added with extend will be removed when your model is created, however observables will not be and can be removed using unmap if they will cause 
+                    problems with servers side serialization. It should be noted that in many cases serialization will drop unexpected properties instead of throwing an 
+                    error, so this is not always necessary and would depend on your platform.
                 </section>
                 <section id="customOption" class="inner">
                     <h3>The custom processing option</h3>
