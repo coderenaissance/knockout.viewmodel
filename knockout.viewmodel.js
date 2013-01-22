@@ -17,7 +17,7 @@ ko.viewmodel = (function () {
         makeObservable = ko.observable,
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parent: "{root}", full: "{root}" },
-        fnLog, useMappingLogic,
+        fnLog, makeChildArraysObservable,
         badResult = function fnBadResult() { };
 
     //Gets settings for the specified path
@@ -120,7 +120,7 @@ ko.viewmodel = (function () {
             }
 
             //only makeObservableArray extend with mapping functions if it's not a nested array or mapping compatabitlity is off
-            if (useMappingLogic !== true || !context.parentIsArray) {
+            if (makeChildArraysObservable !== true || !context.parentIsArray) {
 
                 newContext = { name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true };
                 result = makeObservableArray(result);
@@ -340,7 +340,7 @@ ko.viewmodel = (function () {
     }
 
     function initInternals(options, startMessage) {
-        useMappingLogic = options.mappingCompatability;
+        makeChildArraysObservable = options.makeChildArraysObservable;
         if (window.console && options.logging) {
             //if logging should be done then log start message and add logging function
             console.log(startMessage);
@@ -368,7 +368,7 @@ ko.viewmodel = (function () {
 
     return {
         options: {
-            mappingCompatability: false,
+            makeChildArraysObservable: true,
             logging: false
         },
         fromModel: function fnFromModel(model, options) {
