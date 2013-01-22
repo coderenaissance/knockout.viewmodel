@@ -302,7 +302,7 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
                 <p>
                     Every part of a model can have processing options specified for it. Processing options are specified for an item by it's path. 
-                    There four types of processing options: map, append, exclude, extend, and arrayChildId.
+                    There six types of processing options: custom, append, exclude, extend, arrayChildId, and shared.
                 </p>
 
                 <ul>
@@ -311,8 +311,10 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel);
                     <li>exclude - the path is excluded from processing</li>
                     <li>extend - the path and it's children are processed normally but then extended/modified as specified</li>
                     <li>arrayChildId - used to identify the what property of the array's child objects should to identify them for update purposes</li>
+                    <li>shared - allows you to reduce duplicate definitions by creating named processing functions that can be used with extend and map.</li>
                 </ul>
-                <p>The only processing types that can be used together on a path are extend and arrayChildId. If multiple processing options are specified 
+                <p>
+                    The only processing types that can be used together on a path are extend and arrayChildId. If multiple processing options are specified 
                     for the same path only one will win. Which one will win is subject to internal processing logic that has been organized for performance reasons
                     and should not be relied upon as it is subject to change in future versions.
                 </p>
@@ -477,6 +479,62 @@ var viewmodel = ko.viewmodel(model, {
             Without the arrayChildId option every time an update came back the array would be populated again and all of the items would be 
             extended with selected set to false. With the arrayChildId specified selected state of all objects will be maintained.
             </section>
+                <section id="sharedOption" class="inner">
+                    <h3>Shared Processing Option</h3>
+                    This option allows you to define processing functions that can be reference by name in the extend and custom processing options, 
+                    thus eliminating duplicate code. The following example shows a model for a movies with showtimes. The options extend both 
+                    the movies and the showtimes with an observable property called selected.
+                <pre><code>
+var model = {
+    movies:[
+        {
+            id:256889,
+            name:"item Name",
+            description:"Description of Item",
+            showtimes:[
+                {start:"11:45am", duration:"120 minutes", soldOut:false, pricingType:"Matinee"},
+                {start:"6:45pm", duration:"120 minutes", soldOut:false, pricingType:"Evening"}
+            ]
+        }
+    ]
+};
+
+var options = { 
+    arrayChildId:{//child item id
+        "{root}.movies":"id"
+    },
+    extend:{
+        "{root}.movies[i]":"ExtendWithSelectable",//Reference shared function by name
+        "{root}.movies[i].showtimes[i]": function(showtime){
+
+            //Reference shared function directly
+            options.shared.ExtendWithSelectable(showtime);
+
+            showtime.price = ko.computed(function(){
+                if(showtime.pricingType = "Matinee"){
+                    return 6.75;
+                }
+                else if(showtime.pricingType = "Evening"){
+                    return 10.25;
+                }
+            };
+        }
+    },
+    shared:{
+        ExtendWithSelectable:function (item){
+            item.selected = ko.observable(false);
+            return item;
+        }
+    }
+}
+
+var viewmodel = ko.viewmodel(model, options);
+                </code></pre>
+
+                Another common use of this functionality would be if you had date, currency, or other formatting that needed to be applied to a large number of item. Or
+                perhaps for a large number of fields you wanted "N/A" to be displayed if their were no values. This functionality could be defined once in shared
+                and reference in many places by name.
+            </section>
             </section>
             <section id="globalOptions" class="inner">
                 <h3>Global Options</h3>
@@ -492,6 +550,7 @@ var viewmodel = ko.viewmodel(model, {
                     
                 </ul>
             </section>
+
         </section>
 
     </div>
