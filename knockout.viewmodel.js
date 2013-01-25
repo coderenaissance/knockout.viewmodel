@@ -82,10 +82,6 @@ ko.viewmodel = (function () {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
         pathSettings = GetPathSettings(settings, context);
 
-        if (fnLog) {//Log object being mapped
-            fnLog(context);
-        }
-
         if (customPathSettings = pathSettings.custom) {
             optionProcessed = true;
             //custom can either be specified as a single map function or as an 
@@ -259,7 +255,10 @@ ko.viewmodel = (function () {
     function fnRecursiveUpdate(modelObj, viewModelObj, context) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrap(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp;
-        if (fnLog) fnLog(context);//Log object being updated
+
+        if (fnLog) {
+            fnLog(context);//log object being unmapped
+        }
 
         if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
             //if you have an observable to update and either the new or old value is 
