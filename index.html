@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Knockout.viewmodel : " />
+    <script src="javascripts/prism.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/prism.css">
+
+    <title>Knockout Viewmodel - Cleaner, Faster, Better Knockout Mapping</title>
+</head>
+
+<body class="language-javascript">
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+            <a id="forkme_banner" href="https://github.com/coderenaissance/knockout.viewmodel">View on GitHub</a>
+
+            <h1 id="project_title">Knockout Viewmodel Plugin  </h1>
+            <h2 id="project_tagline">Cleaner, Faster, Better Knockout Mapping</h2>
+
+            <section id="downloads">
+                <a class="zip_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/zipball/master">Download this project as a .zip file</a>
+                <a class="tar_download_link" href="https://github.com/coderenaissance/knockout.viewmodel/tarball/master">Download this project as a tar.gz file</a>
+                <div style="text-align: right; font-weight: bold; font-size: larger">Download Latest Version<br />
+                    <a style="font-size:.8em" href="http://nuget.org/packages/knockout.viewmodel/">(also on Nuget)</a>
+                </div>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+        <section id="main_content" class="inner">
+            <h2>The Knockout Viewmodel Plugin (ko.viewmodel)</h2>
+            <section id="intro" class="inner">
+                <h3>The fastest mapping plugin!</h3>
+                <p>The knockout viewmodel plugin runs <a href="http://jsperf.com/ko-viewmodel-vs-ko-mapping-complex-viewmodel-creation">several times faster</a> than the knockout mapping plugin. It also allows you to fine tune your viewmodel creation for even more speed. 
+                    Now you can create complex observable viewmodels easily and with more structure and control than ever before!
+                </p>
+            </section>
+            <section id="trust" class="inner">
+                <h3>You can trust that it works!!!</h3>
+                <p>
+                    There is a growing <a href="Tests/Tests.htm">suite of unit-tests</a> that ensures that ko.viewmodel works reliably. Bug fixes always start with one or more new unit test so reliability goes up over time.
+                </p>
+            </section>
+            <section id="create" class="inner" >
+                <h3>Creating a simple viewmodel</h3>
+                <p>This code creates an viewModel with an observable array of users whose properties are observable.</p>
+                <pre><code>
+model = {//your model is normally provided via an ajax call
+  users:[ 
+        {firstName:"John", lastName:"Doe"},
+        {firstName:"James", lastName:"Smith"}
+    ]
+};
+
+viewmodel = ko.viewmodel.fromModel(model);
+			</code></pre>
+            </section>
+            <section id="updateFromModel" class="inner">
+                <h3>Updating a viewmodel</h3>
+
+                <p>If you need to update your viewmodel with more recent model data this can be done by calling updateFromModel.</p>
+
+                <pre><code>
+ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+                </code></pre>
+            </section>
+            <section id="toModel" class="inner">
+                <h3>Getting an updated model</h3>
+
+                <p>At somepoint you'll need to get an updated model to send back up to the server. This can be done by calling toModel.</p>
+
+                <pre><code>
+model = ko.viewmodel.toModel(viewmodel);
+        </code></pre>
+            </section>
+            <section id="simpleExample" class="inner">
+                <h3>Extending your viewmodel</h3>
+                <p>Now lets say that you want to extend each object in the users array with an isDeleted flag. You would do this by specifying an extend option.
+                </p>
+                <pre><code>
+options:{ 
+    extend:{
+        "{root}.users[i]": function(user){
+            user.isDeleted = ko.observable(false);
+        }
+    }
+};
+
+viewmodel = ko.viewmodel.fromModel(model,options));
+</code></pre>
+                <p>If we also wanted to add a delete method to an array we would use the following options:</p>
+                <pre><code>
+options:{ 
+    extend:{
+        "{root}.users[i]": function(user){
+            user.isDeleted= ko.observable(false);
+        },
+        "{root}.users": function(users){
+            users.Delete = function(user){
+                user.isDeleted(true);
+            }
+        }
+    }
+};
+</code></pre>
+
+            </section>
+
+            <section id="paths" class="inner">
+                <h3>Processing Option Paths</h3>
+
+                <p>Processing options are specified for an item by it's path. Every full path starts with {root}. Items in an array are referred to as [i]. So a path of "{root}.users[i].firstName" would be used to specify custom processing for the firstName property of every object in the users array. That is its full path name, but it's not necessary to refer to every item by it's -full path name. There are three ways of referencing a path:</p>
+
+                <ul>
+                    <li>Full Path Name - Matches only the specific path, e.g. "{root}.users[i].firstName".</li>
+                    <li>Parent Child-Name - Matches the parent child combination specified. So "users[i].firstName" will only match the first name property on objects in the users array. Array items have to be referenced as ParentName[i].ChildName but for all other objects the proper reference is ParentName.ChildName</li>
+                    <li>Property Name - Matches every property with that name. So a partial path of "firstName" would match every firstName property in your model.</li>
+                </ul>
+            </section>
+            <section id="processingTypes" class="inner">
+                <h3>Processing Options</h3>
+
+                <p>
+                    There six types of processing options: custom, append, exclude, extend, arrayChildId, and shared.
+                </p>
+
+                <ul>
+                    <li>custom - the path and all of it's children are processed only as you specify</li>
+                    <li>append - the path and it's children are appended as is </li>
+                    <li>exclude - the path is excluded from processing</li>
+                    <li>extend - the path and it's children are processed normally but then extended/modified as specified</li>
+                    <li>arrayChildId - used to identify the what property of the array's child objects should to identify them for update purposes</li>
+                    <li>shared - allows you to reduce duplicate definitions by creating named processing functions that can be used with extend and map.</li>
+                </ul>
+                <p>
+                    The only processing types that can be used together on a path are extend and arrayChildId. If multiple processing options are specified 
+                    for the same path only one will win. Which one will win is subject to internal processing logic that has been organized for performance reasons
+                    and should not be relied upon as it is subject to change in future versions.
+                </p>
+                <section id="extendOption" class="inner">
+                    <h4>extend - processing option</h4>
+                    With the extend processing option the path and it's children are processed normally but then extended/modified as specified.
+                <pre><code>
+options:{ 
+    extend:{
+        "{root}.users[i]": function(user){
+            user.isDeleted = ko.observable(false);
+            return user;
+        }
+    }
+};
+        </code></pre>
+        <p>
+            The value of the path is passed to the extend function after processing has been completed on the path and its children. Objects can be modified without being returned. 
+            Note: Whatever is returned from the extend function will be persisted and replace the default processing.
+        </p>
+        There is also this alternate syntax if you need to do unmapping:
+        <pre><code>
+options:{ 
+    custom:{
+        "{root}.users[i]": {
+            map:function(mapped){
+                mapped.isDeleted= ko.observable(false);
+                return mapped;
+            },
+            unmap:function(unmapped){
+            //Because isDeleted was an observable it was unwrapped and added to the model. 
+                delete unmapped.isDeleted;
+                return unmapped;
+            }
+        }
+    }
+};
+                    </code></pre>
+                    Functions added with extend will be removed when your model is created, however observables will not be and can be removed using unmap if they will cause 
+                    problems with servers side serialization. It should be noted that in many cases serialization will drop unexpected properties instead of throwing an 
+                    error, so this is not always necessary and would depend on your platform.
+                </section>
+                <section id="customOption" class="inner">
+                    <h4>custom - processing option</h4>
+                    The custom processing gives you complete control over mapping and unmapping from model to viewmodel and back, though as in the example below you can
+                    make additional calls to viewmodel to make things simpler. One case this is often used for is in translating back and forth from a server format (think date values) or structure
+                    to a format or structure that is easier to work with in javascript.
+        <pre><code>
+options:{ 
+    custom:{
+        "{root}.users[i]": function(user){
+            user.isDeleted= ko.observable(false);
+            return user;
+        }
+    }
+};
+         </code></pre>
+
+            There is also this alternate syntax if you need to do unmapping
+        <pre><code>
+options:{ 
+    custom:{
+        "{root}.users[i]": {
+            map:function(user){
+                var mapped = ko.viewmodel.fromModel(user);
+                mapped().isDeleted= ko.observable(false);
+                return mapped;
+            },
+            unmap:function(user){
+                var unmapped = ko.viewmodel.toModel(user);
+                delete unmapped.isDeleted;
+                return unmapped;
+            }
+        }
+    }
+};
+        </code></pre>
+                    In this case the users are passed through as is with the addition of an observable isDeleted flag.
+                <br />
+                    Note: 
+                <ul>
+                    <li>Make sure to return something from your function, otherwise undefined will be returned as the result of custom.</li>
+                    <li>The object passed into map is the unaltered object from your viewmodel or model (depending on if you are calling fromModel or toModel).</li>
+                </ul>
+                </section>
+                <section id="appendOption" class="inner">
+                    <h4>append - processing option</h4>
+                    With the append processing option the path and all of it's children are appended as is.
+        <pre><code>
+options:{ 
+    append:["{root}.users[i]"]
+};
+        </code></pre>
+                    In this case none of the users have been altered and are appended unchanged.
+                </section>
+                <section id="excludeOption" class="inner">
+                    <h4>exclude - processing option</h4>
+                    With the exclude processing option the path and it's children are excluded from processing and will not be included.
+                    <pre><code>
+options:{ 
+    exclude:["{root}.users[i].firstName"]
+};
+                </code></pre>
+                    The firstName property is not included.
+
+                When calling fromModel:
+                <ul>
+                    <li>the path specified will not be wrapped in an observable.</li>
+                </ul>
+                    When calling toModel:
+                <ul>
+                    <li>if the path is for a computed value it will be unwrapped.</li>
+                    <li>if the path is for a non-observable value it will be included.</li>
+                </ul>
+                </section>
+                <section id="idOption" class="inner">
+                    <h4>arrayChildId - processing option</h4>
+                    The arrayChildId option allows you to flag what the id is on an object within an array of objects so that those objects can be updated and not replaced when updateFromModel is called. 
+                    If an arrayChildId is not specified then when updated data is loaded all old items will be removed from the array and new items added, which will 
+                    cause you to loose the state of those objects. The syntax for this is simple:
+                <pre><code>
+options:{ 
+    arrayChildId:{
+        "{root}.users":"id"
+    }
+}
+                </code></pre>
+                But this will make more sense in context. What if you had an array of items for purchase and the selected items were added to your total. 
+                The code might look similar to this:
+
+                <pre><code>
+var model = {
+    items:[
+        {
+            id:256889,
+            name:"item Name",
+            description:"Description of Item",
+            availble:3,
+            price:4.25
+        }
+    ]
+};
+
+var viewmodel = ko.viewmodel(model, { 
+    arrayChildId:{//child item id
+        "{root}.items":"id"
+    },
+    extend:{
+        "{root}.items":function(items){//Toggle function added to array for better performance
+            items.ToggleSelect = function (item){
+                item.selected(!item.selected);
+            }
+            return items;
+        },
+        "{root}.items[i]":function (item){
+            item.selected = ko.observable(false);
+        }
+    }
+}
+                </code></pre>
+            So now imagine the app is regularly pinging the server to for an updated model so that the number of items available is accurate. 
+            Without the arrayChildId option every time an update came back the array would be populated again and all of the items would be 
+            extended with selected set to false. With the arrayChildId specified selected state of all objects will be maintained.
+            </section>
+                <section id="sharedOption" class="inner">
+                    <h4>shared - processing option</h4>
+                    This option allows you to define processing functions that can be reference by name in the extend and custom processing options, 
+                    thus eliminating duplicate code. The following example shows a model for a movies with showtimes. The options extend both 
+                    the movies and the showtimes with an observable property called selected.
+                <pre><code>
+var model = {
+    movies:[
+        {
+            id:256889,
+            name:"item Name",
+            description:"Description of Item",
+            showtimes:[
+                {start:"11:45am", duration:"120 minutes", soldOut:false, pricingType:"Matinee"},
+                {start:"6:45pm", duration:"120 minutes", soldOut:false, pricingType:"Evening"}
+            ]
+        }
+    ]
+};
+
+var options = { 
+    arrayChildId:{//child item id
+        "{root}.movies":"id"
+    },
+    extend:{
+        "{root}.movies[i]":"ExtendWithSelectable",//Reference shared function by name
+        "{root}.movies[i].showtimes[i]": function(showtime){
+
+            //Reference shared function directly
+            options.shared.ExtendWithSelectable(showtime);
+
+            showtime.price = ko.computed(function(){
+                if(showtime.pricingType = "Matinee"){
+                    return 6.75;
+                }
+                else if(showtime.pricingType = "Evening"){
+                    return 10.25;
+                }
+            };
+        }
+    },
+    shared:{
+        ExtendWithSelectable:function (item){
+            item.selected = ko.observable(false);
+            return item;
+        }
+    }
+}
+
+var viewmodel = ko.viewmodel(model, options);
+                </code></pre>
+
+                Another common use of this functionality would be if you had date, currency, or other formatting that needed to be applied to a large number of item. Or
+                perhaps for a large number of fields you wanted "N/A" to be displayed if their were no values. This functionality could be defined once in shared
+                and reference in many places by name.
+            </section>
+            </section>
+            <section id="globalOptions" class="inner">
+                <h3>Global Options</h3>
+                <p>
+                    Global options affect all calls to ko.viewmodel and are access and set via ko.viewmodel.options. Currently there are two global options:
+                </p>
+
+                <ul>
+                    <li>logging - (default:false) logs viewmodel processing to the console, including all paths processed and mapping options applied.</li>
+                    <li>makeChildArraysObservable - (default:true) determines if nested arrays are converted to observable arrays. 
+                        Set to false for compatibility with original mapping plugin or to improve performance.
+                    </li>
+                    
+                </ul>
+            </section>
+            <section id="arrayMethods" class="inner">
+                <h3>Observable Array Mapping Methods</h3>
+                Once an observable array has been mapped, items which need to be added and removed can be processed through viewmodel mapping using the following
+                methods which are added to the observable array.
+                
+                <ul>
+                    <li>pushFromModel - modifies the object passed in according to the original mapping options, and calls array.push</li>
+                    <li>unshiftFromModel - modifies the object passed in according to the original mapping options and calls array.unshift</li>
+                    <li>popToModel - calls array.pop and unmaps and returns the object according to the original mapping options</li>
+                    <li>shiftToModel - calls array.shift and unmaps and returns the object according to the original mapping options</li>
+                </ul> 
+            </section>
+
+        <section id="bug" class="inner">
+            <h3>Think you've found a bug?</h3>
+            If you think you've found a bug please submit a <a href="https://github.com/coderenaissance/knockout.viewmodel/issues?state=open">new issue ticket </a>. 
+            All bug fixes start with failing unit tests so <a href="http://jsfiddle.net/CodeRenaissance/nx2yx/">including one</a> will help speed things along... thanks!
+        </section>
+
+        </section>
+
+
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+        <footer class="inner">
+            <p class="copyright">Knockout.viewmodel maintained by <a href="https://github.com/coderenaissance">coderenaissance</a></p>
+            <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+        </footer>
+    </div>
+
+
+
+</body>
+</html>
