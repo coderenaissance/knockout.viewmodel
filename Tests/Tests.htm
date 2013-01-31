@@ -31,6 +31,7 @@
                 #qunit-header {
                     background:transparent;
                     position:absolute;
+                    z-index:-1;
                 }
                 #qunit-header a, #qunit-header a:hover {
                     position:relative;
@@ -38,7 +39,11 @@
                     top:-40px;
                 }
                 #qunit-banner {
-                    background:orange!Important;
+                    height:30px;
+                }
+                .fail th {
+                    background:white;
+                    color:#222;
                 }
             </style>
             <section id="downloads">
@@ -66,6 +71,7 @@
             <script src="toModel-Basic-qunit-tests.js"></script>
             <script src="fromModelToModel-Basic-qunit-tests.js"></script>
             <script src="updateFromModel-Basic-qunit-tests.js"></script>
+            <script src="updateFromModel-Mapping-qunit-tests.js"></script>
             <script src="issues-qunit-tests.js"></script>
             </section>
     </div>
