@@ -118,13 +118,13 @@ test("Append property", function () {
 	
 	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	
-	notEqual(viewmodel.stringProp, updatedModel.stringProp, "From Model String Test Fail");
+	deepEqual(viewmodel.stringProp, updatedModel.stringProp, "From Model String Test Fail");
 	deepEqual(viewmodel.id(), updatedModel.id, "Update Number Test");
     deepEqual(viewmodel.date(), updatedModel.date, "Update Date Test");
 	
 	modelResult = ko.viewmodel.toModel(viewmodel);
 	
-	notEqual(modelResult.stringProp, updatedModel.stringProp, "To Model String Test");
+	deepEqual(modelResult.stringProp, updatedModel.stringProp, "To Model String Test");
     deepEqual(modelResult.id, updatedModel.id, "To Model Number Test");
     deepEqual(modelResult.date, updatedModel.date, "To Model Date Test");
 });

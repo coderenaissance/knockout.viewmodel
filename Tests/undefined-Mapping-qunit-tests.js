@@ -153,13 +153,13 @@ test("Append property", function () {
 	
 	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	
-	notEqual(viewmodel.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
-	notEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
+	deepEqual(viewmodel.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
+	deepEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
 	
 	modelResult = ko.viewmodel.toModel(viewmodel);
 	
-	notEqual(modelResult.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
-	notDeepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
+	deepEqual(modelResult.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
+	deepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
 
 });
 

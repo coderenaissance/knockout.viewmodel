@@ -101,10 +101,6 @@ ko.viewmodel = (function () {
         }
         else if (pathSettings.append) {//append property
             optionProcessed = true;
-            //Q:Can't mark null or undefined as appended, all others are ok
-            if (!isNullOrUndefined(modelObj)) {
-                modelObj.___$appended = undefined;
-            }
             result = modelObj;//append
         }
         else if (pathSettings.exclude) {
@@ -205,8 +201,8 @@ ko.viewmodel = (function () {
         else if (viewModelObj && viewModelObj.___$unmapCustom) {//Defer to customUnmapping where specified
             result = viewModelObj.___$unmapCustom(viewModelObj);
         }
-        else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) || unwrapped.hasOwnProperty("___$appended")) {
-            //return null, undefined, appended values, and wrapped primativish values as is
+        else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) ) {
+            //return null, undefined, values, and wrapped primativish values as is
             result = unwrapped;
         }
         else if (unwrapped instanceof Array) {//create new array to return and add unwrapped values to it
@@ -252,7 +248,7 @@ ko.viewmodel = (function () {
         return result;
     }
 
-    function fnRecursiveUpdate(modelObj, viewModelObj, context) {
+    function fnRecursiveUpdate(modelObj, viewModelObj, context, parentObj) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrap(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp;
 
@@ -268,11 +264,9 @@ ko.viewmodel = (function () {
         else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
             for (p in modelObj) {//loop through object properties and update them
                 child = unwrapped[p];
-                if (!isNullOrUndefined(child) && viewModelObj.hasOwnProperty("___$appended")) {
-                    //update appended child for round trip to server... 
-                    //this probably won't affect view in most cases, though it could
-                    //Q: what would be the work around if the user didn't want this updated?
-                    unwrapped[p] = modelObj;
+
+                if (!wasWrapped && unwrapped.hasOwnProperty(p) && isPrimativeOrDate(child)) {
+                    unwrapped[p] = modelObj[p];
                 }
                 else if (child && typeof child.___$mapCustom === "function") {
                     if (isObservable(child)) {
@@ -295,7 +289,7 @@ ko.viewmodel = (function () {
                         name: p,
                         parent: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
                         full: context.full + "." + p
-                    });
+                    }, unwrapped);
                 }
             }
         }

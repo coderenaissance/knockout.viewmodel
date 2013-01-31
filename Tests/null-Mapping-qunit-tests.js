@@ -153,13 +153,13 @@ test("Append property", function () {
 	
 	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	
-	notEqual(viewmodel.Prop1, updatedModel.Prop1, "Null to Value Update Test");
-	notEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Null Update Test");
+	equal(viewmodel.Prop1, updatedModel.Prop1, "Null to Value Update Test");
+	equal(viewmodel.Prop2, updatedModel.Prop2, "Value to Null Update Test");
 	
 	modelResult = ko.viewmodel.toModel(viewmodel);
 	
-	notEqual(modelResult.Prop1, updatedModel.Prop1, "Null to Value Update Test");
-	notDeepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Null Update Test");
+	equal(modelResult.Prop1, updatedModel.Prop1, "Null to Value Update Test");
+	deepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Null Update Test");
 
 });
 

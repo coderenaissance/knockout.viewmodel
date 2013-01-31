@@ -60,5 +60,5 @@ test("Update appended object", function () {
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    notDeepEqual(modelResult, model, "toModel assert");
+    deepEqual(modelResult, updatedModel, "toModel assert");
 });
