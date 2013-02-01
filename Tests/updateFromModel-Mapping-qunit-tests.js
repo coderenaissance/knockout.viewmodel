@@ -11,19 +11,47 @@ test("Update appended string", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
-        items: {
+        item: {
             string: "Test"
         }
     };
 
     updatedModel = {
-        items: {
+        item: {
             string: "Changed"
         }
     };
 
     var options = {
-        append: ["{root}.items.string"]
+        append: ["{root}.item.string"]
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, options);
+
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    notDeepEqual(modelResult, model, "toModel assert");
+});
+
+test("Update appended string", function () {
+    var model, viewmodel, modelResult, actual, expected;
+
+    model = {
+        item: {
+            string: "Test"
+        }
+    };
+
+    updatedModel = {
+        item: {
+            string: "Changed"
+        }
+    };
+
+    var options = {
+        append: ["{root}.item.string"]
     };
 
     viewmodel = ko.viewmodel.fromModel(model, options);
@@ -39,15 +67,43 @@ test("Update appended object", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
-        items: {
+        item: {
             string: "Test"
         }
     };
 
     updatedModel = {
-        items: {
+        item: {
             string: "Changed"
         }
+    };
+
+    var options = {
+        append: ["{root}.item"]
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, options);
+
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    deepEqual(modelResult, updatedModel, "toModel assert");
+});
+
+test("Update appended array", function () {
+    var model, viewmodel, modelResult, actual, expected;
+
+    model = {
+        items: [{
+            string: "Test"
+        }]
+    };
+
+    updatedModel = {
+        items: [{
+            string: "Updated"
+        }]
     };
 
     var options = {
@@ -60,5 +116,5 @@ test("Update appended object", function () {
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(modelResult, updatedModel, "toModel assert");
+    notDeepEqual(modelResult, model, "toModel assert");
 });

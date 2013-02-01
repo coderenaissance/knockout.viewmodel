@@ -265,7 +265,7 @@ ko.viewmodel = (function () {
             for (p in modelObj) {//loop through object properties and update them
                 child = unwrapped[p];
 
-                if (!wasWrapped && unwrapped.hasOwnProperty(p) && isPrimativeOrDate(child)) {
+                if (!wasWrapped && unwrapped.hasOwnProperty(p) && (isPrimativeOrDate(child) || (child && child.constructor === Array))) {
                     unwrapped[p] = modelObj[p];
                 }
                 else if (child && typeof child.___$mapCustom === "function") {

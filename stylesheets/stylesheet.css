@@ -380,6 +380,12 @@ Full-Width Styles
 
 #footer_wrap {
   background: #212121;
+  min-height:130px;
+}
+
+#qunit {
+margin-top:30px;
+margin-bottom:50px;
 }
 
 
