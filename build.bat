@@ -1,0 +1,1 @@
+tsc --out knockout.viewmodel.js knockout.viewmodel.ts
