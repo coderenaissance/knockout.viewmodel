@@ -78,9 +78,9 @@ ko.viewmodel = (function () {
         return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
     }
 
-    function fnRecursiveFrom(modelObj, settings, context) {
+    function fnRecursiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
-        pathSettings = GetPathSettings(settings, context);
+        pathSettings = pathSettings || GetPathSettings(settings, context), childPathSettings;
 
         if (customPathSettings = pathSettings.custom) {
             optionProcessed = true;
@@ -155,14 +155,33 @@ ko.viewmodel = (function () {
         else if (modelObj.constructor === Object) {
             result = {};
             for (p in modelObj) {
-                temp = fnRecursiveFrom(modelObj[p], settings, {//call recursive from on each child property
+                var newContext = {
                     name: p,
                     parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                     full: context.full + "." + p
-                });
+                };
+                var childObj = modelObj[p];
 
-                if (temp !== badResult) {//properties that couldn't be mapped return badResult
-                    result[p] = temp;
+                //since primative children cannot store their own custom functions, handle processing here and store them in the parent
+                if (isPrimativeOrDate(childObj) && (childPathSettings = GetPathSettings(settings, newContext)) && childPathSettings.custom) {
+                    result.___$customChildren = result.___$customChildren || {};
+                    result.___$customChildren[p] = childPathSettings.custom;
+
+                    if (typeof childPathSettings.custom === "function") {
+                        result[p] = childPathSettings.custom(modelObj[p]);
+                    }
+                    else {
+                        result[p] = childPathSettings.custom.map(modelObj[p]);
+                    }
+                }
+                else {
+
+                    temp = fnRecursiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
+
+                    if (temp !== badResult) {//properties that couldn't be mapped return badResult
+                        result[p] = temp;
+                    }
+
                 }
             }
         }
@@ -216,21 +235,26 @@ ko.viewmodel = (function () {
         else if (unwrapped.constructor === Object) {//create new object to return and add unwrapped values to it
             result = {};
             for (p in unwrapped) {
-                if (p.substr(0, 2) !== "___$") {//ignore all properties starting with the magic string as internal
-                    child = unwrapped[p];
-                    if (!ko.isComputed(child) && !((temp = unwrap(child)) && temp.constructor === Function)) {
-
-                        recursiveResult = fnRecursiveTo(child, {
-                            name: p,
-                            parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
-                            full: context.full + "." + p
-                        });
-
-                        //if badResult wasn't returned then add property
-                        if (recursiveResult !== badResult) {
-                            result[p] = recursiveResult;
-                        }
+                if (p.substr(0, 4) !== "___$") {//ignore all properties starting with the magic string as internal
+                    if (viewModelObj.___$customChildren && viewModelObj.___$customChildren[p] && viewModelObj.___$customChildren[p].unmap) {
+                        result[p] = viewModelObj.___$customChildren[p].unmap(unwrapped[p]);
                     }
+                    else {
+                        child = unwrapped[p];
+                        if (!ko.isComputed(child) && !((temp = unwrap(child)) && temp.constructor === Function)) {
+
+                            recursiveResult = fnRecursiveTo(child, {
+                                name: p,
+                                parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
+                                full: context.full + "." + p
+                            });
+
+                            //if badResult wasn't returned then add property
+                            if (recursiveResult !== badResult) {
+                                result[p] = recursiveResult;
+                            }
+                        }
+                    } 
                 }
             }
         }
@@ -263,33 +287,40 @@ ko.viewmodel = (function () {
         }
         else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
             for (p in modelObj) {//loop through object properties and update them
-                child = unwrapped[p];
 
-                if (!wasWrapped && unwrapped.hasOwnProperty(p) && (isPrimativeOrDate(child) || (child && child.constructor === Array))) {
-                    unwrapped[p] = modelObj[p];
+                if (viewModelObj.___$customChildren && viewModelObj.___$customChildren[p]) {
+                    var childMap = viewModelObj.___$customChildren[p].map || viewModelObj.___$customChildren[p];
+                    unwrapped[p] = childMap(modelObj[p]);
                 }
-                else if (child && typeof child.___$mapCustom === "function") {
-                    if (isObservable(child)) {
-                        childTemp = child.___$mapCustom(modelObj[p])//get child value mapped by custom maping
-                        childTemp = unwrap(childTemp);//don't nest observables... what you want is the value from the customMapping
-                        child(childTemp);//update child;
+                else{
+                    child = unwrapped[p];
+
+                    if (!wasWrapped && unwrapped.hasOwnProperty(p) && (isPrimativeOrDate(child) || (child && child.constructor === Array))) {
+                        unwrapped[p] = modelObj[p];
                     }
-                    else {//property wasn't observable? update it anyway for return to server
-                        unwrapped[p] = unwrapped[p].___$mapCustom(modelObj[p]);
+                    else if (child && typeof child.___$mapCustom === "function") {
+                        if (isObservable(child)) {
+                            childTemp = child.___$mapCustom(modelObj[p])//get child value mapped by custom maping
+                            childTemp = unwrap(childTemp);//don't nest observables... what you want is the value from the customMapping
+                            child(childTemp);//update child;
+                        }
+                        else {//property wasn't observable? update it anyway for return to server
+                            unwrapped[p] = unwrapped[p].___$mapCustom(modelObj[p]);
+                        }
                     }
-                }
-                else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && unwrapped[p].constructor === Object) {
-                    //Replace null or undefined with object for round trip to server; probably won't affect the view
-                    //WORKAROUND: If values are going to switch between obj and null/undefined and the UI needs to be updated
-                    //then the user should use the extend option to wrap the object in an observable
-                    unwrapped[p] = modelObj[p];
-                }
-                else {//Recursive update everything else
-                    fnRecursiveUpdate(modelObj[p], unwrapped[p], {
-                        name: p,
-                        parent: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
-                        full: context.full + "." + p
-                    }, unwrapped);
+                    else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && unwrapped[p].constructor === Object) {
+                        //Replace null or undefined with object for round trip to server; probably won't affect the view
+                        //WORKAROUND: If values are going to switch between obj and null/undefined and the UI needs to be updated
+                        //then the user should use the extend option to wrap the object in an observable
+                        unwrapped[p] = modelObj[p];
+                    }
+                    else {//Recursive update everything else
+                        fnRecursiveUpdate(modelObj[p], unwrapped[p], {
+                            name: p,
+                            parent: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                            full: context.full + "." + p
+                        }, unwrapped);
+                    }
                 }
             }
         }
