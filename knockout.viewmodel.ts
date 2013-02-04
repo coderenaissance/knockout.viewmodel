@@ -177,9 +177,10 @@ ko.viewmodel = (function () {
                     full: context.full + "." + p
                 };
                 var childObj = modelObj[p];
-
-                //since primative children cannot store their own custom functions, handle processing here and store them in the parent
-                if (isPrimativeOrDate(childObj) && (childPathSettings = GetPathSettings(settings, newContext)) && childPathSettings.custom) {
+                childPathSettings = isPrimativeOrDate(childObj) ? GetPathSettings(settings, newContext) : undefined;
+                
+                if (childPathSettings && childPathSettings.custom) {//primativish value w/ custom maping
+                    //since primative children cannot store their own custom functions, handle processing here and store them in the parent
                     result.___$customChildren = result.___$customChildren || {};
                     result.___$customChildren[p] = childPathSettings.custom;
 
@@ -191,7 +192,6 @@ ko.viewmodel = (function () {
                     }
                 }
                 else {
-
                     temp = fnRecursiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
 
                     if (temp !== badResult) {//properties that couldn't be mapped return badResult

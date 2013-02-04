@@ -161,9 +161,10 @@ ko.viewmodel = (function () {
                     full: context.full + "." + p
                 };
                 var childObj = modelObj[p];
-
-                //since primative children cannot store their own custom functions, handle processing here and store them in the parent
-                if (isPrimativeOrDate(childObj) && (childPathSettings = GetPathSettings(settings, newContext)) && childPathSettings.custom) {
+                childPathSettings = isPrimativeOrDate(childObj) ? GetPathSettings(settings, newContext) : undefined;
+                
+                if (childPathSettings && childPathSettings.custom) {//primativish value w/ custom maping
+                    //since primative children cannot store their own custom functions, handle processing here and store them in the parent
                     result.___$customChildren = result.___$customChildren || {};
                     result.___$customChildren[p] = childPathSettings.custom;
 
@@ -175,7 +176,6 @@ ko.viewmodel = (function () {
                     }
                 }
                 else {
-
                     temp = fnRecursiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
 
                     if (temp !== badResult) {//properties that couldn't be mapped return badResult
@@ -317,7 +317,7 @@ ko.viewmodel = (function () {
                     else {//Recursive update everything else
                         fnRecursiveUpdate(modelObj[p], unwrapped[p], {
                             name: p,
-                            parent: (context.name === "[i]" ? context.parentChildName : context.name) + "." + p,
+                            parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                             full: context.full + "." + p
                         }, unwrapped);
                     }
@@ -333,7 +333,7 @@ ko.viewmodel = (function () {
                     for (q = unwrapped.length - 1; q >= 0; q--) {
                         if (modelId === unwrapped[q][idName]()) {//If updated model id equals viewmodel id then update viewmodel object with model data
                             fnRecursiveUpdate(modelObj[p], unwrapped[q], {
-                                name: "[i]", parentChildName: context.name + "[i]", full: context.full + "[i]"
+                                name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                             });
                             found = true;
                             foundModels[q] = true;
