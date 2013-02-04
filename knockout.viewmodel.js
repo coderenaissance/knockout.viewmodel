@@ -80,7 +80,7 @@ ko.viewmodel = (function () {
 
     function fnRecursiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
-        pathSettings = pathSettings || GetPathSettings(settings, context), childPathSettings;
+        pathSettings = pathSettings || GetPathSettings(settings, context), childPathSettings, childObj;
 
         if (customPathSettings = pathSettings.custom) {
             optionProcessed = true;
@@ -155,12 +155,12 @@ ko.viewmodel = (function () {
         else if (modelObj.constructor === Object) {
             result = {};
             for (p in modelObj) {
-                var newContext = {
+                newContext = {
                     name: p,
                     parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                     full: context.full + "." + p
                 };
-                var childObj = modelObj[p];
+                childObj = modelObj[p];
                 childPathSettings = isPrimativeOrDate(childObj) ? GetPathSettings(settings, newContext) : undefined;
                 
                 if (childPathSettings && childPathSettings.custom) {//primativish value w/ custom maping
@@ -186,7 +186,6 @@ ko.viewmodel = (function () {
             }
         }
 
-        
         if (!optionProcessed && (extend = pathSettings.extend)) {
             if (typeof extend === "function") {//single map function specified
                 //Extend can either modify the mapped value or replace it
@@ -274,7 +273,7 @@ ko.viewmodel = (function () {
 
     function fnRecursiveUpdate(modelObj, viewModelObj, context, parentObj) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrap(viewModelObj),
-            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp;
+            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap;
 
         if (fnLog) {
             fnLog(context);//log object being unmapped
@@ -289,7 +288,7 @@ ko.viewmodel = (function () {
             for (p in modelObj) {//loop through object properties and update them
 
                 if (viewModelObj.___$customChildren && viewModelObj.___$customChildren[p]) {
-                    var childMap = viewModelObj.___$customChildren[p].map || viewModelObj.___$customChildren[p];
+                    childMap = viewModelObj.___$customChildren[p].map || viewModelObj.___$customChildren[p];
                     unwrapped[p] = childMap(modelObj[p]);
                 }
                 else{
