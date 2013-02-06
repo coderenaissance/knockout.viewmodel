@@ -4,11 +4,7 @@
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
 /*global ko:false */
 
-//The following recursive algorithms, functions which call themselves, but are conceptually just loops
-//Like all loops when executed over a large enough number of items every statement executed bears a noticible load 
-//Performance is of key concern in this project, so in many cases terse code is used to reduce the number of statements executed
-//which is especially important in older versions of IE; Given equal performance less terse code is to be prefered.
-ko.viewmodel = (function () {
+(function () {
     //Module declarations. For increased compression with simple settings on the closure compiler,
     //the ko functions are stored in variables. These variable names will be shortened by the compiler, 
     //whereas references to ko would not be. There is also a performance savings from this.
@@ -21,7 +17,7 @@ ko.viewmodel = (function () {
         badResult = function fnBadResult() { };
 
     //Gets settings for the specified path
-    function GetPathSettings(settings, context) {
+    function getPathSettings(settings, context) {
         //Settings for more specific paths are chosen over less specific ones.
         var pathSettings = settings ? settings[context.full] || settings[context.parent] || settings[context.name] || {} : {};
         if (fnLog) fnLog(context, pathSettings, settings);//log what mapping will be used
@@ -30,7 +26,7 @@ ko.viewmodel = (function () {
 
     //Converts options into a dictionary of path settings
     //This allows for path settings to be looked up efficiently
-    function GetPathSettingsDictionary(options) {
+    function getPathSettingsDictionary(options) {
         var result = {}, shared = options ? options.shared || {} : {},
             settings, fn, index, key, length, settingType, childName, child;
         for (settingType in options) {
@@ -78,9 +74,9 @@ ko.viewmodel = (function () {
         return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
     }
 
-    function fnRecursiveFrom(modelObj, settings, context, pathSettings) {
+    function recrusiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
-        pathSettings = pathSettings || GetPathSettings(settings, context), childPathSettings, childObj;
+        pathSettings = pathSettings || getPathSettings(settings, context), childPathSettings, childObj;
 
         if (customPathSettings = pathSettings.custom) {
             optionProcessed = true;
@@ -115,7 +111,7 @@ ko.viewmodel = (function () {
             result = [];
 
             for (p = 0, length = modelObj.length; p < length; p++) {
-                result[p] = fnRecursiveFrom(modelObj[p], settings, {
+                result[p] = recrusiveFrom(modelObj[p], settings, {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true
                 });
             }
@@ -134,20 +130,20 @@ ko.viewmodel = (function () {
                 //wrap array methods for adding and removing items in functions that
                 //close over settings and context allowing the objects and their children to be correctly mapped.
                 result.pushFromModel = function (item) {
-                    item = fnRecursiveFrom(item, settings, newContext);
+                    item = recrusiveFrom(item, settings, newContext);
                     result.push(item);
                 };
                 result.unshiftFromModel = function (item) {
-                    item = fnRecursiveFrom(item, settings, newContext);
+                    item = recrusiveFrom(item, settings, newContext);
                     result.unshift(item);
                 };
                 result.popToModel = function (item) {
                     item = result.pop();
-                    return fnRecursiveTo(item, newContext);
+                    return recrusiveTo(item, newContext);
                 };
                 result.shiftToModel = function (item) {
                     item = result.shift();
-                    return fnRecursiveTo(item, newContext);
+                    return recrusiveTo(item, newContext);
                 };
             }
 
@@ -161,7 +157,7 @@ ko.viewmodel = (function () {
                     full: context.full + "." + p
                 };
                 childObj = modelObj[p];
-                childPathSettings = isPrimativeOrDate(childObj) ? GetPathSettings(settings, newContext) : undefined;
+                childPathSettings = isPrimativeOrDate(childObj) ? getPathSettings(settings, newContext) : undefined;
                 
                 if (childPathSettings && childPathSettings.custom) {//primativish value w/ custom maping
                     //since primative children cannot store their own custom functions, handle processing here and store them in the parent
@@ -176,7 +172,7 @@ ko.viewmodel = (function () {
                     }
                 }
                 else {
-                    temp = fnRecursiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
+                    temp = recrusiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
 
                     if (temp !== badResult) {//properties that couldn't be mapped return badResult
                         result[p] = temp;
@@ -205,7 +201,7 @@ ko.viewmodel = (function () {
         return result;
     }
 
-    function fnRecursiveTo(viewModelObj, context) {
+    function recrusiveTo(viewModelObj, context) {
         var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
@@ -226,7 +222,7 @@ ko.viewmodel = (function () {
         else if (unwrapped instanceof Array) {//create new array to return and add unwrapped values to it
             result = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
-                result[p] = fnRecursiveTo(unwrapped[p], {
+                result[p] = recrusiveTo(unwrapped[p], {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                 });
             }
@@ -242,7 +238,7 @@ ko.viewmodel = (function () {
                         child = unwrapped[p];
                         if (!ko.isComputed(child) && !((temp = unwrap(child)) && temp.constructor === Function)) {
 
-                            recursiveResult = fnRecursiveTo(child, {
+                            recursiveResult = recrusiveTo(child, {
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
@@ -271,7 +267,7 @@ ko.viewmodel = (function () {
         return result;
     }
 
-    function fnRecursiveUpdate(modelObj, viewModelObj, context, parentObj) {
+    function recursiveUpdate(modelObj, viewModelObj, context, parentObj) {
         var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrap(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap;
 
@@ -314,7 +310,7 @@ ko.viewmodel = (function () {
                         unwrapped[p] = modelObj[p];
                     }
                     else {//Recursive update everything else
-                        fnRecursiveUpdate(modelObj[p], unwrapped[p], {
+                        recursiveUpdate(modelObj[p], unwrapped[p], {
                             name: p,
                             parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                             full: context.full + "." + p
@@ -331,7 +327,7 @@ ko.viewmodel = (function () {
                     modelId = modelObj[p][idName];
                     for (q = unwrapped.length - 1; q >= 0; q--) {
                         if (modelId === unwrapped[q][idName]()) {//If updated model id equals viewmodel id then update viewmodel object with model data
-                            fnRecursiveUpdate(modelObj[p], unwrapped[q], {
+                            recursiveUpdate(modelObj[p], unwrapped[q], {
                                 name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                             });
                             found = true;
@@ -398,23 +394,23 @@ ko.viewmodel = (function () {
         }
     }
 
-    return {
+    ko.viewmodel = {
         options: {
             makeChildArraysObservable: true,
             logging: false
         },
         fromModel: function fnFromModel(model, options) {
-            var settings = GetPathSettingsDictionary(options);
+            var settings = getPathSettingsDictionary(options);
             initInternals(this.options, "Mapping From Model");
-            return fnRecursiveFrom(model, settings, rootContext);
+            return recrusiveFrom(model, settings, rootContext);
         },
         toModel: function fnToModel(viewmodel) {
             initInternals(this.options, "Mapping To Model");
-            return fnRecursiveTo(viewmodel, rootContext);
+            return recrusiveTo(viewmodel, rootContext);
         },
         updateFromModel: function fnUpdateFromModel(viewmodel, model) {
             initInternals(this.options, "Update From Model");
-            return fnRecursiveUpdate(model, viewmodel, rootContext);
+            return recursiveUpdate(model, viewmodel, rootContext);
         }
     };
 }());
