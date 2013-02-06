@@ -118,13 +118,13 @@ test("Append property", function () {
 	
 	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	
-	notEqual(viewmodel.stringProp, updatedModel.stringProp, "From Model String Test Fail");
+	deepEqual(viewmodel.stringProp, updatedModel.stringProp, "From Model String Test Fail");
 	deepEqual(viewmodel.id(), updatedModel.id, "Update Number Test");
     deepEqual(viewmodel.date(), updatedModel.date, "Update Date Test");
 	
 	modelResult = ko.viewmodel.toModel(viewmodel);
 	
-	notEqual(modelResult.stringProp, updatedModel.stringProp, "To Model String Test");
+	deepEqual(modelResult.stringProp, updatedModel.stringProp, "To Model String Test");
     deepEqual(modelResult.id, updatedModel.id, "To Model Number Test");
     deepEqual(modelResult.date, updatedModel.date, "To Model Date Test");
 });
@@ -134,26 +134,26 @@ test("Custom basic", function () {
     var viewmodel = ko.viewmodel.fromModel(model, {
         custom: {
 			"{root}.date":function (date) {
-				return ko.observable(date.valueOf());
+				return date.valueOf();
 			}
 		}
     });
 
     deepEqual(viewmodel.stringProp(), model.stringProp, "From Model String Test");
     deepEqual(viewmodel.id(), model.id, "From Model Number Test");
-    deepEqual(viewmodel.date(), model.date.valueOf(), "From Model Date Test");
+    deepEqual(viewmodel.date, model.date.valueOf(), "From Model Date Test");
 
     ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
 	deepEqual(viewmodel.stringProp(), updatedModel.stringProp, "Update String Test");
     deepEqual(viewmodel.id(), updatedModel.id, "Update Number Test");
-    notEqual(viewmodel.date(), updatedModel.date.valueOf(), "Update Date Test");
+    deepEqual(viewmodel.date, updatedModel.date.valueOf(), "Update Date Test");
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(modelResult.stringProp, updatedModel.stringProp, "To Model String Test");
     deepEqual(modelResult.id, updatedModel.id, "To Model Number Test");
-    deepEqual(modelResult.date, updatedModel.date, "To Model Date Test");
+    deepEqual(modelResult.date, updatedModel.date.valueOf(), "To Model Date Test");
 });
 
 test("Custom map and unmap", function () {
