@@ -1,4 +1,4 @@
-﻿/*ko.viewmodel.js - version 2.0.2
+﻿/*ko.viewmodel.js - version 2.0.3
 * Copyright 2013, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
@@ -42,7 +42,7 @@
                     result[key].settingType = result[key].settingType ? "multiple" : settingType;
                 }
             }
-            else if(settings.constructor === Object){//process associative array for extend and map
+            else if (settings.constructor === Object) {//process associative array for extend and map
                 for (key in settings) {
                     result[key] = result[key] || {};
                     fn = settings[key];
@@ -84,6 +84,9 @@
             //object with map and unmap properties
             if (typeof customPathSettings === "function") {
                 result = customPathSettings(modelObj);
+                if (!isNullOrUndefined(result)) {
+                    result.___$mapCustom = customPathSettings;
+                }
             }
             else {
                 result = customPathSettings.map(modelObj);
@@ -158,7 +161,7 @@
                 };
                 childObj = modelObj[p];
                 childPathSettings = isPrimativeOrDate(childObj) ? getPathSettings(settings, newContext) : undefined;
-                
+
                 if (childPathSettings && childPathSettings.custom) {//primativish value w/ custom maping
                     //since primative children cannot store their own custom functions, handle processing here and store them in the parent
                     result.___$customChildren = result.___$customChildren || {};
@@ -215,7 +218,7 @@
         else if (viewModelObj && viewModelObj.___$unmapCustom) {//Defer to customUnmapping where specified
             result = viewModelObj.___$unmapCustom(viewModelObj);
         }
-        else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped) ) {
+        else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped)) {
             //return null, undefined, values, and wrapped primativish values as is
             result = unwrapped;
         }
@@ -249,7 +252,7 @@
                                 result[p] = recursiveResult;
                             }
                         }
-                    } 
+                    }
                 }
             }
         }
@@ -268,7 +271,7 @@
     }
 
     function recursiveUpdate(modelObj, viewModelObj, context, parentObj) {
-        var p, q, found, foundModels, modelId, idName, length, unwrapped = unwrap(viewModelObj),
+        var p, q, found, foundModels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap;
 
         if (fnLog) {
@@ -287,7 +290,7 @@
                     childMap = viewModelObj.___$customChildren[p].map || viewModelObj.___$customChildren[p];
                     unwrapped[p] = childMap(modelObj[p]);
                 }
-                else{
+                else {
                     child = unwrapped[p];
 
                     if (!wasWrapped && unwrapped.hasOwnProperty(p) && (isPrimativeOrDate(child) || (child && child.constructor === Array))) {
@@ -326,17 +329,29 @@
                     found = false;
                     modelId = modelObj[p][idName];
                     for (q = unwrapped.length - 1; q >= 0; q--) {
-                        if (modelId === unwrapped[q][idName]()) {//If updated model id equals viewmodel id then update viewmodel object with model data
-                            recursiveUpdate(modelObj[p], unwrapped[q], {
-                                name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
-                            });
+                        child = ko.utils.unwrapObservable(unwrapped[q]);
+                        viewmodelId = child[idName];
+                        if (viewmodelId === modelId) {//If updated model id equals viewmodel id then update viewmodel object with model data
+                            if (unwrapped[q].___$mapCustom) {
+                                if (ko.isObservable(unwrapped[q])) {
+                                    unwrapped[q](unwrapped[q].___$mapCustom(modelObj[p])());
+                                }
+                                else {
+                                    unwrapped[q] = unwrapped[q].___$mapCustom(modelObj[p]);
+                                }
+                            }
+                            else {
+                                recursiveUpdate(modelObj[p], unwrapped[q], {
+                                    name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
+                                });
+                            }
                             found = true;
-                            foundModels[q] = true;
+                            foundModels[p] = true;
                             break;
                         }
                     }
                     if (!found) {//If not found in updated model then remove from viewmodel
-                        viewModelObj.splice(p, 1);
+                        viewModelObj.splice(q, 1);
                     }
                 }
                 for (p = modelObj.length - 1; p >= 0; p--) {
