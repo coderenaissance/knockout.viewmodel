@@ -329,8 +329,8 @@
                     found = false;
                     modelId = modelObj[p][idName];
                     for (q = unwrapped.length - 1; q >= 0; q--) {
-                        child = ko.utils.unwrapObservable(unwrapped[q]);
-                        viewmodelId = child[idName];
+                        child = unwrap(unwrapped[q]);
+                        viewmodelId = unwrap(child[idName]);
                         if (viewmodelId === modelId) {//If updated model id equals viewmodel id then update viewmodel object with model data
                             if (unwrapped[q].___$mapCustom) {
                                 if (ko.isObservable(unwrapped[q])) {
