@@ -358,7 +358,7 @@
                         }
                     }
                     if (!found) {//If not found in updated model then remove from viewmodel
-                        viewModelObj.splice(q, 1);
+                        viewModelObj.splice(q + 1, 1);
                     }
                 }
                 for (p = modelObj.length - 1; p >= 0; p--) {
