@@ -298,12 +298,12 @@
                     }
                     else if (child && typeof child.___$mapCustom === "function") {
                         if (isObservable(child)) {
-                            childTemp = child.___$mapCustom(modelObj[p])//get child value mapped by custom maping
+                            childTemp = child.___$mapCustom(modelObj[p], child)//get child value mapped by custom maping
                             childTemp = unwrap(childTemp);//don't nest observables... what you want is the value from the customMapping
                             child(childTemp);//update child;
                         }
                         else {//property wasn't observable? update it anyway for return to server
-                            unwrapped[p] = unwrapped[p].___$mapCustom(modelObj[p]);
+                            unwrapped[p] = child.___$mapCustom(modelObj[p], child);
                         }
                     }
                     else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && unwrapped[p].constructor === Object) {
@@ -329,15 +329,22 @@
                     found = false;
                     modelId = modelObj[p][idName];
                     for (q = unwrapped.length - 1; q >= 0; q--) {
-                        child = unwrap(unwrapped[q]);
-                        viewmodelId = unwrap(child[idName]);
+                        child = unwrapped[q];
+                        unwrappedChild = unwrap(child);
+                        viewmodelId = unwrap(unwrappedChild[idName]);
                         if (viewmodelId === modelId) {//If updated model id equals viewmodel id then update viewmodel object with model data
-                            if (unwrapped[q].___$mapCustom) {
-                                if (ko.isObservable(unwrapped[q])) {
-                                    unwrapped[q](unwrapped[q].___$mapCustom(modelObj[p])());
+                            if (child.___$mapCustom) {
+
+                                if (ko.isObservable(child)) {
+                                    tempChild = child.___$mapCustom(modelObj[p], child);
+                                    if (isObservable(tempChild) && tempChild != child) {
+                                        child(unwrap(tempChild));
+                                    }
+                                    //else custom mapping returned previous observable;
+                                    //if it's smart enough to do that, assume it updated it correctly	
                                 }
                                 else {
-                                    unwrapped[q] = unwrapped[q].___$mapCustom(modelObj[p]);
+                                    unwrapped[q] = child.___$mapCustom(modelObj[p], child);
                                 }
                             }
                             else {
