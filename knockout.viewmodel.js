@@ -271,7 +271,7 @@
     }
 
     function recursiveUpdate(modelObj, viewModelObj, context, parentObj) {
-        var p, q, found, foundModels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
+        var p, q, found, foundModels, foundViewmodels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap;
 
         if (fnLog) {
@@ -325,8 +325,8 @@
         else if (unwrapped && unwrapped instanceof Array) {
             if (idName = viewModelObj.___$childIdName) {//id is specified, create, update, and delete by id
                 foundModels = [];
+                foundViewmodels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
-                    found = false;
                     modelId = modelObj[p][idName];
                     for (q = unwrapped.length - 1; q >= 0; q--) {
                         child = unwrapped[q];
@@ -352,17 +352,19 @@
                                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                                 });
                             }
-                            found = true;
+                            foundViewmodels[q] = true;
                             foundModels[p] = true;
                             break;
                         }
                     }
-                    if (!found) {//If not found in updated model then remove from viewmodel
-                        viewModelObj.splice(q + 1, 1);
+                }
+                for (q = unwrapped.length - 1; q >= 0; q--) {
+                    if (!foundViewmodels[q]) {//If missing from model remove from viewmodel
+                        viewModelObj.splice(q, 1);
                     }
                 }
                 for (p = modelObj.length - 1; p >= 0; p--) {
-                    if (!foundModels[p]) {//If found and updated in viewmodel then add to viewmodel
+                    if (!foundModels[p]) {//If not found and updated in viewmodel then add to viewmodel
                         viewModelObj.pushFromModel(modelObj[p]);
                     }
                 }
