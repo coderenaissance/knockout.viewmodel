@@ -13,7 +13,7 @@
         makeObservable = ko.observable,
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parent: "{root}", full: "{root}" },
-        fnLog, makeChildArraysObservable,
+        fnLog, makeChildArraysObservable, noncontiguousObjectUpdates,
         badResult = function fnBadResult() { };
 
     //Gets settings for the specified path
@@ -313,11 +313,20 @@
                         unwrapped[p] = modelObj[p];
                     }
                     else {//Recursive update everything else
-                        recursiveUpdate(modelObj[p], unwrapped[p], {
-                            name: p,
-                            parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
-                            full: context.full + "." + p
-                        }, unwrapped);
+                        var fnRecursiveUpdate = function () {
+                            recursiveUpdate(modelObj[p], unwrapped[p], {
+                                name: p,
+                                parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
+                                full: context.full + "." + p
+                            }, unwrapped);
+                        };
+
+                        if (noncontiguousObjectUpdates === true) {
+                            setTimeout(fnRecursiveUpdate, 0);
+                        }
+                        else {
+                            fnRecursiveUpdate();
+                        }
                     }
                 }
             }
@@ -393,6 +402,7 @@
 
     function initInternals(options, startMessage) {
         makeChildArraysObservable = options.makeChildArraysObservable;
+        noncontiguousObjectUpdates = options.noncontiguousObjectUpdates;
         if (window.console && options.logging) {
             //if logging should be done then log start message and add logging function
             console.log(startMessage);
@@ -421,7 +431,8 @@
     ko.viewmodel = {
         options: {
             makeChildArraysObservable: true,
-            logging: false
+            logging: false,
+            noncontiguousObjectUpdates: false//When true each object is updated via a setTimeout call; prevents long running script on update in older browsers
         },
         fromModel: function fnFromModel(model, options) {
             var settings = getPathSettingsDictionary(options);
