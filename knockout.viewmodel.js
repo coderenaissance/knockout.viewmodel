@@ -270,7 +270,7 @@
         return result;
     }
 
-    function recursiveUpdate(modelObj, viewModelObj, context, parentObj) {
+    function recursiveUpdate(modelObj, viewModelObj, context, parentObj, noncontiguousObjectUpdateCount) {
         var p, q, found, foundModels, foundViewmodels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap;
 
@@ -313,19 +313,25 @@
                         unwrapped[p] = modelObj[p];
                     }
                     else {//Recursive update everything else
-                        var fnRecursiveUpdate = function () {
+                        var fnRecursiveObjectUpdate = function () {
                             recursiveUpdate(modelObj[p], unwrapped[p], {
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
-                            }, unwrapped);
+                            }, unwrapped, noncontiguousObjectUpdateCount);
+                            if (noncontiguousObjectUpdateCount) {
+                                noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
+                            }
                         };
 
                         if (noncontiguousObjectUpdates === true) {
-                            setTimeout(fnRecursiveUpdate, 0);
+                            if (noncontiguousObjectUpdateCount) {
+                                noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() + 1);
+                            }
+                            setTimeout(fnRecursiveObjectUpdate, 0);
                         }
                         else {
-                            fnRecursiveUpdate();
+                            fnRecursiveObjectUpdate();
                         }
                     }
                 }
@@ -357,9 +363,26 @@
                                 }
                             }
                             else {
-                                recursiveUpdate(modelObj[p], unwrapped[q], {
-                                    name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
-                                });
+                                
+                                var fnRecursiveObjectUpdate = function () {
+                                    recursiveUpdate(modelObj[p], unwrapped[q], {
+                                        name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
+                                    }, undefined, noncontiguousObjectUpdateCount);
+
+                                    if (noncontiguousObjectUpdateCount) {
+                                        noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
+                                    }
+                                };
+
+                                if (noncontiguousObjectUpdates === true) {
+                                    if (noncontiguousObjectUpdateCount) {
+                                        noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() + 1);
+                                    }
+                                    setTimeout(fnRecursiveObjectUpdate, 0);
+                                }
+                                else {
+                                    fnRecursiveObjectUpdate();
+                                }
                             }
                             foundViewmodels[q] = true;
                             foundModels[p] = true;
@@ -397,6 +420,26 @@
         }
         else if (wasWrapped) {//If it makes it this far and it was wrapped then update it
             viewModelObj(modelObj);
+        }
+
+        if (context.name === "{root}") {
+            return {
+                onComplete:function (fnOnComplete) {
+                    if(fnOnComplete && typeof fnOnComplete == "function"){
+                        if (noncontiguousObjectUpdates && !!noncontiguousObjectUpdateCount) {
+                            var onCompleteNotify = ko.computed(function () {
+                                if (fnOnComplete && noncontiguousObjectUpdateCount() === 0) {
+                                    fnOnComplete();
+                                    fnOnComplete = undefined;
+                                }
+                            }).extend({throttle:50});
+                        }
+                        else{
+                            fnOnComplete();
+                        }
+                    }
+                }
+            };
         }
     }
 
@@ -445,7 +488,8 @@
         },
         updateFromModel: function fnUpdateFromModel(viewmodel, model) {
             initInternals(this.options, "Update From Model");
-            return recursiveUpdate(model, viewmodel, rootContext);
+            var  noncontiguousObjectUpdateCount = noncontiguousObjectUpdates ? ko.observable(0) : null;
+            return recursiveUpdate(model, viewmodel, rootContext, undefined, noncontiguousObjectUpdateCount);
         }
     };
 }());

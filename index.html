@@ -373,7 +373,7 @@ var viewmodel = ko.viewmodel(model, options);
                     <li>makeChildArraysObservable - (default:true) determines if nested arrays are converted to observable arrays. 
                         Set to false for compatibility with original mapping plugin or to improve performance.
                     </li>
-					<li>noncontiguousObjectUpdates - (default:false) causes each object to be updated within it's own setTimeout call. This can help prevent long running script errors in older browsers when updates are made. A side effect of this is that objects will continue updating after the updateFromModel call returns, potentially causing problems.</li>            
+					<li>noncontiguousObjectUpdates - (default:false) causes each object to be updated within it's own setTimeout call. This can help prevent long running script errors in older browsers when updates are made. A side effect of this is that objects will continue updating after the updateFromModel call returns, potentially causing problems. UpdateFromViewmodel now returns an object with an onComplete method that takes a callback, e.g. ko.viewmodel.updateFromViewmodel(vm,m).onComplete(function(){}).</li>            
                 </ul>
             </section>
             <section id="arrayMethods" class="inner">
