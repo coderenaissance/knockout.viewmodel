@@ -13,7 +13,7 @@
         makeObservable = ko.observable,
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parent: "{root}", full: "{root}" },
-        fnLog, makeChildArraysObservable, noncontiguousObjectUpdates,
+        fnLog, makeChildArraysObservable,
         badResult = function fnBadResult() { };
 
     //Gets settings for the specified path
@@ -313,25 +313,26 @@
                         unwrapped[p] = modelObj[p];
                     }
                     else {//Recursive update everything else
-                        var fnRecursiveObjectUpdate = function () {
+                        if (!!noncontiguousObjectUpdateCount) {
+                            var fnRecursivePropertyObjectUpdate = (function (modelObj, viewModelObj, p) {
+                                return function () {//keep in sync with else below
+                                    recursiveUpdate(modelObj[p], unwrapped[p], {
+                                        name: p,
+                                        parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
+                                        full: context.full + "." + p
+                                    }, unwrapped, noncontiguousObjectUpdateCount);
+                                    noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
+                                }
+                            }(modelObj, viewModelObj, p));
+                            noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() + 1);
+                            setTimeout(fnRecursivePropertyObjectUpdate, 0);
+                        }
+                        else {//keep in sync with if above
                             recursiveUpdate(modelObj[p], unwrapped[p], {
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
-                            }, unwrapped, noncontiguousObjectUpdateCount);
-                            if (noncontiguousObjectUpdateCount) {
-                                noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
-                            }
-                        };
-
-                        if (noncontiguousObjectUpdates === true) {
-                            if (noncontiguousObjectUpdateCount) {
-                                noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() + 1);
-                            }
-                            setTimeout(fnRecursiveObjectUpdate, 0);
-                        }
-                        else {
-                            fnRecursiveObjectUpdate();
+                            });
                         }
                     }
                 }
@@ -364,24 +365,23 @@
                             }
                             else {
                                 
-                                var fnRecursiveObjectUpdate = function () {
+                                if (!!noncontiguousObjectUpdateCount) {//keep in sync with else block below
+                                    var fnRecursiveArrayChildObjectUpdate = (function (modelObj, viewModelObj, p, q) {
+                                        return function () {
+                                            recursiveUpdate(modelObj[p], unwrapped[q], {
+                                                name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
+                                            }, undefined, noncontiguousObjectUpdateCount);
+
+                                            noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
+                                        };
+                                    }(modelObj, viewModelObj, p, q));
+                                    noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() + 1);
+                                    setTimeout(fnRecursiveArrayChildObjectUpdate, 0);
+                                }
+                                else {//keep in sync with if block above
                                     recursiveUpdate(modelObj[p], unwrapped[q], {
                                         name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
-                                    }, undefined, noncontiguousObjectUpdateCount);
-
-                                    if (noncontiguousObjectUpdateCount) {
-                                        noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
-                                    }
-                                };
-
-                                if (noncontiguousObjectUpdates === true) {
-                                    if (noncontiguousObjectUpdateCount) {
-                                        noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() + 1);
-                                    }
-                                    setTimeout(fnRecursiveObjectUpdate, 0);
-                                }
-                                else {
-                                    fnRecursiveObjectUpdate();
+                                    });
                                 }
                             }
                             foundViewmodels[q] = true;
@@ -422,11 +422,11 @@
             viewModelObj(modelObj);
         }
 
-        if (context.name === "{root}") {
+        if (context.name === "{root}" && !!noncontiguousObjectUpdateCount) {
             return {
                 onComplete:function (fnOnComplete) {
                     if(fnOnComplete && typeof fnOnComplete == "function"){
-                        if (noncontiguousObjectUpdates && !!noncontiguousObjectUpdateCount) {
+                        if (!!noncontiguousObjectUpdateCount) {
                             var onCompleteNotify = ko.computed(function () {
                                 if (fnOnComplete && noncontiguousObjectUpdateCount() === 0) {
                                     fnOnComplete();
@@ -445,7 +445,6 @@
 
     function initInternals(options, startMessage) {
         makeChildArraysObservable = options.makeChildArraysObservable;
-        noncontiguousObjectUpdates = options.noncontiguousObjectUpdates;
         if (window.console && options.logging) {
             //if logging should be done then log start message and add logging function
             console.log(startMessage);
@@ -474,8 +473,7 @@
     ko.viewmodel = {
         options: {
             makeChildArraysObservable: true,
-            logging: false,
-            noncontiguousObjectUpdates: false//When true each object is updated via a setTimeout call; prevents long running script on update in older browsers
+            logging: false
         },
         fromModel: function fnFromModel(model, options) {
             var settings = getPathSettingsDictionary(options);
@@ -486,9 +484,9 @@
             initInternals(this.options, "Mapping To Model");
             return recrusiveTo(viewmodel, rootContext);
         },
-        updateFromModel: function fnUpdateFromModel(viewmodel, model) {
+        updateFromModel: function fnUpdateFromModel(viewmodel, model, makeNoncontiguousObjectUpdates) {
+            var noncontiguousObjectUpdateCount = makeNoncontiguousObjectUpdates ? ko.observable(0) : undefined;
             initInternals(this.options, "Update From Model");
-            var  noncontiguousObjectUpdateCount = noncontiguousObjectUpdates ? ko.observable(0) : null;
             return recursiveUpdate(model, viewmodel, rootContext, undefined, noncontiguousObjectUpdateCount);
         }
     };
