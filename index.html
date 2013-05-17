@@ -70,6 +70,14 @@ viewmodel = ko.viewmodel.fromModel(model);
                 <pre><code>
 ko.viewmodel.updateFromModel(viewmodel, updatedModel);
                 </code></pre>
+				
+				<p>This method optionally takes a third parameter, makeNoncontiguousObjectUpdates, which can be used to eliminate long running script errors in older browsers. When set to true  each object will have an update function created for it which will be called via setTimeout. Given this makeNoncontiguousObjectUpdates should only be set to true if you are getting long running script errors in older browsers. An onComplete method allows you to pass in a callback to be fired when noncontiguous object updates are completed.</p>
+				<pre><code>
+ko.viewmodel.updateFromModel(viewmodel, updatedModel, true).onComplete(function(){
+    //respond to completion of update
+});
+                </code></pre>
+				<p>Note: the onComplete method is only available when makeNoncontiguousObjectUpdates is set to true.</p>
             </section>
             <section id="toModel" class="inner">
                 <h3>Getting an updated model</h3>
@@ -373,7 +381,6 @@ var viewmodel = ko.viewmodel(model, options);
                     <li>makeChildArraysObservable - (default:true) determines if nested arrays are converted to observable arrays. 
                         Set to false for compatibility with original mapping plugin or to improve performance.
                     </li>
-					<li>noncontiguousObjectUpdates - (default:false) causes each object to be updated within it's own setTimeout call. This can help prevent long running script errors in older browsers when updates are made. A side effect of this is that objects will continue updating after the updateFromModel call returns, potentially causing problems. UpdateFromViewmodel now returns an object with an onComplete method that takes a callback, e.g. ko.viewmodel.updateFromViewmodel(vm,m).onComplete(function(){}).</li>            
                 </ul>
             </section>
             <section id="arrayMethods" class="inner">

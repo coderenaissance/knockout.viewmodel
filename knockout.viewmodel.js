@@ -76,7 +76,8 @@
 
     function recrusiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
-        pathSettings = pathSettings || getPathSettings(settings, context), childPathSettings, childObj;
+        childPathSettings, childObj;
+        pathSettings = pathSettings || getPathSettings(settings, context);
 
         if (customPathSettings = pathSettings.custom) {
             optionProcessed = true;
@@ -271,8 +272,8 @@
     }
 
     function recursiveUpdate(modelObj, viewModelObj, context, parentObj, noncontiguousObjectUpdateCount) {
-        var p, q, found, foundModels, foundViewmodels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
-            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap;
+        var p, q, foundModels, foundViewmodels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
+            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap, unwrappedChild, tempChild;
 
         if (fnLog) {
             fnLog(context);//log object being unmapped
@@ -298,7 +299,7 @@
                     }
                     else if (child && typeof child.___$mapCustom === "function") {
                         if (isObservable(child)) {
-                            childTemp = child.___$mapCustom(modelObj[p], child)//get child value mapped by custom maping
+                            childTemp = child.___$mapCustom(modelObj[p], child);//get child value mapped by custom maping
                             childTemp = unwrap(childTemp);//don't nest observables... what you want is the value from the customMapping
                             child(childTemp);//update child;
                         }
@@ -322,7 +323,7 @@
                                         full: context.full + "." + p
                                     }, unwrapped, noncontiguousObjectUpdateCount);
                                     noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
-                                }
+                                };
                             }(modelObj, viewModelObj, p));
                             noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() + 1);
                             setTimeout(fnRecursivePropertyObjectUpdate, 0);
@@ -427,7 +428,7 @@
                 onComplete:function (fnOnComplete) {
                     if(fnOnComplete && typeof fnOnComplete == "function"){
                         if (!!noncontiguousObjectUpdateCount) {
-                            var onCompleteNotify = ko.computed(function () {
+                            ko.computed(function () {
                                 if (fnOnComplete && noncontiguousObjectUpdateCount() === 0) {
                                     fnOnComplete();
                                     fnOnComplete = undefined;
