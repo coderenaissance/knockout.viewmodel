@@ -68,7 +68,7 @@ test("Extend", function () {
                 date.isValid = ko.computed(function () {
                     return date() && date() < new Date();
                 });
-            },
+            }
         }
     });
 
