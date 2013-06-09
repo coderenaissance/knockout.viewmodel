@@ -567,11 +567,11 @@
             makeChildArraysObservable: true,
             logging: false
         },
-        fromModel: function fnFromModel(model, options) {
-            var settings = getPathSettingsDictionary(options);
+        fromModel: function fnFromModel(model, mapping) {
+            var settings = getPathSettingsDictionary(mapping);
             initInternals(this.options, "Mapping From Model");
             return recrusiveFrom(model, settings, rootContext);
-        },
+        },  
         toModel: function fnToModel(viewmodel) {
             initInternals(this.options, "Mapping To Model");
             return recrusiveTo(viewmodel, rootContext);
