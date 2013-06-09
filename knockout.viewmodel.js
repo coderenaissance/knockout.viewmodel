@@ -365,7 +365,7 @@
                                 }
                             }
                             else {
-                                
+
                                 if (!!noncontiguousObjectUpdateCount) {//keep in sync with else block below
                                     var fnRecursiveArrayChildObjectUpdate = (function (modelObj, viewModelObj, p, q) {
                                         return function () {
@@ -425,17 +425,17 @@
 
         if (context.name === "{root}" && !!noncontiguousObjectUpdateCount) {
             return {
-                onComplete:function (fnOnComplete) {
-                    if(fnOnComplete && typeof fnOnComplete == "function"){
+                onComplete: function (fnOnComplete) {
+                    if (fnOnComplete && typeof fnOnComplete == "function") {
                         if (!!noncontiguousObjectUpdateCount) {
                             ko.computed(function () {
                                 if (fnOnComplete && noncontiguousObjectUpdateCount() === 0) {
                                     fnOnComplete();
                                     fnOnComplete = undefined;
                                 }
-                            }).extend({throttle:50});
+                            }).extend({ throttle: 50 });
                         }
-                        else{
+                        else {
                             fnOnComplete();
                         }
                     }
@@ -472,6 +472,97 @@
     }
 
     ko.viewmodel = {
+        mappingBuilder: function () {
+            var mapping = {
+                paths:  {}, 
+                extend: {},
+                custom: {},
+                append: [],
+                exclude: [],
+                arrayChildId: {},
+                shared: {}
+            };
+
+            function pathCheck(path, type) {
+                var msg;
+                if (mapping.paths[path]) {
+                    msg = "Could not add " + type + "-map for path '" + path + "': path already defined.";
+                    console.log(msg);
+                }
+                return true;
+            }
+
+            var builder = {
+                __getMapping: function () {
+                    return mapping;
+                },
+                extend: function (path, fn) {
+                    if (pathCheck(path, "extend")) {
+                        mapping.paths[path] = true;
+                        mapping.custom[path] = { map: fn };
+                    }
+                    return builder;
+                },
+                unmapExtend: function (path, fn) {
+                    if (!!mapping.extend[path] && !!mapping.extend[path].map) {
+                        console.log("Could not add unmap-extend for path '" + path + "': no mapping defined.");
+                    }
+                    else {
+                        mapping.extend[path].unmap = fn;
+                    }
+                    return builder;
+                },
+                custom: function (path, fn) {
+                    if (pathCheck(path, "custom")) {
+                        mapping.paths[path] = true;
+                        mapping.custom[path] = { map: fn };
+                    }
+                    return builder;
+                },
+                unmapCustom: function (path, fn) {
+                    if (!!mapping.custom[path] && !!mapping.custom[path].map) {
+                        console.log("Could not add unmap-custom for path '" + path + "': no mapping defined.");
+                    }
+                    else {
+                        mapping.extend[path].unmap = fn;
+                    }
+                    return builder;
+                },
+                append: function (path) {
+                    if (pathCheck(path, "Append")) {
+                        mapping.paths[path] = true;
+                        mapping.append.push(path);
+                    }
+                    return builder;
+                },
+                exclude: function (path) {
+                    if (pathCheck(path, "Exclude")) {
+                        mapping.paths[path] = true;
+                        mapping.exclude.push(path);
+                    }
+                    return builder;
+                },
+                arrayChildId: function (path, idName) {
+                    if (!!mapping.arrayChildId[path]) {
+                        console.log("Could not add ArrayChildId for path '" + path + "'. ArrayChildId mapping already defined.");
+                    }
+                    else {
+                        mapping.arrayChildId[path] = idName;
+                    }
+                    return builder;
+                },
+                define: function (name, definition) {
+                    if (!!mapping.shared[name]) {
+                        console.log("Could not define '" + name + "' because '" + name + "' is  already defined.");
+                    }
+                    else {
+                        mapping.shared[name] = definition;
+                    }
+                    return builder;
+                }
+            };
+            return builder;
+        },
         options: {
             makeChildArraysObservable: true,
             logging: false
