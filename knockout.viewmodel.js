@@ -568,7 +568,7 @@
             logging: false
         },
         fromModel: function fnFromModel(model, mapping) {
-            mapping = mapping.__getMapping ? mapping.__getMapping() || mapping;
+            mapping = !!mapping && !!mapping.__getMapping ? mapping.__getMapping() : mapping;
             var settings = getPathSettingsDictionary(mapping);
             initInternals(this.options, "Mapping From Model");
             return recrusiveFrom(model, settings, rootContext);
