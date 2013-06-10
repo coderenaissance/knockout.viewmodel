@@ -16,16 +16,13 @@ test("Extend full path", function () {
         }
     };
 
-    var customMapping = {
-        extend: {
-            "{root}.test.stringProp": function (obj) {
+    var customMapping = ko.viewmodel.mappingBuilder()
+            .extend("{root}.test.stringProp",function (obj) {
                 obj.repeat = ko.computed(function () {
                     return obj() + obj();
                 });
                 return obj;
-            }
-        }
-    };
+            });
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 

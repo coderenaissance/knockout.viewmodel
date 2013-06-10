@@ -499,7 +499,7 @@
                 extend: function (path, fn) {
                     if (pathCheck(path, "extend")) {
                         mapping.paths[path] = true;
-                        mapping.custom[path] = { map: fn };
+                        mapping.extend[path] = { map: fn };
                     }
                     return builder;
                 },
