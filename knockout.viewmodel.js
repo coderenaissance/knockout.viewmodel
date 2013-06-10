@@ -4,7 +4,16 @@
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
 /*global ko:false */
 
-(function () {
+// Uses AMD or browser globals to create a Knockout plugin.
+(function (factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['knockout'], factory);
+    } else {
+        // Browser globals
+        factory(ko);
+    }
+}(function (ko) {
     //Module declarations. For increased compression with simple settings on the closure compiler,
     //the ko functions are stored in variables. These variable names will be shortened by the compiler, 
     //whereas references to ko would not be. There is also a performance savings from this.
@@ -491,4 +500,4 @@
             return recursiveUpdate(model, viewmodel, rootContext, undefined, noncontiguousObjectUpdateCount);
         }
     };
-}());
+}));
