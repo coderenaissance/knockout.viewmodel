@@ -13,10 +13,10 @@ test("Extend full path", function () {
     model = {
         test: {
             stringProp: "test"
-        }
+        }   
     };
 
-    var customMapping = ko.viewmodel.mappingBuilder()
+    var mapping = ko.viewmodel.mappingBuilder()
             .extend("{root}.test.stringProp",function (obj) {
                 obj.repeat = ko.computed(function () {
                     return obj() + obj();
@@ -24,7 +24,7 @@ test("Extend full path", function () {
                 return obj;
             });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
@@ -41,24 +41,18 @@ test("Extend full path with shared", function () {
         }
     };
 
-    var customMapping = {
-        extend: {
-            "{root}.test.stringProp": "repeat",
-            "{root}.otherTest.stringProp": {
-                map: "repeat"
-            }
-        },
-        shared: {
-            "repeat": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj() + obj();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .define("repeat", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj() + obj();
+            });
+            return obj;
+        })
+        .extend("{root}.test.stringProp", "repeat")
+        .extend("{root}.otherTest.stringProp", "repeat");
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
     deepEqual(viewmodel.otherTest.stringProp.repeat(), viewmodel.otherTest.stringProp() + viewmodel.otherTest.stringProp());
@@ -73,18 +67,15 @@ test("Extend object property path", function () {
         }
     };
 
-    var customMapping = {
-        extend: {
-            "test.stringProp": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj() + obj();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("test.stringProp", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj() + obj();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
@@ -96,18 +87,15 @@ test("Extend property path", function () {
         stringProp: "test"
     };
 
-    var customMapping = {
-        extend: {
-            "stringProp": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj() + obj();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("stringProp", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj() + obj();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.stringProp.repeat(), viewmodel.stringProp() + viewmodel.stringProp());
 });
@@ -121,21 +109,18 @@ test("Extend full path wins over object property path", function () {
         }
     };
 
-    var customMapping = {
-        extend: {
-            "{root}.test.stringProp": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj() + obj();
-                });
-                return obj;
-            },
-            "test.stringProp": function (obj) {
-                return null;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("{root}.test.stringProp", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj() + obj();
+            });
+            return obj;
+        })
+        .extend("test.stringProp", function (obj) {
+            return null;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
@@ -149,21 +134,19 @@ test("Extend full path wins over property path", function () {
         }
     };
 
-    var customMapping = {
-        extend: {
-            "{root}.test.stringProp": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj() + obj();
-                });
-                return obj;
-            },
-            "stringProp": function (obj) {
-                return null;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("{root}.test.stringProp", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj() + obj();
+            });
+            return obj;
+        })
+        .extend("stringProp", function (obj) {
+            return null;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.test.stringProp.repeat(), viewmodel.test.stringProp() + viewmodel.test.stringProp());
 });
@@ -180,18 +163,15 @@ test("Extend array array-item property path", function () {
         }]
     };
 
-    var customMapping = {
-        extend: {
-            "items[i].test": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj.stringProp() + obj.stringProp();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("items[i].test", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj.stringProp() + obj.stringProp();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     actual = viewmodel.items()[0].test.repeat();
     expected = model.items[0].test.stringProp + model.items[0].test.stringProp;
@@ -210,21 +190,18 @@ test("Extend array array-item property path wins over array-item property path",
         }]
     };
 
-    var customMapping = {
-        extend: {
-            "[i].test": function (obj) {
-                return null;
-            },
-            "items[i].test": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj.stringProp() + obj.stringProp();
-                });
-                return obj;
-            }            
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("[i].test", function (obj) {
+            return null;
+        })
+        .extend("items[i].test", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj.stringProp() + obj.stringProp();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     actual = viewmodel.items()[0].test.repeat();
     expected = model.items[0].test.stringProp + model.items[0].test.stringProp;
@@ -243,21 +220,17 @@ test("Extend array array-item property path wins over property path", function (
         }]
     };
 
-    var customMapping = {
-        extend: {
-            "test": function (obj) {
-                return null;
-            },
-            "items[i].test": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj.stringProp() + obj.stringProp();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("test", function (obj) {
+            return null;
+        }).extend("items[i].test", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj.stringProp() + obj.stringProp();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     actual = viewmodel.items()[0].test.repeat();
     expected = model.items[0].test.stringProp + model.items[0].test.stringProp;
@@ -276,15 +249,12 @@ test("Extend all array items", function () {
         }]
     };
 
-    var customMapping = {
-        extend: {
-            "[i]": function (obj) {
-                obj.IsNew = false;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("[i]", function (obj) {
+            obj.IsNew = false;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     actual = viewmodel.items()[0].IsNew;
     expected = false;
@@ -293,7 +263,7 @@ test("Extend all array items", function () {
 });
 
 
-test("Extended Array Push with Map", function () {
+test("Extended Array Push with Map sytax 1", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -305,23 +275,77 @@ test("Extended Array Push with Map", function () {
         }]
     };
 
-    var customMapping = {
-        extend: {
-            "{root}.items[i]": {
-                map: function (obj) {
-                    obj.IsNew = (obj.id() > 0) ? false : true;
-                },
-                unmap: function (obj, vm) {
-                    if (vm) {//not using this param but test will fail if not available, easy way to verify that it is passe in
-                        delete obj.IsNew;
-                    }
-                    return obj;
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("{root}.items[i]", function (obj) {
+            obj.IsNew = (obj.id() > 0) ? false : true;
+            return obj;
+        })
+        .unmapExtend("{root}.items[i]", function (obj, vm) {
+                if (vm) {//not using this param but test will fail if not available, easy way to verify that it is passe in
+                    delete obj.IsNew;
                 }
+                return obj;
             }
-        }
+        );
+
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
+
+    deepEqual(viewmodel.items()[0].IsNew, false, "Extend logic - object with id is not new");//1
+
+    viewmodel.items.pushFromModel({
+        test: {
+            stringProp: "test"
+        },
+        id: null
+    });
+
+    deepEqual(viewmodel.items()[1].IsNew, true, "Extend logic applied to pushFromModel - object with id OF null is not new");//2
+
+    actual = viewmodel.items()[0];
+    expected = viewmodel.items.pop()
+
+    notStrictEqual(actual, expected, "Pop does not change object");//3
+
+    viewmodel.items.push(expected);
+
+    actual = viewmodel.items()[0];
+    expected = viewmodel.items.pop()
+
+    notStrictEqual(actual, expected, "Pushing and popping does not change object");//4
+
+    expected = model.items[0];
+    actual = viewmodel.items.popToModel();
+
+    deepEqual(actual, expected, "popToModel calls unmap and removes IsNew property");//5
+
+});
+
+test("Extended Array Push with Map syntax 2", function () {
+    var model, viewmodel, modelResult, actual, expected;
+
+    model = {
+        items: [{
+            test: {
+                stringProp: "test"
+            },
+            id: 1259
+        }]
     };
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("{root}.items[i]", {
+            map: function (obj) {
+                obj.IsNew = (obj.id() > 0) ? false : true;
+            },
+            unmap: function (obj, vm) {
+                if (vm) {//not using this param but test will fail if not available, easy way to verify that it is passe in
+                    delete obj.IsNew;
+                }
+                return obj;
+            }
+        });
+
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.items()[0].IsNew, false, "Extend logic - object with id is not new");//1
 
@@ -364,15 +388,12 @@ test("Extended Array Push without Map", function () {
         }]
     };
 
-    var customMapping = {
-        extend: {
-            "[i]": function (obj) {
-                obj.IsNew = false;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("[i]", function (obj) {
+            obj.IsNew = false;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     viewmodel.items.push({
         test: {
@@ -394,11 +415,10 @@ test("Exclude full path", function () {
         }]
     };
 
-    var customMapping = {
-        exclude: ["{root}.items[i].test"]
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .exclude("{root}.items[i].test");
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
@@ -415,12 +435,11 @@ test("Exclude full path wins over append object-property path", function () {
         }]
     };
 
-    var customMapping = {
-        exclude: ["{root}.items[i].test"],
-        append: ["items[i].test"]
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .exclude(["{root}.items[i].test"])
+        .append("items[i].test");
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
@@ -437,12 +456,11 @@ test("Exclude object-property path wins over append property path", function () 
         }]
     };
 
-    var customMapping = {
-        exclude: ["items[i].test"],
-        append: ["test"]
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .exclude("items[i].test")
+        .append("test");
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
@@ -460,15 +478,14 @@ test("Same path Last in wins", function () {
         }]
     };
 
-    var customMapping = {
-        exclude: ["items[i].test"],
-        append: ["items[i].test"]
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .append("items[i].test").exclude("items[i].test")
+        ;
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    notEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
+    notEqual(viewmodel.items()[0].hasOwnProperty("test"), true, "Item Not Mapped");
 });
 
 test("Exclude array item property path", function () {
@@ -482,11 +499,11 @@ test("Exclude array item property path", function () {
         }]
     };
 
-    var customMapping = {
+    var mapping = {
         exclude: ["items[i].test"]
     };
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
@@ -503,11 +520,11 @@ test("Append property", function () {
         }]
     };
 
-    var customMapping = {
+    var mapping = {
         append: ["items[i]"]
     };
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     actual = viewmodel.items()[0].test.stringProp;
     expected = model.items[0].test.stringProp
@@ -526,11 +543,11 @@ test("Override array", function () {
         }]
     };
 
-    var customMapping = {
+    var mapping = {
         override: ["[i]"]
     };
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     actual = viewmodel.items()[0].test.stringProp();
     expected = model.items[0].test.stringProp
@@ -549,12 +566,12 @@ test("Override object", function () {
         }]
     };
 
-    var customMapping = {
+    var mapping = {
         override: ["{root}"]
     };
 
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     actual = viewmodel.items()[0].test.stringProp();
     expected = model.items[0].test.stringProp
@@ -573,7 +590,7 @@ test("Custom Success", function () {
         }]
     };
 
-    var customMapping = {
+    var mapping = {
         custom: {
             "test": function (obj) {
                 return obj ? true : false;
@@ -581,7 +598,7 @@ test("Custom Success", function () {
         }
     };
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.items()[0].test, true, "Item Not Mapped");
 });
@@ -597,7 +614,7 @@ test("Custom Success with shared", function () {
         }]
     };
 
-    var customMapping = {
+    var mapping = {
         custom: {
             "test": "test"
         },
@@ -608,7 +625,7 @@ test("Custom Success with shared", function () {
         }
     };
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.items()[0].test, true, "Item Not Mapped");
 });
@@ -624,7 +641,7 @@ test("Custom Fail", function () {
         }]
     };
 
-    var customMapping = {
+    var mapping = {
         custom: {
             "test": function (obj) {
                 
@@ -632,7 +649,7 @@ test("Custom Fail", function () {
         }
     };
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
@@ -648,7 +665,7 @@ test("Custom Obsevable", function () {
         }]
     };
 
-    var customMapping = {
+    var mapping = {
         custom: {
             "test": function (obj) {
 
@@ -656,7 +673,7 @@ test("Custom Obsevable", function () {
         }
     };
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });

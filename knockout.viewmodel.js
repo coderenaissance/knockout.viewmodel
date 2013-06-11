@@ -499,12 +499,28 @@
                 extend: function (path, fn) {
                     if (pathCheck(path, "extend")) {
                         mapping.paths[path] = true;
-                        mapping.extend[path] = { map: fn };
+                        if (fn.constructor === Function) {
+                            mapping.extend[path] = { map: fn };
+                        }
+                        else if (typeof fn === "string") {
+                            if (!mapping.shared[fn]) {
+                                throw new Error("Could not add extend for path '" + path + "': No definition for '" + fn + "' was found'");
+                            }
+                            else {
+                                mapping.extend[path] = fn;
+                            }
+                        }
+                        else if (fn.constructor === Object) {
+                            mapping.extend[path] = { map: fn.map };
+                            if (fn.unmap) {
+                                builder.unmapExtend(path, fn.unmap);
+                            }
+                        }
                     }
                     return builder;
                 },
                 unmapExtend: function (path, fn) {
-                    if (!!mapping.extend[path] && !!mapping.extend[path].map) {
+                    if (!mapping.extend[path] || !mapping.extend[path].map) {
                         console.log("Could not add unmap-extend for path '" + path + "': no mapping defined.");
                     }
                     else {
@@ -529,16 +545,34 @@
                     return builder;
                 },
                 append: function (path) {
-                    if (pathCheck(path, "Append")) {
-                        mapping.paths[path] = true;
-                        mapping.append.push(path);
+                    var index, length;
+                    if (typeof path === "string") {
+                        if (pathCheck(path, "Append")) {
+                            mapping.paths[path] = true;
+                            mapping.append.push(path);
+                        }
+                    }
+                    else if (path.constructor === Array) {
+                        length = path.length;
+                        for (index = 0; index < length; index++) {
+                            builder.append(path[index]);
+                        }
                     }
                     return builder;
                 },
                 exclude: function (path) {
-                    if (pathCheck(path, "Exclude")) {
-                        mapping.paths[path] = true;
-                        mapping.exclude.push(path);
+                    var index, length;
+                    if (typeof path === "string") {
+                        if (pathCheck(path, "Exclude")) {
+                            mapping.paths[path] = true;
+                            mapping.exclude.push(path);
+                        }
+                    }
+                    else if (path.constructor === Array){
+                        length = path.length;
+                        for (index = 0; index < length; index++) {
+                            builder.exclude(path[index]);
+                        }
                     }
                     return builder;
                 },
