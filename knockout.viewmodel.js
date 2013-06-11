@@ -484,12 +484,13 @@
             };
 
             function pathCheck(path, type) {
-                var msg;
+                var msg, result = true;
                 if (mapping.paths[path]) {
                     msg = "Could not add " + type + "-map for path '" + path + "': path already defined.";
                     console.log(msg);
+                    result = false;
                 }
-                return true;
+                return result;
             }
 
             var builder = {

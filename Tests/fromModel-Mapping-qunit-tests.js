@@ -467,7 +467,29 @@ test("Exclude object-property path wins over append property path", function () 
 });
 
 
-test("Same path Last in wins", function () {
+test("Same path Last in wins - Manual Syntax", function () {
+    var model, viewmodel, modelResult, actual, expected;
+
+    model = {
+        items: [{
+            test: {
+                stringProp: "test"
+            }
+        }]
+    };
+
+    var mapping = {
+        exclude: ["items[i].test"],
+        append: ["items[i].test"]
+    };
+
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    notEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
+});
+
+test("Same path First in wins - dot syntax", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -479,13 +501,13 @@ test("Same path Last in wins", function () {
     };
 
     var mapping = ko.viewmodel.mappingBuilder()
-        .append("items[i].test").exclude("items[i].test")
+        .exclude("items[i].test").append("items[i].test")
         ;
 
-    viewmodel = ko.viewmodel.fromModel(model, mapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping); 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    notEqual(viewmodel.items()[0].hasOwnProperty("test"), true, "Item Not Mapped");
+    equal(viewmodel.items()[0].hasOwnProperty("test"), false, "Item Not Mapped");
 });
 
 test("Exclude array item property path", function () {
