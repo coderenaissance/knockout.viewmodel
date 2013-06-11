@@ -118,6 +118,9 @@
                 result[p] = recrusiveFrom(modelObj[p], settings, {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true
                 });
+                if (result[p] === badResult) {
+                    result[p] = undefined;
+                }
             }
 
             //only makeObservableArray extend with mapping functions if it's not a nested array or mapping compatabitlity is off

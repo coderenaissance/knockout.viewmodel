@@ -438,6 +438,7 @@ test("Exclude full path wins over append object-property path", function () {
     var mapping = ko.viewmodel.mappingBuilder()
         .exclude(["{root}.items[i].test"])
         .append("items[i].test");
+    
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
@@ -501,9 +502,9 @@ test("Same path First in wins - dot syntax", function () {
     };
 
     var mapping = ko.viewmodel.mappingBuilder()
-        .exclude("items[i].test").append("items[i].test")
-        ;
+        .exclude("items[i].test").append("items[i].test");
 
+    if (console) console.log("items[i].test message was part of test");
     viewmodel = ko.viewmodel.fromModel(model, mapping); 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
@@ -542,9 +543,7 @@ test("Append property", function () {
         }]
     };
 
-    var mapping = {
-        append: ["items[i]"]
-    };
+    var mapping = ko.viewmodel.mappingBuilder().append("items[i]");
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
@@ -554,7 +553,7 @@ test("Append property", function () {
     deepEqual(actual, expected, "Item Not Mapped");
 });
 
-test("Override array", function () {
+test("Exclude array Item", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -565,19 +564,18 @@ test("Override array", function () {
         }]
     };
 
-    var mapping = {
-        override: ["[i]"]
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .exclude("[i]");
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
-    actual = viewmodel.items()[0].test.stringProp();
-    expected = model.items[0].test.stringProp
+    actual = viewmodel.items()[0];
+    expected = undefined;
 
     deepEqual(actual, expected, "Item Not Mapped");
 });
 
-test("Override object", function () {
+test("Exclude object", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -588,17 +586,16 @@ test("Override object", function () {
         }]
     };
 
-    var mapping = {
-        override: ["{root}"]
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .exclude("{root}");
 
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
-    actual = viewmodel.items()[0].test.stringProp();
-    expected = model.items[0].test.stringProp
+    actual = viewmodel;
+    expected = null;
 
-    deepEqual(actual, expected, "Item Not Mapped");
+    notDeepEqual(actual, expected, "Item Not Mapped");
 });
 
 test("Custom Success", function () {
@@ -612,13 +609,10 @@ test("Custom Success", function () {
         }]
     };
 
-    var mapping = {
-        custom: {
-            "test": function (obj) {
-                return obj ? true : false;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .custom("test", function (obj) {
+            return obj ? true : false;
+        });
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
@@ -636,16 +630,11 @@ test("Custom Success with shared", function () {
         }]
     };
 
-    var mapping = {
-        custom: {
-            "test": "test"
-        },
-        shared: {
-            "test": function (obj) {
-                return obj ? true : false;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .define("test", function (obj) {
+            return obj ? true : false;
+        })
+        .custom("test", "test");
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
@@ -663,20 +652,15 @@ test("Custom Fail", function () {
         }]
     };
 
-    var mapping = {
-        custom: {
-            "test": function (obj) {
-                
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .custom("test", function (obj) { });
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
-test("Custom Obsevable", function () {
+test("Custom Observable", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -687,16 +671,13 @@ test("Custom Obsevable", function () {
         }]
     };
 
-    var mapping = {
-        custom: {
-            "test": function (obj) {
-
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .custom("test", function (obj) {
+            return ko.observable(obj);
+        });
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
-    deepEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
+    deepEqual(viewmodel.items()[0].test(), model.items[0].test, "Item Not Mapped");
 });
 
