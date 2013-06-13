@@ -17,18 +17,15 @@ test("Extend full path", function () {
         }
     };
 
-    var customMapping = {
-        extend: {
-            "{root}.test.stringProp": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj() + obj();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("{root}.test.stringProp", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj() + obj();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel().test().stringProp.repeat(), viewmodel().test().stringProp() + viewmodel().test().stringProp(), "Extension Added");
 });
@@ -42,18 +39,15 @@ test("Extend object property path", function () {
         }
     };
 
-    var customMapping = {
-        extend: {
-            "test.stringProp": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj() + obj();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("test.stringProp", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj() + obj();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel().test().stringProp.repeat(), viewmodel().test().stringProp() + viewmodel().test().stringProp(), "Extension Added");
 });
@@ -65,18 +59,15 @@ test("Extend name path", function () {
         stringProp: "test"
     };
 
-    var customMapping = {
-        extend: {
-            "stringProp": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj() + obj();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("stringProp", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj() + obj();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(viewmodel().stringProp.repeat(), viewmodel().stringProp() + viewmodel().stringProp(), "Extension Added");
 });
@@ -93,18 +84,15 @@ test("Extend array item property", function () {
         }]
     };
 
-    var customMapping = {
-        extend: {
-            "items[i].test": function (obj) {
-                obj.repeat = ko.computed(function () {
-                    return obj().stringProp() + obj().stringProp();
-                });
-                return obj;
-            }
-        }
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("items[i].test", function (obj) {
+            obj.repeat = ko.computed(function () {
+                return obj().stringProp() + obj().stringProp();
+            });
+            return obj;
+        });
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     actual = viewmodel().items()[0]().test.repeat();
     expected = model.items[0].test.stringProp + model.items[0].test.stringProp;
@@ -123,9 +111,8 @@ test("Exclude property", function () {
         }]
     };
 
-    var options = {
-        exclude: ["items[i].test"]
-    };
+    var options = ko.viewmodel.mappingBuilder()
+        .exclude("items[i].test");
 
     viewmodel = ko.viewmodel.fromModel(model, options);
 
@@ -146,11 +133,10 @@ test("Append property", function () {
         }]
     };
 
-    var customMapping = {
-        append: ["items[i]"]
-    };
+    var mapping = ko.viewmodel.mappingBuilder()
+        .append("items[i]");
 
-    viewmodel = ko.viewmodel.fromModel(model, customMapping);
+    viewmodel = ko.viewmodel.fromModel(model, mapping);
     modelResult = ko.viewmodel.toModel(viewmodel);
 
     deepEqual(viewmodel().items()[0].test.stringProp, model.items[0].test.stringProp, "fromModel assert");
