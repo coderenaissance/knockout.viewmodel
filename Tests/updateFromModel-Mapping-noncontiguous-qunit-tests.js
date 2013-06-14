@@ -13,16 +13,11 @@
 
     model = { items: [{ test: 5, Id: 3 }] };
 
-    var customMapping = {
-        extend: {
-            "{root}.items[i]": function (item) {
-                return ko.observable(item);
-            }
-        },
-        arrayChildId: {
-            "{root}.items": "Id"
-        }
-    };
+    var customMapping = ko.viewmodel.mappingBuilder()
+        .extend("{root}.items[i]", function (item) {
+            return ko.observable(item);
+        })
+        .arrayChildId("{root}.items", "Id");
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 
@@ -65,16 +60,11 @@
 
     model = { items: [{ test: 5, Id: 3 }] };
 
-    var customMapping = {
-        extend: {
-            "{root}.items[i]": function (item) {
-                return ko.observable(item);
-            }
-        },
-        arrayChildId: {
-            "{root}.items": "Id"
-        }
-    };
+    var customMapping = ko.viewmodel.mappingBuilder()
+        .extend("{root}.items[i]", function (item) {
+            return ko.observable(item);
+        })
+        .arrayChildId("{root}.items", "Id");
 
     viewmodel = ko.viewmodel.fromModel(model, customMapping);
 

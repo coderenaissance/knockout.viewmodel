@@ -33,12 +33,12 @@ test("Extend String Undefined", function () {
         extend: {
             "{root}.Prop1": function (val) {
                 val.isValid = ko.computed(function () {
-                    return val() != undefined && val().length > 0;
+                    return val() !== undefined && val().length > 0;
                 });
             },
             "{root}.Prop2": function (val) {
                 val.isValid = ko.computed(function () {
-                    return val() != undefined && val().length > 0;
+                    return val() !== undefined && val().length > 0;
                 });
             }
         }
@@ -63,20 +63,19 @@ test("Extend String Undefined", function () {
 
 test("Extend Object Undefined", function () {
 
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        extend: {
-            "{root}.Prop3": function (val) {
-                val.isValid = ko.computed(function () {
-                    return ko.utils.unwrapObservable(val) != undefined;
-                });
-            }, 
-            "{root}.Prop4": function (val) {
-                val.isValid = ko.computed(function () {
-                    return ko.utils.unwrapObservable(val) != undefined;
-                });
-            }
-        }
-    });
+    var mapping = ko.viewmodel.mappingBuilder()
+        .extend("{root}.Prop3", function (val) {
+            val.isValid = ko.computed(function () {
+                return ko.utils.unwrapObservable(val) !== undefined;
+            });
+        })
+        .extend("{root}.Prop4", function (val) {
+            val.isValid = ko.computed(function () {
+                return ko.utils.unwrapObservable(val) !== undefined;
+            });
+        });
+
+    var viewmodel = ko.viewmodel.fromModel(model, mapping);
 
     deepEqual(typeof viewmodel.Prop3, "object", "Object Prop Test");
     deepEqual(viewmodel.Prop3.isValid(), true, "Object Prop Extend Test");
@@ -96,34 +95,31 @@ test("Extend Object Undefined", function () {
 
 test("Extend Object Undefined", function () {
 
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        extend: {
-            "{root}.Prop1": function (val) {
-                if (!ko.isObservable(val)) {
-                    val = ko.observable(val)
-                }
-                return val;
-            },
-            "{root}.Prop2": function (val) {
-                if (!ko.isObservable(val)) {
-                    val = ko.observable(val)
-                }
-                return val;
-            },
-            "{root}.Prop3": function (val) {
-                if (!ko.isObservable(val)) {
-                    val = ko.observable(val)
-                }
-                return val;
-            },
-            "{root}.Prop4": function (val) {
-                if (!ko.isObservable(val)) {
-                    val = ko.observable(val)
-                }
-                return val;
+    var viewmodel = ko.viewmodel.fromModel(model, ko.viewmodel.mappingBuilder()//Not a prefered syntax, just experimenting
+        .extend("{root}.Prop1", function (val) {
+            if (!ko.isObservable(val)) {
+                val = ko.observable(val);
             }
-        }
-    });
+            return val;
+        })
+        .extend("{root}.Prop2", function (val) {
+            if (!ko.isObservable(val)) {
+                val = ko.observable(val);
+            }
+            return val;
+        })
+        .extend("{root}.Prop3", function (val) {
+            if (!ko.isObservable(val)) {
+                val = ko.observable(val);
+            }
+            return val;
+        })
+        .extend("{root}.Prop4", function (val) {
+            if (!ko.isObservable(val)) {
+                val = ko.observable(val);
+            }
+            return val;
+        }));
 
     deepEqual(viewmodel.Prop1(), model.Prop1);
     deepEqual(viewmodel.Prop2(), model.Prop2);
@@ -144,43 +140,41 @@ test("Extend Object Undefined", function () {
 
 test("Append property", function () {
 
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        append: ["{root}.Prop1", "{root}.Prop2"]
-    });
-	
+    var viewmodel = ko.viewmodel.fromModel(model, ko.viewmodel.mappingBuilder()
+        .append(["{root}.Prop1", "{root}.Prop2"])
+    );
+
     deepEqual(viewmodel.Prop1, model.Prop1, "Undefined to Value Update Test");
     deepEqual(viewmodel.Prop2, model.Prop2, "Value to Undefined Update Test");
-	
-	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
-	
-	deepEqual(viewmodel.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
-	deepEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
-	
-	modelResult = ko.viewmodel.toModel(viewmodel);
-	
-	deepEqual(modelResult.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
-	deepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
+
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    deepEqual(viewmodel.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
+    deepEqual(viewmodel.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    deepEqual(modelResult.Prop1, updatedModel.Prop1, "Undefined to Value Update Test");
+    deepEqual(modelResult.Prop2, updatedModel.Prop2, "Value to Undefined Update Test");
 
 });
 
 test("Custom basic", function () {
 
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        custom: {
-			"{root}.Prop1":function (val) {
-			    return ko.observable(val);
-			},
-			"{root}.Prop2": function (val) {
-			    return ko.observable(val);
-			},
-			"{root}.Prop3": function (val) {
-			    return ko.observable(val);
-			},
-			"{root}.Prop4": function (val) {
-			    return ko.observable(val);
-			}
-		}
-    });
+    var viewmodel = ko.viewmodel.fromModel(model, ko.viewmodel.mappingBuilder()
+        .custom("{root}.Prop1", function (val) {
+            return ko.observable(val);
+        })
+        .custom("{root}.Prop2", function (val) {
+            return ko.observable(val);
+        })
+        .custom("{root}.Prop3", function (val) {
+            return ko.observable(val);
+        })
+        .custom("{root}.Prop4", function (val) {
+            return ko.observable(val);
+        })
+    );
 
     deepEqual(viewmodel.Prop1(), model.Prop1);
     deepEqual(viewmodel.Prop2(), model.Prop2);
@@ -202,42 +196,40 @@ test("Custom basic", function () {
 
 test("Custom map and unmap", function () {
 
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        custom: {
-            "{root}.Prop1": {
+    var viewmodel = ko.viewmodel.fromModel(model, ko.viewmodel.mappingBuilder()
+            .custom("{root}.Prop1", {
                 map: function (val) {
                     return ko.observable(val);
                 },
                 unmap: function (val) {
                     return val();
                 }
-            },
-            "{root}.Prop2": {
+            })
+            .custom("{root}.Prop2", {
                 map: function (val) {
                     return ko.observable(val);
                 },
                 unmap: function (val) {
                     return val();
                 }
-            },
-            "{root}.Prop3": {
+            })
+            .custom("{root}.Prop3", {
                 map: function (val) {
                     return ko.observable(val);
                 },
                 unmap: function (val) {
                     return val();
                 }
-            },
-            "{root}.Prop4": {
+            })
+            .custom("{root}.Prop4", {
                 map: function (val) {
                     return ko.observable(val);
                 },
                 unmap: function (val) {
                     return val();
                 }
-            }
-        }
-    });
+            })
+        );
 
     deepEqual(viewmodel.Prop1(), model.Prop1);
     deepEqual(viewmodel.Prop2(), model.Prop2);
@@ -258,9 +250,9 @@ test("Custom map and unmap", function () {
 
 test("Exclude", function () {
 
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        exclude: ["{root}.Prop2"]
-    });
+    var viewmodel = ko.viewmodel.fromModel(model, ko.viewmodel.mappingBuilder()
+        .exclude("{root}.Prop2")
+    );
 
     equal(viewmodel.hasOwnProperty("Prop2"), false, "From Model String Prop Not Exist");
 

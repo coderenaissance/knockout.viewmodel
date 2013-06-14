@@ -515,9 +515,14 @@
                             }
                         }
                         else if (fn.constructor === Object) {
-                            mapping.extend[path] = { map: fn.map };
-                            if (fn.unmap) {
-                                builder.unmapExtend(path, fn.unmap);
+                            if (fn.map) {
+                                mapping.extend[path] = { map: fn.map };
+                                if (fn.unmap) {
+                                    builder.unmapExtend(path, fn.unmap);
+                                }
+                                else{
+                                    console.log("Could not add map-extend for path '" + path + "': no mapping defined.");
+                                }
                             }
                         }
                     }
@@ -535,7 +540,28 @@
                 custom: function (path, fn) {
                     if (pathCheck(path, "custom")) {
                         mapping.paths[path] = true;
-                        mapping.custom[path] = { map: fn };
+                        if (fn.constructor === Function) {
+                            mapping.custom[path] = { map: fn };
+                        }
+                        else if (typeof fn === "string") {
+                            if (!mapping.shared[fn]) {
+                                throw new Error("Could not add custom for path '" + path + "': No definition for '" + fn + "' was found'");
+                            }
+                            else {
+                                mapping.custom[path] = fn;
+                            }
+                        }
+                        else if (fn.constructor === Object) {
+                            if (fn.map) {
+                                mapping.custom[path] = { map: fn.map };
+                                if (fn.unmap) {
+                                    builder.unmapCustom(path, fn.unmap);
+                                }
+                                else {
+                                    console.log("Could not add map-custom for path '" + path + "': no mapping defined.");
+                                }
+                            }
+                        }
                     }
                     return builder;
                 },
@@ -544,7 +570,7 @@
                         console.log("Could not add unmap-custom for path '" + path + "': no mapping defined.");
                     }
                     else {
-                        mapping.extend[path].unmap = fn;
+                        mapping.custom[path].unmap = fn;
                     }
                     return builder;
                 },
