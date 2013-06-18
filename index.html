@@ -71,7 +71,7 @@ viewmodel = ko.viewmodel.fromModel(model);
 ko.viewmodel.updateFromModel(viewmodel, updatedModel);
                 </code></pre>
 				
-				<p>This method optionally takes a third parameter, makeNoncontiguousObjectUpdates, which can be used to eliminate long running script errors in older browsers. When set to true  each object will have an update function created for it which will be called via setTimeout. Given this makeNoncontiguousObjectUpdates should only be set to true if you are getting long running script errors in older browsers. An onComplete method allows you to pass in a callback to be fired when noncontiguous object updates are completed.</p>
+				<p>This method optionally takes a third parameter, makeNoncontiguousObjectUpdates. When set to true it can help eliminate long running script errors in older browsers by creating an update function for each object and calling it via setTimeout. Given the overhead of creating all of these functions makeNoncontiguousObjectUpdates should only be set to true if you are getting long running script errors in older browsers. An onComplete method allows you to pass in a callback to be fired when noncontiguous object updates are completed.</p>
 				<pre><code>
 ko.viewmodel.updateFromModel(viewmodel, updatedModel, true).onComplete(function(){
     //respond to completion of update
@@ -89,6 +89,11 @@ model = ko.viewmodel.toModel(viewmodel);
         </code></pre>
             </section>
             <section id="simpleExample" class="inner">
+			<h3>What is a viewmodel?</h3>
+			<p>In knockout your viewmodel is an interactive model that has been been modified with any observables, observable arrays, computeds, 
+			and functions needed by your view. </p>
+			<h3>Mapping from viewmodels to models and back</h3>
+			<p></p>
                 <h3>Extending your viewmodel</h3>
                 <p>Now lets say that you want to extend each object in the users array with an isDeleted flag. You would do this by specifying an extend option.
                 </p>
