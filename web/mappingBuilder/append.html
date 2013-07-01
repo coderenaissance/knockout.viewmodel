@@ -36,12 +36,40 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
         <section id="main_content" class="inner">
-            <h2>mappingBuilder - append(path)</h2>
+            <h2>mappingBuilder - append ( path )</h2>
             <section id="intro" class="inner">
-                <h3>append(path)</h3>
-                <p>
-                    
+                <h3>append ( path )</h3>
+				<p>
+                    The specified path in the model is appended to (referenced by) the viewmodel as is. The object and it's children will not be made observable. It's properties/children will not processed and cannot be reference by any other mapping.<br/><br/>
+					Note: If the appended path refers to an object then changes to the properties of the object in the viewmodel will also change those properties in the model. This is normally not a concern unless the original model needs to be preserved for some reason, such as for a dirty comparison or to revert changes.
                 </p>
+				<h5>Parameters:</h5>
+                <p>
+                    path - either a single path as a string or an array of paths.
+                </p>
+				<h5>Example - Appending a single path</h5>
+                <pre><code>
+var mappingOptions = ko.viewmodel.mappingBuilder().append("{root}.users[i]");
+
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
+				<h5>Example - Appending multiple paths with multiple calls</h5>
+                <pre><code>
+var mappingOptions = ko.viewmodel.mappingBuilder()
+	.append("{root}.users[i]")
+	.append("{root}.currentUser");
+	
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
+				<h5>Example - Appending multiple paths by passing in an array of paths:</h5>
+                <pre><code>
+var mappingOptions = ko.viewmodel.mappingBuilder().append([
+	"{root}.users[i]",
+	"{root}.currentUser",
+]);
+
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
             </section>
         </section>
     </div>
