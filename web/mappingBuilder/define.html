@@ -36,11 +36,59 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
         <section id="main_content" class="inner">
-            <h2>mappingBuilder - shared(name, fn)</h2>
+            <h2>mappingBuilder - define</h2>
             <section id="intro" class="inner">
+			<h3>define(name, fn)</h3>
                 <p>
-                    
+                    Defines a shared function that can be specified in place of function definitions when calling the custom and extend methods.
                 </p>
+				<h5>Example - trim for custom and extend</h5>
+                <pre><code>
+var mappingOptions = ko.viewmodel.mappingBuilder()
+    .define("passthru", function(item){
+		//returns whats passed in this gets around limitation 
+		//that you can't specify an unmap without a map function
+		return item;
+	},
+	.define("trimString", function(item){
+		var val = ko.utils.unwrapObservable(item);//works if observable (for extend) or not (custom).
+		if(typeOf val === "string"){
+			val = val.trim();//Assumes modern browser that includes trim method or polyfill
+			if(ko.isObservable(item){//if item was observable (extend) store value
+				item(val);
+			}
+			else{//if not observable (custom or unmapping) then assign trimmed value to item
+				item = val;
+			}
+		}
+		return item;//return item whether altered or not
+	}),
+	.define("nullableObjectMap", function(item){
+		//nulls are observable by default but objects aren't
+		//this wraps objects in observables
+		return ko.isObservable(item) ? item : ko.observable(item);
+	}),
+	.define("nullableArrayMap", function(item){
+		//convert nulls to emptyObservableArrays
+		return item.peek() === null ? ko.observableArray([]) : item;	
+	})
+	.define("nullableArrayUnmap", function(item){
+		//convert empty arrays back to nulls
+		return item.length === 0 ? null : item;	
+	})
+	.extend("{root}.CustomPlan", "nullableObjectMap"),
+	.extend("{root}.Address", "nullableObjectMap"),
+	.extend("{root}.OpenOrders", "nullableArrayMap", "nullableArrayUnmap"),
+	.extend("{root}.ProcessedOrders", "nullableArrayMap", "nullableArrayUnmap"),
+	.extend("{root}.User.FirstName", "passthru", "trimString")
+	.extend("{root}.User.LastName", "passthru", "trimString")
+	.extend("{root}.User.MiddleInitial", "passthru", "trimString")
+	.extend("{root}.User.Email", "passthru", "trimString");
+	
+
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
+				<p>The above code defines shared functions and applies them to multiple properties by name. In the same way functions can be defined and used for custom mapping.</p>
             </section>
         </section>
     </div>
