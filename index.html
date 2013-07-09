@@ -67,7 +67,31 @@ model = {//your model is normally provided via an ajax call
 
 viewmodel = ko.viewmodel.fromModel(model);
 			</code></pre>
+			<p>This example relies on the default mapping provided by fromModel. These rules can be overridden by passing in mapping options as a second parameter (discussed later).</p>
+			<h5>Default Mapping</h5>
+			<ul>
+			<li>Objects in the model are mapped to objects in the viewmodel and are not observable.</li>
+			<li>All non-object json properties in the model are mapped to observables containing those values.</li>
+			<li>Arrays are mapped to observablesArrays unless they are direct children of arrays, e.g. this json [ [], [] ] maps to an observable array containing two non-observable arrays. </li>
+			</ul>
             </section>
+			<section id="toModel" class="inner">
+                <h3>Getting an updated model</h3>
+
+                <p>At somepoint you'll need to get an updated model to send back up to the server. This can be done by calling toModel and passing in your viewmodel.</p>
+
+                <pre><code>
+model = ko.viewmodel.toModel(viewmodel);
+        </code></pre>
+			<p>The toModel method follows default unmapping rules unless mapping options were specified in the original fromModel call </p>	
+			<h5>Default Unmapping</h5>
+					<ul>
+					<li>Objects in the viewmodel are mapped to objects in a new model</li>
+					<li>All observable properties, including observable arrays, are unwrapped and added to the model</li>
+					<li>All non-observable, non-object json data will be appended to the viewmodel.</li>
+					<li>Functions, computed values, and non-json data	 are ignored.</li>
+					</ul>
+			</section>
             <section id="updateFromModel" class="inner">
                 <h3>Updating a viewmodel</h3>
 
@@ -84,15 +108,6 @@ ko.viewmodel.updateFromModel(viewmodel, updatedModel, true).onComplete(function(
 });
                 </code></pre>
                 <p>Note: the onComplete method is only available when makeNoncontiguousObjectUpdates is set to true.</p>
-            </section>
-            <section id="toModel" class="inner">
-                <h3>Getting an updated model</h3>
-
-                <p>At somepoint you'll need to get an updated model to send back up to the server. This can be done by calling toModel.</p>
-
-                <pre><code>
-model = ko.viewmodel.toModel(viewmodel);
-        </code></pre>
             </section>
             <section id="MappingBuilder" class="inner">
                 <h3>Mapping Builder - Building more complicated viewmodels</h3>

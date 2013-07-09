@@ -39,42 +39,15 @@
             <h2>mappingBuilder - extend</h2>
             <section id="intro" class="inner">
 				<h3>extend ( path, fnMap, fnUnmap )</h3>
-				Adds additional mapping/unmapping processing for the specified path. 
-				<p>Extend can be used to transform property values or object structures, to extend objects (with additional properties, computed properties, functions), or make objects observable. Whatever is returned by the fnMap and fnUmap functions replaces the default map and unmap values.</p>
+				Adds additional mapping/unmapping processing for the specified path. The objects passed to fnMap and fnUnmap have already been through default mapping or default unmapping, respectively. For complete control use custom instead of extend.				
 				<h5>Parameters:</h5>
-                <p>
+                <ul>
 					<li>path - a single path as a string</li>
 					<li>fnMap - a function that accepts a single parameter and returns the extended object (depending on the type of value passed in the parameter may recieve observables or non-observables)</li>
 					<li>fnUnmap - a function that accepts a single parameter and returns the extended object</li>
-                </p>
-				<p><strong>Following default mapping (on fromModel/updateFromModel) the mapped path will be returned to the fnMap function</strong></p> 
-					<strong>Default mapping</strong>:
-					<ul>
-					<li>Objects in the model are mapped to objects in the viewmodel and are not observable</li>
-					<li>All non-object json properties in the model are mapped to observables containing those values</li>
-					<li>Arrays are mapped to observablesArrays unless they are direct children of arrays. (e.g. [[[],[]]] maps to an observable array containing a non-observable array containing two non-observable arrays. </li>
-					</ul>
-					<p>
-				<p><strong>Following default unmapping (on toModel calls) the unmapped path will be passed to the fnUnmap function.</strong></p>				
-					<strong>Default Unmapping</strong>:
-					<ul>
-					<li>Objects in the viewmodel are mapped to objects in a new model</li>
-					<li>All observable properties, including observable arrays, are unwrapped and added to the model</li>
-					<li>All non-observable, non-object json data will be appended to the viewmodel.</li>
-					<li>Functions, computed values, and non-json data	 are ignored.</li>
-					</ul>
-					<p>
-					<strong>Extending objects</strong>:<br/>
-					
-					Beware of nullable objects. Because nulls are made observable by default but objects are not, a call to updateFromModel can update a null to an object but not an object to a null. If a specified path can contain both nulls and objects then the extend method needs to be called and used to test ko.isObservable(item) and return objects wrapped in observables. If an object will never be null there is no need for it to be observable as it's properties, including id values, will be updated. 
-					</p>
-					<p>
-					<strong>Extending observables</strong>:<br/>
-					Properties, computed properties, and functions can be added to observables and can reference the observable. These will be ignored ignored when toModel is called and do not need to be manually removed with fnUnmap.</p>
-					</p>
+                </ul>	
 				<h5>Example - extending a single path</h5>
-                <pre><code>
-var mappingOptions = ko.viewmodel.mappingBuilder().extend("{root}.users[i]");
+                <pre><code>var mappingOptions = ko.viewmodel.mappingBuilder().extend("{root}.users[i]");
 
 var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
                 </code></pre>
@@ -94,6 +67,17 @@ var mappingOptions = ko.viewmodel.mappingBuilder().extend([
 ]);
 
 var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+</code></pre>				
+<p>Extend can be used to transform property values or object structures, to extend objects (with additional properties, computed properties, functions), or make objects observable. Whatever is returned by the fnMap and fnUmap functions replaces the default map and unmap values.</p>
+					<p>
+					<strong>Extending objects</strong>:<br/>
+					
+					Beware of nullable objects. Because nulls are made observable by default but objects are not, a call to updateFromModel can update a null to an object but not an object to a null. If a specified path can contain both nulls and objects then the extend method needs to be called and used to test ko.isObservable(item) and return objects wrapped in observables. If an object will never be null there is no need for it to be observable as it's properties, including id values, will be updated. 
+					</p>
+					<p>
+					<strong>Extending observables</strong>:<br/>
+					Properties, computed properties, and functions can be added to observables and can reference the observable. These will be ignored ignored when toModel is called and do not need to be manually removed with fnUnmap.</p>
+					</p>
         </section>
     </div>
 
