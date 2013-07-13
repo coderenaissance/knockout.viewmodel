@@ -78,7 +78,7 @@
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
         childPathSettings, childObj;
         pathSettings = pathSettings || getPathSettings(settings, context);
-
+		
         if (customPathSettings = pathSettings.custom) {
             optionProcessed = true;
             //custom can either be specified as a single map function or as an 
@@ -108,8 +108,12 @@
             return badResult;
         }
         else if (isPrimativeOrDate(modelObj)) {
-            //primative and date children of arrays aren't mapped... all others are
-            result = context.parentIsArray ? modelObj : makeObservable(modelObj);
+			if(context.parentIsArray){//primative and date children of arrays aren't mapped.
+				result =  modelObj;
+			}
+			else{
+				result = makeObservable(modelObj);
+			}
         }
         else if (modelObj instanceof Array) {
             result = [];
@@ -188,6 +192,14 @@
                 }
             }
         }
+		
+		if(pathSettings.nullable){//make sure nullable objects are observable and provide method to update
+			result = ko.utils.isObservable(result) ? result : makeObservable(result);
+			result.___$updateNullWithMappedObject = function(item){
+				var newValue = recrusiveFrom(modelObj, settings, context, pathSettings);
+				result(newValue);
+			}
+		}
 
         if (!optionProcessed && (extend = pathSettings.extend)) {
             if (typeof extend === "function") {//single map function specified
@@ -205,6 +217,7 @@
                 }
             }
         }
+		
         return result;
     }
 

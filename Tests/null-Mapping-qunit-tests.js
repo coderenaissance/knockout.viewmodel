@@ -8,14 +8,18 @@ module("Null Mapping Tests", {
             Prop1: null,
             Prop2: "test2",
             Prop3: {},
-            Prop4: null
+            Prop4: null,
+			Prop5: null
         };
 
         updatedModel = {
             Prop1: "test2",
             Prop2: null,
             Prop3: null,
-            Prop4: {}
+            Prop4: {},
+			Prop5: {
+				Test:"New Data"
+			}
         };
 
     },
@@ -273,5 +277,38 @@ test("Exclude", function () {
     equal(modelResult.hasOwnProperty("Prop2"), false, "Update... String Prop Not Exist");
 });
 
+test("Exclude", function () {
+
+    var viewmodel = ko.viewmodel.fromModel(model, {
+        exclude: ["{root}.Prop2"]
+    });
+
+    equal(viewmodel.hasOwnProperty("Prop2"), false, "From Model String Prop Not Exist");
+
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    equal(viewmodel.hasOwnProperty("Prop2"), false, "Update... String Prop Not Exist");
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    equal(modelResult.hasOwnProperty("Prop2"), false, "Update... String Prop Not Exist");
+});
 
 
+
+test("FlagAsNullable with object", function () {
+
+    var viewmodel = ko.viewmodel.fromModel(model, {
+        nullable: ["{root}.Prop5"]
+    });
+
+    deepEqual(viewmodel.Prop5(), model.Prop5);
+
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    deepEqual(viewmodel.Prop5().Test(), model.Prop5.Test);
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    deepEqual(updatedModel, modelResult);
+});
