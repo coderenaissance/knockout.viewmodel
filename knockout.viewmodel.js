@@ -150,11 +150,11 @@
                 };
                 result.popToModel = function (item) {
                     item = result.pop();
-                    return recrusiveTo(item, newContext);
+                    return recursiveTo(item, newContext);
                 };
                 result.shiftToModel = function (item) {
                     item = result.shift();
-                    return recrusiveTo(item, newContext);
+                    return recursiveTo(item, newContext);
                 };
             }
 
@@ -180,6 +180,9 @@
                     }
                     else {
                         result[p] = childPathSettings.custom.map(modelObj[p]);
+                        if (childPathSettings.custom.unmap && result[p].constructor === Object){
+                            result[p].___$unmapCustom = childPathSettings.custom.unmap;
+                        }
                     }
                 }
                 else {
@@ -194,11 +197,12 @@
         }
 		
 		if(pathSettings.nullable){//make sure nullable objects are observable and provide method to update
-			result = ko.utils.isObservable(result) ? result : makeObservable(result);
+			result = isObservable(result) ? result : makeObservable(result);
 			result.___$updateNullWithMappedObject = function(item){
-				var newValue = recrusiveFrom(modelObj, settings, context, pathSettings);
+			    var newValue = recrusiveFrom(item, settings, context, pathSettings);
 				result(newValue);
 			}
+			pathSettings.nullable = false;
 		}
 
         if (!optionProcessed && (extend = pathSettings.extend)) {
@@ -221,7 +225,7 @@
         return result;
     }
 
-    function recrusiveTo(viewModelObj, context) {
+    function recursiveTo(viewModelObj, context) {
         var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
@@ -236,13 +240,13 @@
             result = viewModelObj.___$unmapCustom(viewModelObj);
         }
         else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped)) {
-            //return null, undefined, values, and wrapped primativish values as is
+            //return nonwrapped null and undefined values, and wrapped primativish values as is
             result = unwrapped;
         }
         else if (unwrapped instanceof Array) {//create new array to return and add unwrapped values to it
             result = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
-                result[p] = recrusiveTo(unwrapped[p], {
+                result[p] = recursiveTo(unwrapped[p], {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                 });
             }
@@ -258,7 +262,7 @@
                         child = unwrapped[p];
                         if (!ko.isComputed(child) && !((temp = unwrap(child)) && temp.constructor === Function)) {
 
-                            recursiveResult = recrusiveTo(child, {
+                            recursiveResult = recursiveTo(child, {
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
@@ -292,12 +296,14 @@
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap, unwrappedChild, tempChild;
 
         if (fnLog) {
-            fnLog(context);//log object being unmapped
+            fnLog(context);//log object being updated
         }
 
-        if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
-            //if you have an observable to update and either the new or old value is 
-            //null or undefined then update the observable
+        if (wasWrapped && viewModelObj.___$updateNullWithMappedObject && isNullOrUndefined(unwrapped)) {
+            viewModelObj.___$updateNullWithMappedObject(modelObj);
+        }
+        else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) { 
+            //if observable and the new or old value is null or undefined then update the observable
             viewModelObj(modelObj);
         }
         else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
@@ -495,6 +501,7 @@
                 custom: {},
                 append: [],
                 exclude: [],
+                nullable:[],
                 arrayChildId: {},
                 shared: {}
             };
@@ -579,7 +586,7 @@
                     return builder;
                 },
                 unmapCustom: function (path, fn) {
-                    if (!!mapping.custom[path] && !!mapping.custom[path].map) {
+                    if (!mapping.custom[path] || !mapping.custom[path].map) {
                         console.log("Could not add unmap-custom for path '" + path + "': no mapping defined.");
                     }
                     else {
@@ -636,6 +643,19 @@
                         mapping.shared[name] = definition;
                     }
                     return builder;
+                },
+                flagAsNullable: function (path) {
+                    var index, length;
+                    if (typeof path === "string") {
+                            mapping.nullable.push(path);
+                    }
+                    else if (path.constructor === Array) {
+                        length = path.length;
+                        for (index = 0; index < length; index++) {
+                            builder.flagAsNullable(path[index]);
+                        }
+                    }
+                    return builder;
                 }
             };
             return builder;
@@ -652,7 +672,7 @@
         },  
         toModel: function fnToModel(viewmodel) {
             initInternals(this.options, "Mapping To Model");
-            return recrusiveTo(viewmodel, rootContext);
+            return recursiveTo(viewmodel, rootContext);
         },
         updateFromModel: function fnUpdateFromModel(viewmodel, model, makeNoncontiguousObjectUpdates) {
             var noncontiguousObjectUpdateCount = makeNoncontiguousObjectUpdates ? ko.observable(0) : undefined;
