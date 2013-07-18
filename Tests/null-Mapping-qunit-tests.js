@@ -358,11 +358,15 @@ test("FlagAsNullable and custom map object", function () {
                 return "Unmapped";
             }
         });
-
+		
+	model = {Prop5:model.Prop5};
+	updatedModel = {Prop5:updatedModel.Prop5};
+	
     var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
 
     deepEqual(viewmodel.Prop5(), model.Prop5);
 
+	model = {Prop5:model.Prop5};
     ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
     deepEqual(viewmodel.Prop5().Test(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);

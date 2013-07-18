@@ -42,7 +42,7 @@
                     result[key].settingType = result[key].settingType ? "multiple" : settingType;
                 }
             }
-            else if (settings.constructor === Object) {//process associative array for extend and map
+            else if (settings.constructor === Object && settingType != "paths") {//process associative array for extend and map
                 for (key in settings) {
                     result[key] = result[key] || {};
                     fn = settings[key];
@@ -181,7 +181,7 @@
                     else {
                         result[p] = childPathSettings.custom.map(modelObj[p]);
                         if (childPathSettings.custom.unmap && result[p].constructor === Object){
-                            result[p].___$unmapCustom = childPathSettings.custom.unmap;
+                            result[p].___$unmapCustom = childPathSettings.custom.unmap;//why is this done twice
                         }
                     }
                 }
@@ -255,8 +255,8 @@
             result = {};
             for (p in unwrapped) {
                 if (p.substr(0, 4) !== "___$") {//ignore all properties starting with the magic string as internal
-                    if (viewModelObj.___$customChildren && viewModelObj.___$customChildren[p] && viewModelObj.___$customChildren[p].unmap) {
-                        result[p] = viewModelObj.___$customChildren[p].unmap(unwrapped[p]);
+                    if (unwrapped.___$customChildren && unwrapped.___$customChildren[p] && unwrapped.___$customChildren[p].unmap) {
+                        result[p] = unwrapped.___$customChildren[p].unmap(unwrapped[p]);
                     }
                     else {
                         child = unwrapped[p];
