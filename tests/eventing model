@@ -1,0 +1,34 @@
+
+fromModel
+
+	transform					| append	| extend	|	custom
+								|  			| 			|
+	Mapping Logic:				|  			| 			|
+		default(with or  		| 			| 			|  
+		without nullable flag)	|  			| 			|
+								|  			| 			|
+	extend (ignored on exclude)	|  			| 			|
+
+
+updateFromModel				|	custom
+                            |
+	transform               |
+                            |
+	Mapping Logic:      	|  
+		default        		|
+			OR       		|
+		nullable     		|
+			OR				|
+		append				|
+			
+
+toModel 					| custom
+	Mapping Logic           |
+		default             |
+	                        |
+	transform               | 
+	                        |
+                            |
+                            |
+                            |
+                            |
