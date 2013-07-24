@@ -78,7 +78,7 @@
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
         childPathSettings, childObj;
         pathSettings = pathSettings || getPathSettings(settings, context);
-		
+
         if (customPathSettings = pathSettings.custom) {
             optionProcessed = true;
             //custom can either be specified as a single map function or as an 
@@ -108,12 +108,12 @@
             return badResult;
         }
         else if (isPrimativeOrDate(modelObj)) {
-			if(context.parentIsArray){//primative and date children of arrays aren't mapped.
-				result =  modelObj;
-			}
-			else{
-				result = makeObservable(modelObj);
-			}
+            if (context.parentIsArray) {//primative and date children of arrays aren't mapped.
+                result = modelObj;
+            }
+            else {
+                result = makeObservable(modelObj);
+            }
         }
         else if (modelObj instanceof Array) {
             result = [];
@@ -180,7 +180,7 @@
                     }
                     else {
                         result[p] = childPathSettings.custom.map(modelObj[p]);
-                        if (childPathSettings.custom.unmap && result[p].constructor === Object){
+                        if (childPathSettings.custom.unmap && result[p].constructor === Object) {
                             result[p].___$unmapCustom = childPathSettings.custom.unmap;//why is this done twice
                         }
                     }
@@ -195,25 +195,27 @@
                 }
             }
         }
-		
-		if(pathSettings.nullable){//make sure nullable objects are observable and provide method to update
-			result = isObservable(result) ? result : makeObservable(result);
-			result.___$updateNullWithMappedObject = function(item){
-			    var newValue = recrusiveFrom(item, settings, context, pathSettings);
-				result(newValue);
-			}
-			pathSettings.nullable = false;
-		}
+
+        if (pathSettings.nullable) {//make sure nullable objects are observable and provide method to update
+            result = isObservable(result) ? result : makeObservable(result);
+            result.___$updateNullWithMappedObject = function (item) {
+                var newValue = recrusiveFrom(item, settings, context, pathSettings);
+                result(newValue);
+            }
+            pathSettings.nullable = false;
+        }
 
         if (!optionProcessed && (extend = pathSettings.extend)) {
             if (typeof extend === "function") {//single map function specified
                 //Extend can either modify the mapped value or replace it
                 //Falsy values assumed to be undefined
                 result = extend(result) || result;
+                result.___$mapExtend = extend;//store unmap for use by toModel
             }
             else if (extend.constructor === Object) {//map and/or unmap were specified as part of object
                 if (typeof extend.map === "function") {
                     result = extend.map(result) || result;//use map to get result
+                    result.___$mapExtend = extend.map;//store unmap for use by toModel
                 }
 
                 if (typeof extend.unmap === "function") {
@@ -221,7 +223,7 @@
                 }
             }
         }
-		
+
         return result;
     }
 
@@ -293,7 +295,7 @@
 
     function recursiveUpdate(modelObj, viewModelObj, context, parentObj, noncontiguousObjectUpdateCount) {
         var p, q, foundModels, foundViewmodels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
-            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap, unwrappedChild, tempChild;
+            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap, unwrappedChild, tempChild, result;
 
         if (fnLog) {
             fnLog(context);//log object being updated
@@ -302,7 +304,7 @@
         if (wasWrapped && viewModelObj.___$updateNullWithMappedObject && isNullOrUndefined(unwrapped)) {
             viewModelObj.___$updateNullWithMappedObject(modelObj);
         }
-        else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) { 
+        else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
             //if observable and the new or old value is null or undefined then update the observable
             viewModelObj(modelObj);
         }
@@ -311,6 +313,10 @@
 
                 if (viewModelObj.___$customChildren && viewModelObj.___$customChildren[p]) {
                     childMap = viewModelObj.___$customChildren[p].map || viewModelObj.___$customChildren[p];
+                    unwrapped[p] = childMap(modelObj[p]);
+                }
+                else if (unwrapped.___$customChildren && unwrapped.___$customChildren[p]) {
+                    childMap = unwrapped.___$customChildren[p].map || unwrapped.___$customChildren[p];
                     unwrapped[p] = childMap(modelObj[p]);
                 }
                 else {
@@ -442,7 +448,14 @@
             }
         }
         else if (wasWrapped) {//If it makes it this far and it was wrapped then update it
-            viewModelObj(modelObj);
+            if (viewModelObj.___$mapExtend) {
+                result = viewModelObj.___$mapExtend(modelObj);
+                viewModelObj(result);
+            }
+            else {
+                viewModelObj(modelObj);
+            }
+            
         }
 
         if (context.name === "{root}" && !!noncontiguousObjectUpdateCount) {
@@ -496,12 +509,12 @@
     ko.viewmodel = {
         mappingBuilder: function () {
             var mapping = {
-                paths:  {}, 
+                paths: {},
                 extend: {},
                 custom: {},
                 append: [],
                 exclude: [],
-                nullable:[],
+                nullable: [],
                 arrayChildId: {},
                 shared: {}
             };
@@ -540,7 +553,7 @@
                                 if (fn.unmap) {
                                     builder.unmapExtend(path, fn.unmap);
                                 }
-                                else{
+                                else {
                                     console.log("Could not add map-extend for path '" + path + "': no mapping defined.");
                                 }
                             }
@@ -618,7 +631,7 @@
                             mapping.exclude.push(path);
                         }
                     }
-                    else if (path.constructor === Array){
+                    else if (path.constructor === Array) {
                         length = path.length;
                         for (index = 0; index < length; index++) {
                             builder.exclude(path[index]);
@@ -647,7 +660,7 @@
                 flagAsNullable: function (path) {
                     var index, length;
                     if (typeof path === "string") {
-                            mapping.nullable.push(path);
+                        mapping.nullable.push(path);
                     }
                     else if (path.constructor === Array) {
                         length = path.length;
@@ -669,7 +682,7 @@
             var settings = getPathSettingsDictionary(mapping);
             initInternals(this.options, "Mapping From Model");
             return recrusiveFrom(model, settings, rootContext);
-        },  
+        },
         toModel: function fnToModel(viewmodel) {
             initInternals(this.options, "Mapping To Model");
             return recursiveTo(viewmodel, rootContext);

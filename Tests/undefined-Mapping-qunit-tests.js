@@ -8,14 +8,18 @@ module("Undefined Mapping Tests", {
             Prop1: undefined,
             Prop2: "test2",
             Prop3: {},
-            Prop4: undefined
+            Prop4: undefined,
+            Prop5: undefined
         };
 
         updatedModel = {
             Prop1: "test2",
             Prop2: undefined,
             Prop3: undefined,
-            Prop4: {}
+            Prop4: {},
+            Prop5: {
+                Test:"New Data"
+            }
         };
 
     },
@@ -266,4 +270,72 @@ test("Exclude", function () {
 });
 
 
+test("FlagAsNullable and extend object", function () {
+    var mappingOptions = ko.viewmodel.mappingBuilder()
+        .flagAsNullable(["{root}.Prop5"])
+        .extend("{root}.Prop5.Test", {
+            map: function (item) {
+                if (item() !== null) {
+                    item(item() + item());
+                }
+                return item;
+            },
+            unmap: function extendUnmapTest(item) {
+                return "Unmapped";
+            }
+        }
+        );
 
+    var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+
+    deepEqual(viewmodel.Prop5(), model.Prop5);
+
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    deepEqual(viewmodel.Prop5().Test(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);
+
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    deepEqual(viewmodel.Prop5().Test(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    deepEqual(modelResult.Prop5.Test, "Unmapped");
+});
+
+test("FlagAsNullable and custom map object", function () {
+    var mappingOptions = ko.viewmodel.mappingBuilder()
+        .flagAsNullable(["{root}.Prop5"])
+        .custom("{root}.Prop5.Test", {
+            map: function customMapTest(item) {
+                if (item !== null) {
+                    item = item + item;
+                }
+                return ko.observable(item);
+            },
+            unmap: function customUnmapTest(item) {
+                return "Unmapped";
+            }
+        });
+
+    model = { Prop5: model.Prop5 };
+    updatedModel = { Prop5: updatedModel.Prop5 };
+
+    var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+
+    deepEqual(viewmodel.Prop5(), model.Prop5);
+
+    model = { Prop5: model.Prop5 };
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    deepEqual(viewmodel.Prop5().Test(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);
+
+    ko.viewmodel.updateFromModel(viewmodel, updatedModel);
+
+    deepEqual(viewmodel.Prop5().Test(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
+
+    deepEqual(modelResult.Prop5.Test, "Unmapped");
+
+});
