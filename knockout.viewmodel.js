@@ -210,17 +210,6 @@
                 //Extend can either modify the mapped value or replace it
                 //Falsy values assumed to be undefined
                 result = extend(result) || result;
-                result.___$mapExtend = extend;//store unmap for use by toModel
-            }
-            else if (extend.constructor === Object) {//map and/or unmap were specified as part of object
-                if (typeof extend.map === "function") {
-                    result = extend.map(result) || result;//use map to get result
-                    result.___$mapExtend = extend.map;//store unmap for use by toModel
-                }
-
-                if (typeof extend.unmap === "function") {
-                    result.___$unmapExtend = extend.unmap;//store unmap for use by toModel
-                }
             }
         }
 
@@ -286,8 +275,8 @@
             }
         }
 
-        if (viewModelObj && viewModelObj.___$unmapExtend) {//if available call extend unmap function
-            result = viewModelObj.___$unmapExtend(result, viewModelObj);
+        if (viewModelObj && viewModelObj.___$untransform) {//if available call extend unmap function
+            result = viewModelObj.___$untransform(result, viewModelObj);
         }
 
         return result;
@@ -448,14 +437,7 @@
             }
         }
         else if (wasWrapped) {//If it makes it this far and it was wrapped then update it
-            if (viewModelObj.___$mapExtend) {
-                result = viewModelObj.___$mapExtend(modelObj);
-                viewModelObj(result);
-            }
-            else {
                 viewModelObj(modelObj);
-            }
-            
         }
 
         if (context.name === "{root}" && !!noncontiguousObjectUpdateCount) {
@@ -511,6 +493,8 @@
             var mapping = {
                 paths: {},
                 extend: {},
+                transform: {},
+                untransform: {},
                 custom: {},
                 append: [],
                 exclude: [],
@@ -537,7 +521,7 @@
                     if (pathCheck(path, "extend")) {
                         mapping.paths[path] = true;
                         if (fn.constructor === Function) {
-                            mapping.extend[path] = { map: fn };
+                            mapping.extend[path] = fn;
                         }
                         else if (typeof fn === "string") {
                             if (!mapping.shared[fn]) {
@@ -547,26 +531,56 @@
                                 mapping.extend[path] = fn;
                             }
                         }
+                    }
+                    return builder;
+                },
+                transform: function (path, fn) {
+                    if (pathCheck(path, "transform")) {
+                        mapping.paths[path] = true;
+
+                        if (typeof fn === "string") {
+                            if (!mapping.shared[fn]) {
+                                throw new Error("Could not add transform for path '" + path + "': No definition for '" + fn + "' was found'");
+                            }
+                            else {
+                                fn = mapping.shared[fn]
+                            }
+                        }
+
+                        if (fn.constructor === Function) {
+                            mapping.transform[path] = fn;
+                        }
                         else if (fn.constructor === Object) {
                             if (fn.map) {
-                                mapping.extend[path] = { map: fn.map };
-                                if (fn.unmap) {
-                                    builder.unmapExtend(path, fn.unmap);
-                                }
-                                else {
-                                    console.log("Could not add map-extend for path '" + path + "': no mapping defined.");
-                                }
+                                mapping.transform[path] = fn.map;
+                            }
+                            
+                            if (fn.unmap) {
+                               builder.untransform(path, fn.unmap);
                             }
                         }
                     }
                     return builder;
                 },
-                unmapExtend: function (path, fn) {
-                    if (!mapping.extend[path] || !mapping.extend[path].map) {
-                        console.log("Could not add unmap-extend for path '" + path + "': no mapping defined.");
-                    }
-                    else {
-                        mapping.extend[path].unmap = fn;
+                untransform: function (path, fn) {
+                    if (pathCheck(path, "untransform")) {
+                        mapping.paths[path] = true;
+
+                        if (typeof fn === "string") {
+                            if (!mapping.shared[fn]) {
+                                throw new Error("Could not add untransform for path '" + path + "': No definition for '" + fn + "' was found'");
+                            }
+                            else {
+                                fn = mapping.shared[fn]
+                            }
+                        }
+
+                        if (fn.constructor === Function) {
+                            mapping.untransform[path] = fn;
+                        }
+                        else if (fn.constructor === Object) {
+
+                        }
                     }
                     return builder;
                 },

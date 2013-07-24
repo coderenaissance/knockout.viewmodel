@@ -279,14 +279,7 @@ test("Extended Array Push with Map sytax 1", function () {
         .extend("{root}.items[i]", function (obj) {
             obj.IsNew = (obj.id() > 0) ? false : true;
             return obj;
-        })
-        .unmapExtend("{root}.items[i]", function (obj, vm) {
-                if (vm) {//not using this param but test will fail if not available, easy way to verify that it is passe in
-                    delete obj.IsNew;
-                }
-                return obj;
-            }
-        );
+        });
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
