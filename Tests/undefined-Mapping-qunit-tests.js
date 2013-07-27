@@ -270,13 +270,13 @@ test("Exclude", function () {
 });
 
 
-test("FlagAsNullable and extend object", function () {
+test("FlagAsNullable and transform object", function () {
     var mappingOptions = ko.viewmodel.mappingBuilder()
         .flagAsNullable(["{root}.Prop5"])
-        .extend("{root}.Prop5.Test", {
+        .transform("{root}.Prop5.Test", {
             map: function (item) {
-                if (item() !== undefined) {
-                    item(item() + item());
+                if (item !== undefined) {
+                    return item + item;
                 }
                 return item;
             },

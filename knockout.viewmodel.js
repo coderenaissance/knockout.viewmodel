@@ -76,8 +76,12 @@
 
     function recrusiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
-        childPathSettings, childObj;
+        childPathSettings, childObj, resultChildPathSettings;
         pathSettings = pathSettings || getPathSettings(settings, context);
+
+        if (pathSettings.transform) {
+            modelObj = pathSettings.transform(modelObj);
+        }
 
         if (customPathSettings = pathSettings.custom) {
             optionProcessed = true;
@@ -150,11 +154,11 @@
                 };
                 result.popToModel = function (item) {
                     item = result.pop();
-                    return recursiveTo(item, newContext);
+                    return recursiveTo(item, newContext, result);
                 };
                 result.shiftToModel = function (item) {
                     item = result.shift();
-                    return recursiveTo(item, newContext);
+                    return recursiveTo(item, newContext, result);
                 };
             }
 
@@ -170,20 +174,13 @@
                 childObj = modelObj[p];
                 childPathSettings = isPrimativeOrDate(childObj) ? getPathSettings(settings, newContext) : undefined;
 
-                if (childPathSettings && childPathSettings.custom) {//primativish value w/ custom maping
-                    //since primative children cannot store their own custom functions, handle processing here and store them in the parent
-                    result.___$customChildren = result.___$customChildren || {};
-                    result.___$customChildren[p] = childPathSettings.custom;
+                if (childPathSettings) {
+                    resultChildPathSettings = resultChildPathSettings || {};
+                    resultChildPathSettings[p] = childPathSettings;//store all child path settings for later use
+                }
 
-                    if (typeof childPathSettings.custom === "function") {
-                        result[p] = childPathSettings.custom(modelObj[p]);
-                    }
-                    else {
-                        result[p] = childPathSettings.custom.map(modelObj[p]);
-                        if (childPathSettings.custom.unmap && result[p].constructor === Object) {
-                            result[p].___$unmapCustom = childPathSettings.custom.unmap;//why is this done twice
-                        }
-                    }
+                if (childPathSettings && childPathSettings.custom && childPathSettings.custom.map) {//primativish value w/ custom maping
+                    result[p] = childPathSettings.custom.map(modelObj[p]);
                 }
                 else {
                     temp = recrusiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
@@ -213,10 +210,14 @@
             }
         }
 
+        if (resultChildPathSettings) {
+            result.___$childPathSettings = resultChildPathSettings
+        }
+
         return result;
     }
 
-    function recursiveTo(viewModelObj, context) {
+    function recursiveTo(viewModelObj, context, parent) {
         var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
@@ -227,8 +228,8 @@
         if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) {//Exclude functions
             return badResult;
         }
-        else if (viewModelObj && viewModelObj.___$unmapCustom) {//Defer to customUnmapping where specified
-            result = viewModelObj.___$unmapCustom(viewModelObj);
+        else if (viewModelObj && viewModelObj.___$childPathSettings && viewModelObj.___$childPathSettings.custom && viewModelObj.___$childPathSettings.custom.unmap) {//Defer to customUnmapping where specified
+            result = viewModelObj.___$childPathSettings.custom.unmap(viewModelObj);
         }
         else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped)) {
             //return nonwrapped null and undefined values, and wrapped primativish values as is
@@ -239,15 +240,15 @@
             for (p = 0, length = unwrapped.length; p < length; p++) {
                 result[p] = recursiveTo(unwrapped[p], {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
-                });
+                }, viewModelObj);
             }
         }
         else if (unwrapped.constructor === Object) {//create new object to return and add unwrapped values to it
             result = {};
             for (p in unwrapped) {
                 if (p.substr(0, 4) !== "___$") {//ignore all properties starting with the magic string as internal
-                    if (unwrapped.___$customChildren && unwrapped.___$customChildren[p] && unwrapped.___$customChildren[p].unmap) {
-                        result[p] = unwrapped.___$customChildren[p].unmap(unwrapped[p]);
+                    if (viewModelObj.___$childPathSettings && viewModelObj.___$childPathSettings[p] && viewModelObj.___$childPathSettings[p].custom && viewModelObj.___$childPathSettings[p].custom.unmap) {
+                        result[p] = viewModelObj.___$childPathSettings[p].custom.unmap(unwrapped[p]);
                     }
                     else {
                         child = unwrapped[p];
@@ -257,7 +258,7 @@
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
-                            });
+                            }, viewModelObj);
 
                             //if badResult wasn't returned then add property
                             if (recursiveResult !== badResult) {
@@ -275,8 +276,8 @@
             }
         }
 
-        if (viewModelObj && viewModelObj.___$untransform) {//if available call extend unmap function
-            result = viewModelObj.___$untransform(result, viewModelObj);
+        if (parent && parent.___$childPathSettings && parent.___$childPathSettings[context.name] && parent.___$childPathSettings[context.name].untransform) {//if available call extend unmap function
+            result = parent.___$childPathSettings[context.name].untransform(result);
         }
 
         return result;
@@ -290,6 +291,10 @@
             fnLog(context);//log object being updated
         }
 
+        if (parentObj && parentObj.childPathSettings && parentObj.childPathSettings[context.name] && parentObj.childPathSettings[context.name].transform) {
+            modelObj = parentObj.childPathSettings[context.name].transform(modelObj);
+        }
+
         if (wasWrapped && viewModelObj.___$updateNullWithMappedObject && isNullOrUndefined(unwrapped)) {
             viewModelObj.___$updateNullWithMappedObject(modelObj);
         }
@@ -300,13 +305,8 @@
         else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
             for (p in modelObj) {//loop through object properties and update them
 
-                if (viewModelObj.___$customChildren && viewModelObj.___$customChildren[p]) {
-                    childMap = viewModelObj.___$customChildren[p].map || viewModelObj.___$customChildren[p];
-                    unwrapped[p] = childMap(modelObj[p]);
-                }
-                else if (unwrapped.___$customChildren && unwrapped.___$customChildren[p]) {
-                    childMap = unwrapped.___$customChildren[p].map || unwrapped.___$customChildren[p];
-                    unwrapped[p] = childMap(modelObj[p]);
+                if (viewModelObj.___$childPathSettings && viewModelObj.___$childPathSettings[p] && viewModelObj.___$childPathSettings[p].custom && viewModelObj.___$childPathSettings[p].custom.map) {
+                    unwrapped[p] = viewModelObj.___$childPathSettings[p].custom.map(modelObj[p]);
                 }
                 else {
                     child = unwrapped[p];
@@ -587,38 +587,36 @@
                 custom: function (path, fn) {
                     if (pathCheck(path, "custom")) {
                         mapping.paths[path] = true;
-                        if (fn.constructor === Function) {
-                            mapping.custom[path] = { map: fn };
-                        }
-                        else if (typeof fn === "string") {
+
+                        if (typeof fn === "string") {
                             if (!mapping.shared[fn]) {
                                 throw new Error("Could not add custom for path '" + path + "': No definition for '" + fn + "' was found'");
                             }
                             else {
-                                mapping.custom[path] = fn;
+                                fn = mapping.shared[fn];
                             }
                         }
+
+                        if (fn.constructor === Function) {
+                            mapping.custom[path] = { map: fn };
+                        } 
                         else if (fn.constructor === Object) {
                             if (fn.map) {
                                 mapping.custom[path] = { map: fn.map };
-                                if (fn.unmap) {
-                                    builder.unmapCustom(path, fn.unmap);
-                                }
-                                else {
-                                    console.log("Could not add map-custom for path '" + path + "': no mapping defined.");
-                                }
+                            }
+
+                            if (fn.unmap) {
+                                mapping.custom[path] = mapping.custom[path] || {};
+                                mapping.custom[path].unmap = fn.unmap;
                             }
                         }
                     }
                     return builder;
                 },
                 unmapCustom: function (path, fn) {
-                    if (!mapping.custom[path] || !mapping.custom[path].map) {
-                        console.log("Could not add unmap-custom for path '" + path + "': no mapping defined.");
-                    }
-                    else {
-                        mapping.custom[path].unmap = fn;
-                    }
+                    mapping.custom[path] = mapping.custom[path] || {};
+                    mapping.custom[path].unmap = fn;
+
                     return builder;
                 },
                 append: function (path) {

@@ -1,2 +1,5 @@
 Have removed unmap for extend. Extend is only a one time deal on mapping to extend observables.
 In place of previous extend functionality adding transform and untransform. transform to fire before mapping. and before update. untransform to happen after unmapping. In progress on trans/untrans.
+
+TODO:
+Array still needs childPathSettings

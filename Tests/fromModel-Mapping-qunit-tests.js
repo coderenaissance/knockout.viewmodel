@@ -263,7 +263,7 @@ test("Extend all array items", function () {
 });
 
 
-test("Extended Array Push with Map sytax 1", function () {
+test("Transform Array Push with Map sytax 1", function () {
     var model, viewmodel, modelResult, actual, expected;
 
     model = {
@@ -276,14 +276,20 @@ test("Extended Array Push with Map sytax 1", function () {
     };
 
     var mapping = ko.viewmodel.mappingBuilder()
-        .extend("{root}.items[i]", function (obj) {
-            obj.IsNew = (obj.id() > 0) ? false : true;
-            return obj;
-        });
+        .transform("{root}.items[i]", {
+            map:function (obj) {
+                obj.IsNew = obj.id > 0 ? false : true;
+                return obj;
+            },
+            unmap:function(obj){
+                delete obj.IsNew;
+            }
+        })
+        .append("{root}.items[i].IsNew");
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
-    deepEqual(viewmodel.items()[0].IsNew, false, "Extend logic - object with id is not new");//1
+    equal(viewmodel.items()[0].IsNew, false, "Extend logic - object with id is not new");//1
 
     viewmodel.items.pushFromModel({
         test: {
@@ -326,17 +332,14 @@ test("Extended Array Push with Map syntax 2", function () {
     };
 
     var mapping = ko.viewmodel.mappingBuilder()
-        .extend("{root}.items[i]", {
-            map: function (obj) {
-                obj.IsNew = (obj.id() > 0) ? false : true;
-            },
-            unmap: function (obj, vm) {
-                if (vm) {//not using this param but test will fail if not available, easy way to verify that it is passe in
-                    delete obj.IsNew;
-                }
-                return obj;
-            }
-        });
+        .transform("{root}.items[i]", function (obj) {
+            obj.IsNew = obj.id > 0 ? false : true;
+            return obj;
+        })
+        .untransform("{root}.items[i]", function(obj){
+            delete obj.IsNew;
+        })
+        .append("{root}.items[i].IsNew");
 
     viewmodel = ko.viewmodel.fromModel(model, mapping);
 
