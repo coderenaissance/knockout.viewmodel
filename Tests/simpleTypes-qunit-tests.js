@@ -89,23 +89,6 @@ test("Extend", function () {
     deepEqual(viewmodel.isValid(), true, "Extension check");
 });
 
-test("Append root", function () {
-
-    var viewmodel = ko.viewmodel.fromModel(model, {
-        append: ["{root}"]
-    });
-	
-	deepEqual(viewmodel, model, "From Model Test");
-	
-	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
-	
-	notEqual(viewmodel, updatedModel, "Update Fail Test");
-	
-	modelResult = ko.viewmodel.toModel(viewmodel);
-	
-	deepEqual(modelResult, model, "Result");
-});
-
 test("Append property", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {

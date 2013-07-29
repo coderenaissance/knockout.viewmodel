@@ -98,8 +98,10 @@ test("Append object", function () {
     var viewmodel = ko.viewmodel.fromModel(model, {
         append: ["{root}.data"]
     });
+
+    modelResult = ko.viewmodel.toModel(viewmodel);
 	
-    deepEqual(viewmodel, model, "From Model Test");
+    deepEqual(modelResult, model, "From Model Test");
 	
 	ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 	

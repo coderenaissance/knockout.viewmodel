@@ -214,6 +214,10 @@
             result.___$childPathSettings = resultChildPathSettings
         }
 
+        if (context.name === "{root}") {
+            result.___$rootPathSettings = pathSettings;
+        }
+
         return result;
     }
 
@@ -284,7 +288,7 @@
         return result;
     }
 
-    function recursiveUpdate(modelObj, viewModelObj, context, parent, noncontiguousObjectUpdateCount) {
+    function recursiveUpdate(modelObj, viewModelObj, context, parentObj, noncontiguousObjectUpdateCount) {
         var p, q, foundModels, foundViewmodels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
             wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap, unwrappedChild, tempChild, result;
 
@@ -292,7 +296,7 @@
             fnLog(context);//log object being updated
         }
 
-        var pathSettings = parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : (viewModelObj ? viewModelObj.___$rootPathSettings : undefined);
+        var pathSettings = parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : viewModelObj.___$rootPathSettings;
         if (pathSettings && pathSettings.transform) {
             modelObj = pathSettings.transform(modelObj);
         }
