@@ -219,6 +219,25 @@ test("Custom map and unmap", function () {
     deepEqual(modelResult.data.date, updatedModel.data.date, "To Model Date Test");
 });
 
+test("Custom map and unmap using ko.viewmodel", function () {
+    var viewmodel = ko.viewmodel.fromModel(model, {
+        custom: {
+            "{root}.data": {
+                map: function (data) {
+                    return ko.viewmodel.fromModel(data);
+                },
+                unmap: function(data) {
+                    return ko.viewmodel.toModel(data);
+                }
+            }
+        }
+    }),
+    gotModel;
+
+    gotModel = ko.viewmodel.toModel(viewmodel);
+    deepEqual(gotModel, model);
+});
+
 test("Exclude", function () {
 
     var viewmodel = ko.viewmodel.fromModel(model, {
