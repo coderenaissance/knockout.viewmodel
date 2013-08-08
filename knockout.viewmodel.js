@@ -46,6 +46,11 @@
                 for (key in settings) {
                     result[key] = result[key] || {};
                     fn = settings[key];
+
+                    if (settingType == "custom" && fn && typeof fn === "function") {
+                        fn = { map: fn };
+                    }
+
                     fn = settingType !== "arrayChildId" && fn && fn.constructor === String && shared[fn] ? shared[fn] : fn;
                     if (fn && fn.constructor === Object) {//associative array for map/unmap passed in instead of map function
                         for (childName in fn) {
@@ -55,6 +60,7 @@
                             }
                         }
                     }
+
                     result[key][settingType] = fn;
                     result[key].settingType = result[key].settingType ? "multiple" : settingType;
 
@@ -83,25 +89,11 @@
             modelObj = pathSettings.transform(modelObj);
         }
 
-        if (customPathSettings = pathSettings.custom) {
+        if (pathSettings.custom && pathSettings.custom.map) {
             optionProcessed = true;
             //custom can either be specified as a single map function or as an 
             //object with map and unmap properties
-            if (typeof customPathSettings === "function") {
-                result = customPathSettings(modelObj);
-                if (!isNullOrUndefined(result)) {
-                    result.___$mapCustom = customPathSettings;
-                }
-            }
-            else {
-                result = customPathSettings.map(modelObj);
-                if (!isNullOrUndefined(result)) {//extend object with mapping info where possible
-                    result.___$mapCustom = customPathSettings.map;//preserve map function for updateFromModel calls
-                    if (customPathSettings.unmap) {//perserve unmap function for toModel calls
-                        result.___$unmapCustom = customPathSettings.unmap;
-                    }
-                }
-            }
+            result = pathSettings.custom.map(modelObj);
         }
         else if (pathSettings.append) {//append property
             optionProcessed = true;
@@ -122,10 +114,14 @@
         else if (modelObj instanceof Array) {
             result = [];
 
+            var newContext = {
+                name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true
+            };
+
+            childPathSettings = getPathSettings(settings, newContext) || undefined;//all children of the array share the same settings
+
             for (p = 0, length = modelObj.length; p < length; p++) {
-                result[p] = recrusiveFrom(modelObj[p], settings, {
-                    name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true
-                });
+                result[p] = recrusiveFrom(modelObj[p], settings, newContext);
                 if (result[p] === badResult) {
                     result[p] = undefined;
                 }
@@ -214,6 +210,10 @@
             result.___$childPathSettings = resultChildPathSettings
         }
 
+        if (result && context.name === "{root}") {
+            result.___$rootPathSettings = pathSettings;
+        }
+
         return result;
     }
 
@@ -276,7 +276,7 @@
             }
         }
 
-        var pathSettings = parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : viewModelObj.___$rootPathSettings;
+        var pathSettings = parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : (viewModelObj || {}).___$rootPathSettings;
         if (pathSettings && pathSettings.untransform) {//if available call extend unmap function
             result = pathSettings.untransform(result);
         }
@@ -286,14 +286,19 @@
 
     function recursiveUpdate(modelObj, viewModelObj, context, parent, noncontiguousObjectUpdateCount) {
         var p, q, foundModels, foundViewmodels, modelId, viewmodelId, idName, length, unwrapped = unwrap(viewModelObj),
-            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap, unwrappedChild, tempChild, result;
+            wasWrapped = (viewModelObj !== unwrapped), child, map, tempArray, childTemp, childMap, unwrappedChild, tempChild,
+            result, childPathSettings;
 
         if (fnLog) {
             fnLog(context);//log object being updated
         }
 
-        var pathSettings = parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : (viewModelObj ? viewModelObj.___$rootPathSettings : undefined);
-        if (pathSettings && pathSettings.transform) {
+        var pathSettings = (parent ?
+            (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : //child path settings if they exist
+            (viewModelObj ? viewModelObj.___$rootPathSettings : undefined)//if no parent, find root path settings
+        ) || {};//always have pathsetings object
+
+        if (pathSettings.transform) {
             modelObj = pathSettings.transform(modelObj);
         }
 
@@ -307,24 +312,15 @@
         else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
             for (p in modelObj) {//loop through object properties and update them
 
-                if (viewModelObj.___$childPathSettings && viewModelObj.___$childPathSettings[p] && viewModelObj.___$childPathSettings[p].custom && viewModelObj.___$childPathSettings[p].custom.map) {
-                    unwrapped[p] = viewModelObj.___$childPathSettings[p].custom.map(modelObj[p]);
+                childPathSettings = (viewModelObj.___$childPathSettings || {})[p];
+                if (childPathSettings && childPathSettings.custom && childPathSettings.custom.map) {
+                    unwrapped[p] = childPathSettings.custom.map(modelObj[p]);
                 }
                 else {
                     child = unwrapped[p];
 
                     if (!wasWrapped && unwrapped.hasOwnProperty(p) && (isPrimativeOrDate(child) || (child && child.constructor === Array))) {
                         unwrapped[p] = modelObj[p];
-                    }
-                    else if (child && typeof child.___$mapCustom === "function") {
-                        if (isObservable(child)) {
-                            childTemp = child.___$mapCustom(modelObj[p], child);//get child value mapped by custom maping
-                            childTemp = unwrap(childTemp);//don't nest observables... what you want is the value from the customMapping
-                            child(childTemp);//update child;
-                        }
-                        else {//property wasn't observable? update it anyway for return to server
-                            unwrapped[p] = child.___$mapCustom(modelObj[p], child);
-                        }
                     }
                     else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && unwrapped[p].constructor === Object) {
                         //Replace null or undefined with object for round trip to server; probably won't affect the view
@@ -359,7 +355,8 @@
             }
         }
         else if (unwrapped && unwrapped instanceof Array) {
-            if (idName = viewModelObj.___$childIdName) {//id is specified, create, update, and delete by id
+            childPathSettings = viewModelObj.___$childPathSettings;//all children of the array share the same settings
+            if (idName = pathSettings.arrayChildId) {//id is specified, create, update, and delete by id
                 foundModels = [];
                 foundViewmodels = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
@@ -369,10 +366,10 @@
                         unwrappedChild = unwrap(child);
                         viewmodelId = unwrap(unwrappedChild[idName]);
                         if (viewmodelId === modelId) {//If updated model id equals viewmodel id then update viewmodel object with model data
-                            if (child.___$mapCustom) {
+                            if (childPathSettings && childPathSettings.custom && childPathSettings.custom.map) {
 
                                 if (ko.isObservable(child)) {
-                                    tempChild = child.___$mapCustom(modelObj[p], child);
+                                    tempChild = childPathSettings.custom.map(modelObj[p], child);
                                     if (isObservable(tempChild) && tempChild != child) {
                                         child(unwrap(tempChild));
                                     }
@@ -380,7 +377,7 @@
                                     //if it's smart enough to do that, assume it updated it correctly	
                                 }
                                 else {
-                                    unwrapped[q] = child.___$mapCustom(modelObj[p], child);
+                                    unwrapped[q] = childPathSettings.custom.map(modelObj[p], child);
                                 }
                             }
                             else {
@@ -423,12 +420,11 @@
             }
             else {//no id specified, replace old array items with new array items
                 tempArray = [];
-                map = viewModelObj.___$mapCustom;
-                if (typeof map === "function") {//update array with mapped objects, use indexer for performance
+                if (childPathSettings && childPathSettings.custom && childPathSettings.custom.map) {//update array with mapped objects, use indexer for performance
                     for (p = 0, length = modelObj.length; p < length; p++) {
                         tempArray[p] = modelObj[p];
                     }
-                    viewModelObj(map(tempArray));
+                    viewModelObj(childPathSettings.custom.map(tempArray));
                 }
                 else {//Can't use indexer for assignment; have to preserve original mapping with push
                     viewModelObj(tempArray);
@@ -505,39 +501,25 @@
                 shared: {}
             };
 
-            function pathCheck(path, type) {
-                var msg, result = true;
-                if (mapping.paths[path]) {
-                    msg = "Could not add " + type + "-map for path '" + path + "': path already defined.";
-                    console.log(msg);
-                    result = false;
-                }
-                return result;
-            }
-
             var builder = {
                 __getMapping: function () {
                     return mapping;
                 },
                 extend: function (path, fn) {
-                    if (pathCheck(path, "extend")) {
-                        mapping.paths[path] = true;
-                        if (fn.constructor === Function) {
-                            mapping.extend[path] = fn;
+                    if (fn.constructor === Function) {
+                        mapping.extend[path] = fn;
+                    }
+                    else if (typeof fn === "string") {
+                        if (!mapping.shared[fn]) {
+                            throw new Error("Could not add extend for path '" + path + "': No definition for '" + fn + "' was found'");
                         }
-                        else if (typeof fn === "string") {
-                            if (!mapping.shared[fn]) {
-                                throw new Error("Could not add extend for path '" + path + "': No definition for '" + fn + "' was found'");
-                            }
-                            else {
-                                mapping.extend[path] = fn;
-                            }
+                        else {
+                            mapping.extend[path] = fn;
                         }
                     }
                     return builder;
                 },
                 transform: function (path, fn) {
-                    if (pathCheck(path, "transform")) {
                         mapping.paths[path] = true;
 
                         if (typeof fn === "string") {
@@ -561,56 +543,49 @@
                                builder.untransform(path, fn.unmap);
                             }
                         }
-                    }
                     return builder;
                 },
                 untransform: function (path, fn) {
-                    if (pathCheck(path, "untransform")) {
-                        mapping.paths[path] = true;
+                    mapping.paths[path] = true;
 
-                        if (typeof fn === "string") {
-                            if (!mapping.shared[fn]) {
-                                throw new Error("Could not add untransform for path '" + path + "': No definition for '" + fn + "' was found'");
-                            }
-                            else {
-                                fn = mapping.shared[fn]
-                            }
+                    if (typeof fn === "string") {
+                        if (!mapping.shared[fn]) {
+                            throw new Error("Could not add untransform for path '" + path + "': No definition for '" + fn + "' was found'");
                         }
+                        else {
+                            fn = mapping.shared[fn]
+                        }
+                    }
 
-                        if (fn.constructor === Function) {
-                            mapping.untransform[path] = fn;
-                        }
-                        else if (fn.constructor === Object) {
+                    if (fn.constructor === Function) {
+                        mapping.untransform[path] = fn;
+                    }
+                    else if (fn.constructor === Object) {
 
-                        }
                     }
                     return builder;
                 },
                 custom: function (path, fn) {
-                    if (pathCheck(path, "custom")) {
-                        mapping.paths[path] = true;
+                    if (typeof fn === "string") {
+                        if (!mapping.shared[fn]) {
+                            throw new Error("Could not add custom for path '" + path + "': No definition for '" + fn + "' was found'");
+                        }
+                        else {
+                            fn = mapping.shared[fn];
+                        }
+                    }
 
-                        if (typeof fn === "string") {
-                            if (!mapping.shared[fn]) {
-                                throw new Error("Could not add custom for path '" + path + "': No definition for '" + fn + "' was found'");
-                            }
-                            else {
-                                fn = mapping.shared[fn];
-                            }
+                    if (fn.constructor === Function) {
+                        mapping.custom[path] = { map: fn };
+                    } 
+                    else if (fn.constructor === Object) {
+                        if (fn.map) {
+                            mapping.custom[path] = { map: fn.map };
                         }
 
-                        if (fn.constructor === Function) {
-                            mapping.custom[path] = { map: fn };
-                        } 
-                        else if (fn.constructor === Object) {
-                            if (fn.map) {
-                                mapping.custom[path] = { map: fn.map };
-                            }
-
-                            if (fn.unmap) {
-                                mapping.custom[path] = mapping.custom[path] || {};
-                                mapping.custom[path].unmap = fn.unmap;
-                            }
+                        if (fn.unmap) {
+                            mapping.custom[path] = mapping.custom[path] || {};
+                            mapping.custom[path].unmap = fn.unmap;
                         }
                     }
                     return builder;
@@ -624,10 +599,7 @@
                 append: function (path) {
                     var index, length;
                     if (typeof path === "string") {
-                        if (pathCheck(path, "Append")) {
-                            mapping.paths[path] = true;
-                            mapping.append.push(path);
-                        }
+                        mapping.append.push(path);
                     }
                     else if (path.constructor === Array) {
                         length = path.length;
@@ -640,10 +612,7 @@
                 exclude: function (path) {
                     var index, length;
                     if (typeof path === "string") {
-                        if (pathCheck(path, "Exclude")) {
-                            mapping.paths[path] = true;
                             mapping.exclude.push(path);
-                        }
                     }
                     else if (path.constructor === Array) {
                         length = path.length;

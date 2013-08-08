@@ -3,3 +3,5 @@ In place of previous extend functionality adding transform and untransform. tran
 
 TODO:
 Array still needs childPathSettings
+
+9 10 21 22 26 33 34 94 95

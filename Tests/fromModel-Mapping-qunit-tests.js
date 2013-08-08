@@ -486,27 +486,6 @@ test("Same path Last in wins - Manual Syntax", function () {
     notEqual(viewmodel.items()[0].test, undefined, "Item Not Mapped");
 });
 
-test("Same path First in wins - dot syntax", function () {
-    var model, viewmodel, modelResult, actual, expected;
-
-    model = {
-        items: [{
-            test: {
-                stringProp: "test"
-            }
-        }]
-    };
-
-    var mapping = ko.viewmodel.mappingBuilder()
-        .exclude("items[i].test").append("items[i].test");
-
-    if (console) console.log("items[i].test message was part of test");
-    viewmodel = ko.viewmodel.fromModel(model, mapping); 
-    modelResult = ko.viewmodel.toModel(viewmodel);
-
-    equal(viewmodel.items()[0].hasOwnProperty("test"), false, "Item Not Mapped");
-});
-
 test("Exclude array item property path", function () {
     var model, viewmodel, modelResult, actual, expected;
 
