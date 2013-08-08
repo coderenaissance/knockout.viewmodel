@@ -336,7 +336,7 @@
                                         name: p,
                                         parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                         full: context.full + "." + p
-                                    }, unwrapped, noncontiguousObjectUpdateCount);
+                                    }, unwrapped, noncontiguousObjectUpdateCount);//TODO: why is unwrapped passed in as parent (and have child settings) this and not viewmodel?
                                     noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
                                 };
                             }(modelObj, viewModelObj, p));
@@ -348,7 +348,7 @@
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
-                            });
+                            }, unwrapped);//TODO: why is unwrapped passed in as parent (and have child settings) this and not viewmodel?
                         }
                     }
                 }
