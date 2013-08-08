@@ -80,7 +80,7 @@
         return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
     }
 
-    function recrusiveFrom(modelObj, settings, context, pathSettings) {
+    function recursiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
         childPathSettings, childObj, resultChildPathSettings;
         pathSettings = pathSettings || getPathSettings(settings, context);
@@ -121,7 +121,7 @@
             childPathSettings = getPathSettings(settings, newContext) || undefined;//all children of the array share the same settings
 
             for (p = 0, length = modelObj.length; p < length; p++) {
-                result[p] = recrusiveFrom(modelObj[p], settings, newContext);
+                result[p] = recursiveFrom(modelObj[p], settings, newContext);
                 if (result[p] === badResult) {
                     result[p] = undefined;
                 }
@@ -141,11 +141,11 @@
                 //wrap array methods for adding and removing items in functions that
                 //close over settings and context allowing the objects and their children to be correctly mapped.
                 result.pushFromModel = function (item) {
-                    item = recrusiveFrom(item, settings, newContext);
+                    item = recursiveFrom(item, settings, newContext);
                     result.push(item);
                 };
                 result.unshiftFromModel = function (item) {
-                    item = recrusiveFrom(item, settings, newContext);
+                    item = recursiveFrom(item, settings, newContext);
                     result.unshift(item);
                 };
                 result.popToModel = function (item) {
@@ -179,7 +179,7 @@
                     result[p] = childPathSettings.custom.map(modelObj[p]);
                 }
                 else {
-                    temp = recrusiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
+                    temp = recursiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
 
                     if (temp !== badResult) {//properties that couldn't be mapped return badResult
                         result[p] = temp;
@@ -192,7 +192,7 @@
         if (pathSettings.nullable) {//make sure nullable objects are observable and provide method to update
             result = isObservable(result) ? result : makeObservable(result);
             result.___$updateNullWithMappedObject = function (item) {
-                var newValue = recrusiveFrom(item, settings, context, pathSettings);
+                var newValue = recursiveFrom(item, settings, context, pathSettings);
                 result(newValue);
             }
             pathSettings.nullable = false;
@@ -664,7 +664,7 @@
             mapping = !!mapping && !!mapping.__getMapping ? mapping.__getMapping() : mapping;
             var settings = getPathSettingsDictionary(mapping);
             initInternals(this.options, "Mapping From Model");
-            return recrusiveFrom(model, settings, rootContext);
+            return recursiveFrom(model, settings, rootContext);
         },
         toModel: function fnToModel(viewmodel) {
             initInternals(this.options, "Mapping To Model");
