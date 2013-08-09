@@ -318,18 +318,15 @@ test("FlagAsNullable with object", function () {
 test("FlagAsNullable and extend object", function () {
     var mappingOptions = ko.viewmodel.mappingBuilder()
         .flagAsNullable(["{root}.Prop5"])
-        .extend("{root}.Prop5.Test",{
-                map: function(item) {
-                    if (item() !== null) {
-                        item(item() + item());
-                    }
-                    return item;
-                },
-                unmap: function extendUnmapTest(item) {
-                    return "Unmapped";
+        .extend("{root}.Prop5.Test",  function (item) {
+            item.DoubleValue = ko.computed(function () {
+                if ( item()) {
+                    return item() + item();
                 }
-            }
-        );
+                return null;
+            });
+            return item;
+        });
 
     model = { Prop5: model.Prop5 };
     updatedModel = { Prop5: updatedModel.Prop5 };
@@ -340,15 +337,15 @@ test("FlagAsNullable and extend object", function () {
 
     ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
-    deepEqual(viewmodel.Prop5().Test(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);
+    deepEqual(viewmodel.Prop5().Test.DoubleValue(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);
 
     ko.viewmodel.updateFromModel(viewmodel, updatedModel);
 
-    deepEqual(viewmodel.Prop5().Test(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);
+    deepEqual(viewmodel.Prop5().Test.DoubleValue(), updatedModel.Prop5.Test + updatedModel.Prop5.Test);
 
     modelResult = ko.viewmodel.toModel(viewmodel);
 
-    deepEqual(modelResult.Prop5.Test, "Unmapped");
+    deepEqual(modelResult.Prop5.Test, updatedModel.Prop5.Test);
 });
 
 test("FlagAsNullable and custom map object", function () {
