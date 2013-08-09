@@ -194,6 +194,10 @@
             result.___$updateNullWithMappedObject = function (item) {
                 var newValue = recursiveFrom(item, settings, context, pathSettings);
                 result(newValue);
+                if(newValue.___$childPathSettings){
+                    result.___$childPathSettings = newValue.___$childPathSettings
+                    delete newValue.___$childPathSettings;
+                }
             }
             pathSettings.nullable = false;
         }
@@ -218,8 +222,10 @@
     }
 
     function recursiveTo(viewModelObj, context, parent) {
-        var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
+        var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult, pathSettings,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
+
+        pathSettings = (parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : (viewModelObj || {}).___$rootPathSettings) || {};
 
         if (fnLog) {
             fnLog(context);//log object being unmapped
@@ -228,8 +234,8 @@
         if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) {//Exclude functions
             return badResult;
         }
-        else if (viewModelObj && viewModelObj.___$childPathSettings && viewModelObj.___$childPathSettings.custom && viewModelObj.___$childPathSettings.custom.unmap) {//Defer to customUnmapping where specified
-            result = viewModelObj.___$childPathSettings.custom.unmap(viewModelObj);
+        else if (pathSettings.custom && pathSettings.custom.unmap) {//Defer to customUnmapping where specified
+            result = pathSettings.custom.unmap(viewModelObj);
         }
         else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped)) {
             //return nonwrapped null and undefined values, and wrapped primativish values as is
@@ -276,7 +282,6 @@
             }
         }
 
-        var pathSettings = parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : (viewModelObj || {}).___$rootPathSettings;
         if (pathSettings && pathSettings.untransform) {//if available call extend unmap function
             result = pathSettings.untransform(result);
         }
@@ -302,7 +307,7 @@
             modelObj = pathSettings.transform(modelObj);
         }
 
-        if (wasWrapped && viewModelObj.___$updateNullWithMappedObject && isNullOrUndefined(unwrapped)) {
+        if (viewModelObj && viewModelObj.___$updateNullWithMappedObject && isNullOrUndefined(unwrapped)) {
             viewModelObj.___$updateNullWithMappedObject(modelObj);
         }
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
@@ -336,7 +341,7 @@
                                         name: p,
                                         parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                         full: context.full + "." + p
-                                    }, unwrapped, noncontiguousObjectUpdateCount);//TODO: why is unwrapped passed in as parent (and have child settings) this and not viewmodel?
+                                    }, viewModelObj, noncontiguousObjectUpdateCount);
                                     noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
                                 };
                             }(modelObj, viewModelObj, p));
@@ -348,7 +353,7 @@
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
-                            }, unwrapped);//TODO: why is unwrapped passed in as parent (and have child settings) this and not viewmodel?
+                            }, viewModelObj);
                         }
                     }
                 }
