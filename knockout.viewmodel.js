@@ -80,7 +80,7 @@
         return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
     }
 
-    function recrusiveFrom(modelObj, settings, context, pathSettings) {
+    function recursiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
         childPathSettings, childObj, resultChildPathSettings;
         pathSettings = pathSettings || getPathSettings(settings, context);
@@ -121,7 +121,7 @@
             childPathSettings = getPathSettings(settings, newContext) || undefined;//all children of the array share the same settings
 
             for (p = 0, length = modelObj.length; p < length; p++) {
-                result[p] = recrusiveFrom(modelObj[p], settings, newContext);
+                result[p] = recursiveFrom(modelObj[p], settings, newContext);
                 if (result[p] === badResult) {
                     result[p] = undefined;
                 }
@@ -141,11 +141,11 @@
                 //wrap array methods for adding and removing items in functions that
                 //close over settings and context allowing the objects and their children to be correctly mapped.
                 result.pushFromModel = function (item) {
-                    item = recrusiveFrom(item, settings, newContext);
+                    item = recursiveFrom(item, settings, newContext);
                     result.push(item);
                 };
                 result.unshiftFromModel = function (item) {
-                    item = recrusiveFrom(item, settings, newContext);
+                    item = recursiveFrom(item, settings, newContext);
                     result.unshift(item);
                 };
                 result.popToModel = function (item) {
@@ -179,7 +179,7 @@
                     result[p] = childPathSettings.custom.map(modelObj[p]);
                 }
                 else {
-                    temp = recrusiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
+                    temp = recursiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
 
                     if (temp !== badResult) {//properties that couldn't be mapped return badResult
                         result[p] = temp;
@@ -192,8 +192,12 @@
         if (pathSettings.nullable) {//make sure nullable objects are observable and provide method to update
             result = isObservable(result) ? result : makeObservable(result);
             result.___$updateNullWithMappedObject = function (item) {
-                var newValue = recrusiveFrom(item, settings, context, pathSettings);
+                var newValue = recursiveFrom(item, settings, context, pathSettings);
                 result(newValue);
+                if(newValue.___$childPathSettings){
+                    result.___$childPathSettings = newValue.___$childPathSettings
+                    delete newValue.___$childPathSettings;
+                }
             }
             pathSettings.nullable = false;
         }
@@ -218,8 +222,10 @@
     }
 
     function recursiveTo(viewModelObj, context, parent) {
-        var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
+        var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult, pathSettings,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
+
+        pathSettings = (parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : (viewModelObj || {}).___$rootPathSettings) || {};
 
         if (fnLog) {
             fnLog(context);//log object being unmapped
@@ -228,8 +234,8 @@
         if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) {//Exclude functions
             return badResult;
         }
-        else if (viewModelObj && viewModelObj.___$childPathSettings && viewModelObj.___$childPathSettings.custom && viewModelObj.___$childPathSettings.custom.unmap) {//Defer to customUnmapping where specified
-            result = viewModelObj.___$childPathSettings.custom.unmap(viewModelObj);
+        else if (pathSettings.custom && pathSettings.custom.unmap) {//Defer to customUnmapping where specified
+            result = pathSettings.custom.unmap(viewModelObj);
         }
         else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped)) {
             //return nonwrapped null and undefined values, and wrapped primativish values as is
@@ -276,7 +282,6 @@
             }
         }
 
-        var pathSettings = parent ? (parent.___$childPathSettings ? parent.___$childPathSettings[context.name] : undefined) : (viewModelObj || {}).___$rootPathSettings;
         if (pathSettings && pathSettings.untransform) {//if available call extend unmap function
             result = pathSettings.untransform(result);
         }
@@ -302,7 +307,7 @@
             modelObj = pathSettings.transform(modelObj);
         }
 
-        if (wasWrapped && viewModelObj.___$updateNullWithMappedObject && isNullOrUndefined(unwrapped)) {
+        if (viewModelObj && viewModelObj.___$updateNullWithMappedObject && isNullOrUndefined(unwrapped)) {
             viewModelObj.___$updateNullWithMappedObject(modelObj);
         }
         else if (wasWrapped && (isNullOrUndefined(unwrapped) ^ isNullOrUndefined(modelObj))) {
@@ -336,7 +341,7 @@
                                         name: p,
                                         parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                         full: context.full + "." + p
-                                    }, unwrapped, noncontiguousObjectUpdateCount);
+                                    }, viewModelObj, noncontiguousObjectUpdateCount);
                                     noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() - 1);
                                 };
                             }(modelObj, viewModelObj, p));
@@ -348,7 +353,7 @@
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
-                            });
+                            }, viewModelObj);
                         }
                     }
                 }
@@ -664,7 +669,7 @@
             mapping = !!mapping && !!mapping.__getMapping ? mapping.__getMapping() : mapping;
             var settings = getPathSettingsDictionary(mapping);
             initInternals(this.options, "Mapping From Model");
-            return recrusiveFrom(model, settings, rootContext);
+            return recursiveFrom(model, settings, rootContext);
         },
         toModel: function fnToModel(viewmodel) {
             initInternals(this.options, "Mapping To Model");
