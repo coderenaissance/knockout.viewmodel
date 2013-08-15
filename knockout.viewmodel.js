@@ -111,7 +111,7 @@
             //primative and date children of arrays aren't mapped... all others are
             result = context.parentIsArray ? modelObj : makeObservable(modelObj);
         }
-        else if (modelObj instanceof Array) {
+        else if (modelObj instanceof Array || Object.prototype.toString.call(modelObj) === "[object Array]") {
             result = [];
 
             for (p = 0, length = modelObj.length; p < length; p++) {
@@ -152,7 +152,7 @@
             }
 
         }
-        else if (modelObj.constructor === Object) {
+        else if (modelObj.constructor === Object || typeof modelObj === "object")  {
             result = {};
             for (p in modelObj) {
                 newContext = {
