@@ -151,16 +151,16 @@ viewmodel = ko.viewmodel.fromModel(model, mapping));
 			<section id="paths" class="inner">
                 <h3>Mapping Methods</h3>
 
-                <p>Test</p>
+                <p>Each of the following processing methods can be called on a path</p>
 
                 <ul>
-                    <li>Append - Test</li>
-					<li>Exclude - Test</li>
-					<li>FlagAsNullable - Test</li>
-					<li>Extend - Test</li>
-					<li>Custom - Test</li>
-					<li>Define - Test</li>
-					<li>ArrayChildId - Test</li>
+                    <li><a href="web/mappingBuilder/append.html">Append</a> - Indicates that model value should be added to the viewmodel unchanged.</li>
+					<li><a href="web/mappingBuilder/exclude.html">Exclude</a> - Indicates that the specified path should be ignored and not added to the viewmodel.</li>
+					<li><a href="web/mappingBuilder/flagasnullable.html">FlagAsNullable</a> - Flags objects as nullable. Nullable objects cannot be properly processed without this flag.</li>
+					<li><a href="web/mappingBuilder/transform.html">Transform</a> - Allows the model value to be formatted/transformed before mapping and then transformed back after unmapping.</li>
+					<li><a href="web/mappingBuilder/extend.html">Extend</a> - Allows an path to be extended after it's been through mapping processing.</li>
+					<li><a href="web/mappingBuilder/custom.html">Custom</a> - Allows complete control over processing of a path.</li>
+					<li><a href="web/mappingBuilder/arraychildid.html">ArrayChildId</a> - Specifies what property of objects in an array should be used to identify objects when they are updated.</li>
                 </ul>
             </section>
 
