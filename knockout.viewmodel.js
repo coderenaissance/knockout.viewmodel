@@ -13,8 +13,51 @@
         makeObservable = ko.observable,
         makeObservableArray = ko.observableArray,
         rootContext = { name: "{root}", parent: "{root}", full: "{root}" },
-        fnLog, makeChildArraysObservable,
+        fnLog, makeChildArraysObservable, crossFrameSafe,
         badResult = function fnBadResult() { };
+
+
+
+    function isNullOrUndefined(obj) {//checks if obj is null or undefined
+        return obj === null || obj === undefined;
+    }
+
+    function isArray(obj, crossFrameSafe) {
+       if(!obj) return false;
+       return crossFrameSafe ? Object.prototype.toString.call(obj) === "[object Array]" : obj instanceof Array;
+    }
+
+    function isObject(obj, crossFrameSafe) {
+        if(!obj) return false;
+        return crossFrameSafe ? Object.prototype.toString.call(obj) === "[object Object]" : obj.constructor === Object;
+    }
+
+    function isFunction(obj, crossFrameSafe) {
+        if(!obj) return false;
+        return crossFrameSafe ? Object.prototype.toString.call(obj) === "[object Function]" : obj.constructor === Function;
+    }
+
+    function isString(obj, crossFrameSafe){
+        if(!obj && obj !== "") return false;
+        return crossFrameSafe ? Object.prototype.toString.call(obj) === "[object String]" : obj.constructor === String;
+    }
+
+    function isNumber(obj, crossFrameSafe){
+        if(!obj) return false;
+        return crossFrameSafe ? Object.prototype.toString.call(obj) === "[object Number]" : obj.constructor === Number;
+    }
+
+    function isBoolean(obj, crossFrameSafe){
+        if(!obj) return false;
+        return crossFrameSafe ? Object.prototype.toString.call(obj) === "[object Boolean]" : obj.constructor === Boolean;
+    }
+
+    //while dates aren't part of the JSON spec it doesn't hurt to support them as it's not unreasonable to think they might be added to the model manually.
+    //undefined is also not part of the spec, but it's currently be supported to be more in line with ko.mapping and probably doesn't hurt.
+    function isPrimitiveOrDate(obj) {
+        return obj === null || obj === undefined ||  obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
+    }
+
 
     //Gets settings for the specified path
     function getPathSettings(settings, context) {
@@ -34,7 +77,7 @@
             //Settings can either be dictionaries(associative arrays) or arrays
             //ignore shared option... contains functions that can be assigned by name
             if (settingType === "shared") continue;
-            else if (settings instanceof Array) {//process array list for append and exclude
+            else if (isArray(settings,crossFrameSafe)) {//process array list for append and exclude
                 for (index = 0, length = settings.length; index < length; index++) {
                     key = settings[index];
                     result[key] = result[key] || {};
@@ -42,15 +85,15 @@
                     result[key].settingType = result[key].settingType ? "multiple" : settingType;
                 }
             }
-            else if (settings.constructor === Object) {//process associative array for extend and map
+            else if (isObject(settings,crossFrameSafe)) {//process associative array for extend and map
                 for (key in settings) {
                     result[key] = result[key] || {};
                     fn = settings[key];
-                    fn = settingType !== "arrayChildId" && fn && fn.constructor === String && shared[fn] ? shared[fn] : fn;
-                    if (fn && fn.constructor === Object) {//associative array for map/unmap passed in instead of map function
+                    fn = settingType !== "arrayChildId" && fn && isString(fn,crossFrameSafe)&& shared[fn] ? shared[fn] : fn;
+                    if (fn && isObject(fn,crossFrameSafe)) {//associative array for map/unmap passed in instead of map function
                         for (childName in fn) {
                             //if children of fn are strings then replace with shared function if available
-                            if ((child = fn[childName]) && (child.constructor == String) && shared[child]) {
+                            if ((child = fn[childName]) && (isString(child,crossFrameSafe)) && shared[child]) {
                                 fn[childName] = shared[child];
                             }
                         }
@@ -64,17 +107,8 @@
         return result;
     }
 
-    function isNullOrUndefined(obj) {//checks if obj is null or undefined
-        return obj === null || obj === undefined;
-    }
 
-    //while dates aren't part of the JSON spec it doesn't hurt to support them as it's not unreasonable to think they might be added to the model manually.
-    //undefined is also not part of the spec, but it's currently be supported to be more in line with ko.mapping and probably doesn't hurt.
-    function isPrimativeOrDate(obj) {
-        return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
-    }
-
-    function recrusiveFrom(modelObj, settings, context, pathSettings) {
+    function recursiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
         childPathSettings, childObj;
         pathSettings = pathSettings || getPathSettings(settings, context);
@@ -83,7 +117,7 @@
             optionProcessed = true;
             //custom can either be specified as a single map function or as an 
             //object with map and unmap properties
-            if (typeof customPathSettings === "function") {
+            if (isFunction(customPathSettings,crossFrameSafe)) {
                 result = customPathSettings(modelObj);
                 if (!isNullOrUndefined(result)) {
                     result.___$mapCustom = customPathSettings;
@@ -93,7 +127,7 @@
                 result = customPathSettings.map(modelObj);
                 if (!isNullOrUndefined(result)) {//extend object with mapping info where possible
                     result.___$mapCustom = customPathSettings.map;//preserve map function for updateFromModel calls
-                    if (customPathSettings.unmap) {//perserve unmap function for toModel calls
+                    if (customPathSettings.unmap) {//preserve unmap function for toModel calls
                         result.___$unmapCustom = customPathSettings.unmap;
                     }
                 }
@@ -107,15 +141,15 @@
             optionProcessed = true;
             return badResult;
         }
-        else if (isPrimativeOrDate(modelObj)) {
-            //primative and date children of arrays aren't mapped... all others are
+        else if (isPrimitiveOrDate(modelObj)) {
+            //primitive and date children of arrays aren't mapped... all others are
             result = context.parentIsArray ? modelObj : makeObservable(modelObj);
         }
-        else if (modelObj instanceof Array) {
+        else if (isArray(modelObj, crossFrameSafe)) {
             result = [];
 
             for (p = 0, length = modelObj.length; p < length; p++) {
-                result[p] = recrusiveFrom(modelObj[p], settings, {
+                result[p] = recursiveFrom(modelObj[p], settings, {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true
                 });
             }
@@ -134,25 +168,25 @@
                 //wrap array methods for adding and removing items in functions that
                 //close over settings and context allowing the objects and their children to be correctly mapped.
                 result.pushFromModel = function (item) {
-                    item = recrusiveFrom(item, settings, newContext);
+                    item = recursiveFrom(item, settings, newContext);
                     result.push(item);
                 };
                 result.unshiftFromModel = function (item) {
-                    item = recrusiveFrom(item, settings, newContext);
+                    item = recursiveFrom(item, settings, newContext);
                     result.unshift(item);
                 };
                 result.popToModel = function (item) {
                     item = result.pop();
-                    return recrusiveTo(item, newContext);
+                    return recursiveTo(item, newContext);
                 };
                 result.shiftToModel = function (item) {
                     item = result.shift();
-                    return recrusiveTo(item, newContext);
+                    return recursiveTo(item, newContext);
                 };
             }
 
         }
-        else if (modelObj.constructor === Object) {
+        else if (isObject(modelObj, crossFrameSafe))  {
             result = {};
             for (p in modelObj) {
                 newContext = {
@@ -161,14 +195,14 @@
                     full: context.full + "." + p
                 };
                 childObj = modelObj[p];
-                childPathSettings = isPrimativeOrDate(childObj) ? getPathSettings(settings, newContext) : undefined;
+                childPathSettings = isPrimitiveOrDate(childObj) ? getPathSettings(settings, newContext) : undefined;
 
-                if (childPathSettings && childPathSettings.custom) {//primativish value w/ custom maping
+                if (childPathSettings && childPathSettings.custom) {//primitivish value w/ custom mapping
                     //since primative children cannot store their own custom functions, handle processing here and store them in the parent
                     result.___$customChildren = result.___$customChildren || {};
                     result.___$customChildren[p] = childPathSettings.custom;
 
-                    if (typeof childPathSettings.custom === "function") {
+                    if (isFunction(childPathSettings.custom, crossFrameSafe)) {
                         result[p] = childPathSettings.custom(modelObj[p]);
                     }
                     else {
@@ -176,7 +210,7 @@
                     }
                 }
                 else {
-                    temp = recrusiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
+                    temp = recursiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
 
                     if (temp !== badResult) {//properties that couldn't be mapped return badResult
                         result[p] = temp;
@@ -187,17 +221,17 @@
         }
 
         if (!optionProcessed && (extend = pathSettings.extend)) {
-            if (typeof extend === "function") {//single map function specified
+            if (isFunction(extend,crossFrameSafe)) {//single map function specified
                 //Extend can either modify the mapped value or replace it
                 //Falsy values assumed to be undefined
                 result = extend(result) || result;
             }
-            else if (extend.constructor === Object) {//map and/or unmap were specified as part of object
-                if (typeof extend.map === "function") {
+            else if (isObject(extend,crossFrameSafe)) {//map and/or unmap were specified as part of object
+                if (isFunction(extend.map,crossFrameSafe)) {
                     result = extend.map(result) || result;//use map to get result
                 }
 
-                if (typeof extend.unmap === "function") {
+                if (isFunction(extend.unmap,crossFrameSafe)) {
                     result.___$unmapExtend = extend.unmap;//store unmap for use by toModel
                 }
             }
@@ -205,7 +239,7 @@
         return result;
     }
 
-    function recrusiveTo(viewModelObj, context) {
+    function recursiveTo(viewModelObj, context) {
         var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
@@ -213,25 +247,25 @@
             fnLog(context);//log object being unmapped
         }
 
-        if (!wasWrapped && viewModelObj && viewModelObj.constructor === Function) {//Exclude functions
+        if (!wasWrapped && viewModelObj && isFunction(viewModelObj, crossFrameSafe)) {//Exclude functions
             return badResult;
         }
         else if (viewModelObj && viewModelObj.___$unmapCustom) {//Defer to customUnmapping where specified
             result = viewModelObj.___$unmapCustom(viewModelObj);
         }
-        else if ((wasWrapped && isPrimativeOrDate(unwrapped)) || isNullOrUndefined(unwrapped)) {
+        else if ((wasWrapped && isPrimitiveOrDate(unwrapped)) || isNullOrUndefined(unwrapped)) {
             //return null, undefined, values, and wrapped primativish values as is
             result = unwrapped;
         }
-        else if (unwrapped instanceof Array) {//create new array to return and add unwrapped values to it
+        else if (isArray(unwrapped,crossFrameSafe)) {//create new array to return and add unwrapped values to it
             result = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
-                result[p] = recrusiveTo(unwrapped[p], {
+                result[p] = recursiveTo(unwrapped[p], {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                 });
             }
         }
-        else if (unwrapped.constructor === Object) {//create new object to return and add unwrapped values to it
+        else if (isObject(unwrapped,crossFrameSafe)) {//create new object to return and add unwrapped values to it
             result = {};
             for (p in unwrapped) {
                 if (p.substr(0, 4) !== "___$") {//ignore all properties starting with the magic string as internal
@@ -240,9 +274,9 @@
                     }
                     else {
                         child = unwrapped[p];
-                        if (!ko.isComputed(child) && !((temp = unwrap(child)) && temp.constructor === Function)) {
+                        if (!ko.isComputed(child) && !((temp = unwrap(child)) && isFunction(temp,crossFrameSafe))) {
 
-                            recursiveResult = recrusiveTo(child, {
+                            recursiveResult = recursiveTo(child, {
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
@@ -259,7 +293,7 @@
         }
         else {
             //If it wasn't wrapped and it's not a function then return it.
-            if (!wasWrapped && (typeof unwrapped !== "function")) {
+            if (!wasWrapped && (!isFunction(unwrapped,crossFrameSafe))) {
                 result = unwrapped;
             }
         }
@@ -284,7 +318,7 @@
             //null or undefined then update the observable
             viewModelObj(modelObj);
         }
-        else if (modelObj && unwrapped && unwrapped.constructor == Object && modelObj.constructor === Object) {
+        else if (modelObj && unwrapped && isObject(unwrapped,crossFrameSafe) && isObject(modelObj,crossFrameSafe)) {
             for (p in modelObj) {//loop through object properties and update them
 
                 if (viewModelObj.___$customChildren && viewModelObj.___$customChildren[p]) {
@@ -294,10 +328,10 @@
                 else {
                     child = unwrapped[p];
 
-                    if (!wasWrapped && unwrapped.hasOwnProperty(p) && (isPrimativeOrDate(child) || (child && child.constructor === Array))) {
+                    if (!wasWrapped && unwrapped.hasOwnProperty(p) && (isPrimitiveOrDate(child) || (child && isArray(child,crossFrameSafe)))) {
                         unwrapped[p] = modelObj[p];
                     }
-                    else if (child && typeof child.___$mapCustom === "function") {
+                    else if (child && isFunction(child.___$mapCustom,crossFrameSafe)) {
                         if (isObservable(child)) {
                             childTemp = child.___$mapCustom(modelObj[p], child);//get child value mapped by custom maping
                             childTemp = unwrap(childTemp);//don't nest observables... what you want is the value from the customMapping
@@ -307,7 +341,7 @@
                             unwrapped[p] = child.___$mapCustom(modelObj[p], child);
                         }
                     }
-                    else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && unwrapped[p].constructor === Object) {
+                    else if (isNullOrUndefined(modelObj[p]) && unwrapped[p] && isObject(unwrapped[p],crossFrameSafe)) {
                         //Replace null or undefined with object for round trip to server; probably won't affect the view
                         //WORKAROUND: If values are going to switch between obj and null/undefined and the UI needs to be updated
                         //then the user should use the extend option to wrap the object in an observable
@@ -339,7 +373,7 @@
                 }
             }
         }
-        else if (unwrapped && unwrapped instanceof Array) {
+        else if (unwrapped && isArray(unwrapped,crossFrameSafe)) {
             if (idName = viewModelObj.___$childIdName) {//id is specified, create, update, and delete by id
                 foundModels = [];
                 foundViewmodels = [];
@@ -405,7 +439,7 @@
             else {//no id specified, replace old array items with new array items
                 tempArray = [];
                 map = viewModelObj.___$mapCustom;
-                if (typeof map === "function") {//update array with mapped objects, use indexer for performance
+                if (isFunction(map,crossFrameSafe)) {//update array with mapped objects, use indexer for performance
                     for (p = 0, length = modelObj.length; p < length; p++) {
                         tempArray[p] = modelObj[p];
                     }
@@ -426,7 +460,7 @@
         if (context.name === "{root}" && !!noncontiguousObjectUpdateCount) {
             return {
                 onComplete:function (fnOnComplete) {
-                    if(fnOnComplete && typeof fnOnComplete == "function"){
+                    if(fnOnComplete && isFunction(fnOnComplete, crossFrameSafe)){
                         if (!!noncontiguousObjectUpdateCount) {
                             ko.computed(function () {
                                 if (fnOnComplete && noncontiguousObjectUpdateCount() === 0) {
@@ -446,6 +480,8 @@
 
     function initInternals(options, startMessage) {
         makeChildArraysObservable = options.makeChildArraysObservable;
+        crossFrameSafe = options.crossFrameSafe;
+
         if (window.console && options.logging) {
             //if logging should be done then log start message and add logging function
             console.log(startMessage);
@@ -474,16 +510,17 @@
     ko.viewmodel = {
         options: {
             makeChildArraysObservable: true,
-            logging: false
+            logging: false,
+			crossFrameSafe: false
         },
         fromModel: function fnFromModel(model, options) {
             var settings = getPathSettingsDictionary(options);
             initInternals(this.options, "Mapping From Model");
-            return recrusiveFrom(model, settings, rootContext);
+            return recursiveFrom(model, settings, rootContext);
         },
         toModel: function fnToModel(viewmodel) {
             initInternals(this.options, "Mapping To Model");
-            return recrusiveTo(viewmodel, rootContext);
+            return recursiveTo(viewmodel, rootContext);
         },
         updateFromModel: function fnUpdateFromModel(viewmodel, model, makeNoncontiguousObjectUpdates) {
             var noncontiguousObjectUpdateCount = makeNoncontiguousObjectUpdates ? ko.observable(0) : undefined;
