@@ -38,7 +38,7 @@
     }
 
     function isString(obj, crossFrameSafe){
-        if(!obj) return false;
+        if(!obj && obj !== "") return false;
         return crossFrameSafe ? Object.prototype.toString.call(obj) === "[object String]" : obj.constructor === String;
     }
 
