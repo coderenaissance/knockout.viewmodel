@@ -511,8 +511,7 @@
         options: {
             makeChildArraysObservable: true,
             logging: false,
-			crossFrameSafe: true
-			
+			crossFrameSafe: false
         },
         fromModel: function fnFromModel(model, options) {
             var settings = getPathSettingsDictionary(options);
