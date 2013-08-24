@@ -40,8 +40,8 @@
             <section id="intro" class="inner">
                 <h3>append ( path )</h3>
 				<p>
-                    The specified path in the model is appended to (referenced by) the viewmodel as is. The object and it's children will not be made observable. It's properties/children will not processed and cannot be reference by any other mapping.<br/><br/>
-					Note: If the appended path refers to an object then changes to the properties of the object in the viewmodel will also change those properties in the model. This is normally not a concern unless the original model needs to be preserved for some reason, such as for a dirty comparison or to revert changes.
+                    The specified path in the model is appended to (referenced by) the viewmodel as is. The object and it's children will not be made observable. The path's properties/children will not processed by default or custom mapping.<br/><br/>
+					Note: Appended paths that contain strings, numbers, dates, nulls and undefined values are evectively copied, but if the appended path refers to an object then changes to the properties of the object in the viewmodel will also change those properties in the model (because both the model and viewmodel contain references to the same object). This is normally not a concern unless the original model needs to be preserved for some reason, such as for a dirty comparison or to revert changes.
                 </p>
 				<h5>Parameters:</h5>
                 <p>

@@ -39,7 +39,8 @@
             <h2>mappingBuilder - extend</h2>
             <section id="intro" class="inner">
 				<h3>extend ( path, fnMap, fnUnmap )</h3>
-				Adds additional mapping/unmapping processing for the specified path. The objects passed to fnMap and fnUnmap have already been through default mapping or default unmapping, respectively. For complete control use custom instead of extend.				
+				Allows an path to be extended after it's been through mapping processing. <br/><br/>
+				Note: Extend is primarily meant to allow you to extend observables post processing and as such no unmapping is necessary. If you need unmapping consider using transform or custom instead.				
 				<h5>Parameters:</h5>
                 <ul>
 					<li>path - a single path as a string</li>
