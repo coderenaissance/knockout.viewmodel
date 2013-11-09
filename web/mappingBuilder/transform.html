@@ -34,22 +34,71 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
+        <div id="main_content_wrap" class="outer">
         <section id="main_content" class="inner">
-            <h2>mappingBuilder - append(path)</h2>
+            <h2>mappingBuilder - transform</h2>
             <section id="intro" class="inner">
-                <h3>append(path)</h3>
-                <p>
-                    
-                </p>
-            </section>
+				<h3>transform ( path, mapping) </h3>
+                Allows for model transformations. For fromModel and updateFromModel processing the map function acts as a preprocessor on the incoming model path data (before any viewmodel processing has been done on it). For toModel processing the unmap function acts as a post processor on the path data after it has been mapped back to a model value. The combination of map and unmap allow for objects in the model to undergo hierchical structure transformations that make them easier to consume in the view; these strutural changes can then be untransformed when after being converted back to a model. Transform can also allow string and numeric values to be fomatted/converted for proper consumption.&nbsp;				
+				<h5>Parameters:</h5>
+                <ul>
+					<li>path - a single path as a string</li>
+					<li>mapping - either a object containing map and unmap function properties of a map function</li>
+                </ul>	
+				<h5>Example - transform null array values to empty arrays</h5>
+                <pre><code>var mappingOptions = ko.viewmodel.mappingBuilder()
+	.transform("{root}.users", function(value){
+		return value || [];
+	});//We&#39;re assuming that serverside an empty array is ok, so no need to provide an unmap to convert back	
+
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
+                <h5>Example - transform null to empty string and back</h5>
+                <pre><code>var mappingOptions = ko.viewmodel.mappingBuilder()
+	.transform("{root}.users[i].firstName", {
+		map: function(value){
+			return (value == null || value == undefined) ? &quot;&quot; : value;
+		},
+		unmap: function(value){
+			return value == &quot;&quot; ? null : value;
+		}
+	});
+
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
+				<h5>Example - transform object structure</h5>
+                <pre><code>
+var mappingOptions = ko.viewmodel.mappingBuilder()
+	.transform("{root}.currentUser", {//a simplistic and contrived example
+		map: function(user){
+			user.IsReadOnly = !user.Permissions.IsAllowedReadWrite;
+			user.IsManager = user.Permissions.IsAllowedManagerAccess;
+			user.IsSysAdmin = user.Permissions.IsGodUser;
+			delete user.Permissions;//we don&#39;t need this anymore
+			return user;//the returned the object will be converted to a viewmodel
+		},
+		unmap: function(user){
+			user.Permissions = {
+				IsAllowedReadWrite: !user.IsReadOnly,
+				IsAllowedManagerAccess: user.IsSysAdmin,
+				IsGodUser: user.IsSysAdmin
+			};
+			delete user.IsReadOnly;
+			delete user.IsManager;
+			delete user.IsSysAdmin;
+			return user;//this is the object that will be place on the model
+		}
+	});
+
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                            </code></pre>
+        </section>
         </section>
     </div>
-
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
         <footer class="inner">
-            <p class="copyright">Knockout.viewmodel maintained by <a href="https://github.com/coderenaissance">coderenaissance</a></p>
+            <p class="copyright">Knockout.viewmodel maintained by ps://github.com/coderenaissance">coderenaissance</a></p>
             <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
         </footer>
     </div>

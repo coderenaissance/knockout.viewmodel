@@ -69,16 +69,18 @@ var mappingOptions = ko.viewmodel.mappingBuilder().extend([
 
 var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
 </code></pre>				
-<p>Extend can be used to transform property values or object structures, to extend objects (with additional properties, computed properties, functions), or make objects observable. Whatever is returned by the fnMap and fnUmap functions replaces the default map and unmap values.</p>
-					<p>
-					<strong>Extending objects</strong>:<br/>
-					
-					Beware of nullable objects. Because nulls are made observable by default but objects are not, a call to updateFromModel can update a null to an object but not an object to a null. If a specified path can contain both nulls and objects then the extend method needs to be called and used to test ko.isObservable(item) and return objects wrapped in observables. If an object will never be null there is no need for it to be observable as it's properties, including id values, will be updated. 
-					</p>
-					<p>
-					<strong>Extending observables</strong>:<br/>
-					Properties, computed properties, and functions can be added to observables and can reference the observable. These will be ignored ignored when toModel is called and do not need to be manually removed with fnUnmap.</p>
-					</p>
+            <p>Extend can be used to transform property values or object structures, to extend objects (with additional properties, computed properties, functions), 
+                or make objects observable. Whatever is returned by the fnMap and fnUmap functions replaces the default map and unmap values.
+            </p>
+			<p>
+			<strong>Extending objects</strong>:<br/>
+			Beware of nullable objects. Because nulls are made observable by default but objects are not, a call to updateFromModel can update a null to an object but not an object to a null. If a specified path can contain both nulls and objects then the extend method needs to be called and used to test ko.isObservable(item) and return objects wrapped in observables. If an object will never be null there is no need for it to be observable as it's properties, including id values, will be updated. 
+			</p>
+			<p>
+			<strong>Extending observables</strong>:<br/>
+			Properties, computed properties, and functions can be added to observables and can reference the observable. These will be ignored ignored when toModel is called and do not need to be manually removed with fnUnmap.
+			</p>
+        </section>
         </section>
     </div>
 

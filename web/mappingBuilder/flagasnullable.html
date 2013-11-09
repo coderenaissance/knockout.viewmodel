@@ -36,12 +36,47 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
         <section id="main_content" class="inner">
-            <h2>mappingBuilder - append(path)</h2>
+            <h2>mappingBuilder - FlagAsNullable</h2>
             <section id="intro" class="inner">
-                <h3>append(path)</h3>
+                <h3>flagAsNullable ( path )</h3>
                 <p>
+                    The method flags the specified path as a nullable object. Default processing for nulls and objects are different. Objects aren&#39;t made observable for performance reasons. Null
+                    values are always observable, but have no children to process. This cause two problems:</p>
+                    <p>First, if the path is initially an object then changing it to a null will have no effect on the UI. This is because there is no observable to trigger a response to the change. 
+                        Flag as null instructs the viewmodel plugin to always wrap objects in null.</p>
+                <p>Second, if the path is initially a null that is updated to an object then that object will never recieve processing on it's children.&nbsp; Flagging the path as nullable instructs the viewmodel plugin to do full processing on the object whenever the previous value was a null.
                     
+                    </p>
+                <p>Note: For the purposes of this method both null and undefined are treated as equivalent. 
                 </p>
+				<h5>Parameters:</h5>
+                <p>
+                    path - either a single path as a string or an array of paths.
+                </p>                				
+                <h5>Example - Flagging a single path as nullable</h5>
+                <pre><code>
+var mappingOptions = ko.viewmodel.mappingBuilder()
+	.flagAsNullable("{root}.users[i].settings");
+
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
+				<h5>Example - Appending multiple paths with multiple calls</h5>
+                <pre><code>
+var mappingOptions = ko.viewmodel.mappingBuilder()
+	.flagAsNullable("{root}.users[i].settings")
+	.flagAsNullable("{root}.currentUser");
+	
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
+				<h5>Example - Appending multiple paths by passing in an array of paths:</h5>
+                <pre><code>
+var mappingOptions = ko.viewmodel.mappingBuilder().flagAsNullable ([
+	"{root}.users[i].settings",
+	"{root}.currentUser",
+]);
+
+var viewmodel = ko.viewmodel.fromModel(model, mappingOptions);
+                </code></pre>
             </section>
         </section>
     </div>
