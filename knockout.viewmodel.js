@@ -141,7 +141,7 @@
                     item = recrusiveFrom(item, settings, newContext);
                     result.unshift(item);
                 };
-                result.spliceFromModel = function(offset, length, item) {                    item = recrusiveFrom(item, settings, newContext);                    result.splice(offset, length, item);                }
+                result.spliceFromModel = function(offset, length, item) {                    item = recrusiveFrom(item, settings, newContext);                    return result.splice(offset, length, item);                }
                 result.popToModel = function (item) {
                     item = result.pop();
                     return recrusiveTo(item, newContext);
