@@ -74,7 +74,7 @@
         return obj === null || obj === undefined || obj.constructor === String || obj.constructor === Number || obj.constructor === Boolean || obj instanceof Date;
     }
 
-    function recrusiveFrom(modelObj, settings, context, pathSettings) {
+    function recursiveFrom(modelObj, settings, context, pathSettings) {
         var temp, result, p, length, idName, newContext, customPathSettings, extend, optionProcessed,
         childPathSettings, childObj;
         pathSettings = pathSettings || getPathSettings(settings, context);
@@ -115,7 +115,7 @@
             result = [];
 
             for (p = 0, length = modelObj.length; p < length; p++) {
-                result[p] = recrusiveFrom(modelObj[p], settings, {
+                result[p] = recursiveFrom(modelObj[p], settings, {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]", parentIsArray: true
                 });
             }
@@ -134,20 +134,20 @@
                 //wrap array methods for adding and removing items in functions that
                 //close over settings and context allowing the objects and their children to be correctly mapped.
                 result.pushFromModel = function (item) {
-                    item = recrusiveFrom(item, settings, newContext);
+                    item = recursiveFrom(item, settings, newContext);
                     result.push(item);
                 };
                 result.unshiftFromModel = function (item) {
-                    item = recrusiveFrom(item, settings, newContext);
+                    item = recursiveFrom(item, settings, newContext);
                     result.unshift(item);
                 };
                 result.popToModel = function (item) {
                     item = result.pop();
-                    return recrusiveTo(item, newContext);
+                    return recursiveTo(item, newContext);
                 };
                 result.shiftToModel = function (item) {
                     item = result.shift();
-                    return recrusiveTo(item, newContext);
+                    return recursiveTo(item, newContext);
                 };
             }
 
@@ -176,7 +176,7 @@
                     }
                 }
                 else {
-                    temp = recrusiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
+                    temp = recursiveFrom(childObj, settings, newContext, childPathSettings);//call recursive from on each child property
 
                     if (temp !== badResult) {//properties that couldn't be mapped return badResult
                         result[p] = temp;
@@ -205,7 +205,7 @@
         return result;
     }
 
-    function recrusiveTo(viewModelObj, context) {
+    function recursiveTo(viewModelObj, context) {
         var result, p, length, temp, unwrapped = unwrap(viewModelObj), child, recursiveResult,
             wasWrapped = (viewModelObj !== unwrapped);//this works because unwrap observable calls isObservable and returns the object unchanged if not observable
 
@@ -226,7 +226,7 @@
         else if (unwrapped instanceof Array) {//create new array to return and add unwrapped values to it
             result = [];
             for (p = 0, length = unwrapped.length; p < length; p++) {
-                result[p] = recrusiveTo(unwrapped[p], {
+                result[p] = recursiveTo(unwrapped[p], {
                     name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                 });
             }
@@ -242,7 +242,7 @@
                         child = unwrapped[p];
                         if (!ko.isComputed(child) && !((temp = unwrap(child)) && temp.constructor === Function)) {
 
-                            recursiveResult = recrusiveTo(child, {
+                            recursiveResult = recursiveTo(child, {
                                 name: p,
                                 parent: (context.name === "[i]" ? context.parent : context.name) + "." + p,
                                 full: context.full + "." + p
@@ -358,7 +358,7 @@
                                         child(unwrap(tempChild));
                                     }
                                     //else custom mapping returned previous observable;
-                                    //if it's smart enough to do that, assume it updated it correctly	
+                                    //if it's smart enough to do that, assume it updated it correctly  
                                 }
                                 else {
                                     unwrapped[q] = child.___$mapCustom(modelObj[p], child);
@@ -477,13 +477,15 @@
             logging: false
         },
         fromModel: function fnFromModel(model, options) {
+            // merge in global options
+            if (options) for (opt in this.options) if (options[opt]) this.options[opt] = options[opt];
             var settings = getPathSettingsDictionary(options);
             initInternals(this.options, "Mapping From Model");
-            return recrusiveFrom(model, settings, rootContext);
+            return recursiveFrom(model, settings, rootContext);
         },
         toModel: function fnToModel(viewmodel) {
             initInternals(this.options, "Mapping To Model");
-            return recrusiveTo(viewmodel, rootContext);
+            return recursiveTo(viewmodel, rootContext);
         },
         updateFromModel: function fnUpdateFromModel(viewmodel, model, makeNoncontiguousObjectUpdates) {
             var noncontiguousObjectUpdateCount = makeNoncontiguousObjectUpdates ? ko.observable(0) : undefined;
