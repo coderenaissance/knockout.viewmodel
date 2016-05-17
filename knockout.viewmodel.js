@@ -393,7 +393,7 @@
                 }
                 for (q = unwrapped.length - 1; q >= 0; q--) {
                     if (!foundViewmodels[q]) {//If missing from model remove from viewmodel
-                        viewModelObj.splice(q, 1);
+                        viewModelObj().splice(q, 1);
                     }
                 }
                 for (p = modelObj.length - 1; p >= 0; p--) {
