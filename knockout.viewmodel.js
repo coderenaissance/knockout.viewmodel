@@ -1,4 +1,4 @@
-﻿/*ko.viewmodel.js - version 2.0.3
+/*ko.viewmodel.js - version 2.0.3
 * Copyright 2013, Dave Herren http://coderenaissance.github.com/knockout.viewmodel/
 * License: MIT (http://www.opensource.org/licenses/mit-license.php)*/
 /*jshint eqnull:true, boss:true, loopfunc:true, evil:true, laxbreak:true, undef:true, unused:true, browser:true, immed:true, devel:true, sub: true, maxerr:50 */
@@ -390,12 +390,26 @@
                             break;
                         }
                     }
-                }
+                }                
+                var itemsToRemove =[];
+                var kk = 0;
                 for (q = unwrapped.length - 1; q >= 0; q--) {
                     if (!foundViewmodels[q]) {//If missing from model remove from viewmodel
-                        viewModelObj().splice(q, 1);
+                        var itemToremove = viewModelObj()[q];
+                        itemsToRemove[kk] = (itemToremove);
+                    }
+                    kk++;
+                }
+
+                if (itemsToRemove != null) {
+                    for (var gg = itemsToRemove.length - 1; gg >= 0; gg--) {
+                        if (!foundViewmodels[q]) {//If missing from model remove from viewmodel
+                            viewModelObj.remove(itemsToRemove[gg]);
+                        }
                     }
                 }
+
+
                 for (p = modelObj.length - 1; p >= 0; p--) {
                     if (!foundModels[p]) {//If not found and updated in viewmodel then add to viewmodel
                         viewModelObj.pushFromModel(modelObj[p]);
